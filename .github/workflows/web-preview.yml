@@ -24,6 +24,12 @@ env:
 jobs:
   deploy:
     name: Deploy to GitHub Pages
+    # The automatic deployment only runs when the repository variable
+    # ENABLE_WEB_PREVIEW is set to "true" and GitHub Pages is enabled
+    # (Settings -> Pages -> Source: GitHub Actions). A manual run always
+    # executes, so the preview can be tested without touching the settings.
+    if: >-
+      vars.ENABLE_WEB_PREVIEW == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     environment:
