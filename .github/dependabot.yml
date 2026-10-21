@@ -17,3 +17,12 @@ updates:
     open-pull-requests-limit: 5
     labels:
       - "dependencies"
+    ignore:
+      # share_plus 11 and newer require the Kotlin 2.x Gradle plugin, which the
+      # pinned Flutter 3.29 toolchain does not ship yet. Bump the Flutter
+      # version in the workflows first, then remove this rule.
+      - dependency-name: "share_plus"
+        update-types: ["version-update:semver-major"]
+      # cupertino_icons 2.x expects a newer Flutter SDK than the pinned one.
+      - dependency-name: "cupertino_icons"
+        update-types: ["version-update:semver-major"]
