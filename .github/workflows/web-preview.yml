@@ -51,7 +51,7 @@ jobs:
         # GitHub Actions). Until then the preview deployment is skipped
         # instead of failing the whole run.
         continue-on-error: true
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
 
       - name: Upload the Pages artifact
         continue-on-error: true
