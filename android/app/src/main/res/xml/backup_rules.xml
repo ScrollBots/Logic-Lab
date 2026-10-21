@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Backup rules for Logic Lab.
+
+  The app stores everything locally in SQLite and shared preferences. The
+  backup rules below keep the user's projects and progress in Android's
+  encrypted backup, and exclude the transient WebView/scratch caches.
+-->
+<full-backup-content>
+    <include domain="database" path="." />
+    <include domain="sharedpref" path="." />
+    <exclude domain="database" path="logic_lab.db-journal" />
+</full-backup-content>

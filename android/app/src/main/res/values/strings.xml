@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Primary launcher label. Launchers show a single label, so the Persian
+         subtitle "آزمایشگاه منطق" is presented on the in-app splash and the
+         About screen instead of being crammed into the launcher. -->
+    <string name="app_name">Logic Lab</string>
+    <string name="app_subtitle">آزمایشگاه منطق</string>
+</resources>

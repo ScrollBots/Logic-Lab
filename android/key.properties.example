@@ -1,0 +1,10 @@
+# Copy this file to `key.properties` and fill in the real values before
+# publishing a release build. The real file must never be committed.
+#
+#   keytool -genkey -v -keystore ~/logic-lab-upload.jks -keyalg RSA \
+#           -keysize 2048 -validity 10000 -alias upload
+#
+storePassword=change-me
+keyPassword=change-me
+keyAlias=upload
+storeFile=/absolute/path/to/logic-lab-upload.jks

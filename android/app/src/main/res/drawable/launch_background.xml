@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Native launch background. It shows the app gate glyph on the brand blue so
+  the very first frame already carries the Logic Lab identity. The bilingual
+  wordmark ("Logic Lab" / "آزمایشگاه منطق") is rendered by the Flutter splash
+  screen, because Android's launch window cannot show a reliable subtitle.
+-->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@color/launch_background" />
+    <item
+        android:width="132dp"
+        android:height="132dp"
+        android:gravity="center"
+        android:drawable="@drawable/ic_launcher_foreground" />
+</layer-list>

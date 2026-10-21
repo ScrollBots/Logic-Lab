@@ -1,0 +1,133 @@
+name: Release
+
+# Publishes a signed release when a version tag is pushed:
+#
+#   git tag v1.1.0 && git push origin v1.1.0
+#
+# The tag becomes the version of the build (the build number is the run
+# number), the upload keystore is restored from the repository secrets and the
+# signed APK (per ABI) and App Bundle are attached to a GitHub release.
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release, for example 1.1.0"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+env:
+  FLUTTER_VERSION: "3.29.3"
+
+jobs:
+  release:
+    name: Build and publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Flutter ${{ env.FLUTTER_VERSION }}
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Resolve the release version
+        id: release
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            RAW_VERSION="${{ inputs.version }}"
+          else
+            RAW_VERSION="${GITHUB_REF_NAME#v}"
+          fi
+          if ! echo "$RAW_VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$'; then
+            echo "Invalid version: $RAW_VERSION" >&2
+            exit 1
+          fi
+          echo "version=$RAW_VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=v$RAW_VERSION" >> "$GITHUB_OUTPUT"
+          echo "Releasing Logic Lab $RAW_VERSION"
+
+      - name: Apply the version to pubspec.yaml
+        run: dart run tool/set_version.dart "${{ steps.release.outputs.version }}+${{ github.run_number }}"
+
+      - name: Refresh the dependencies
+        run: flutter pub get
+
+      - name: Restore the upload keystore
+        shell: bash
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          set -euo pipefail
+          if [ -z "${KEYSTORE_BASE64}" ]; then
+            echo "The secret ANDROID_KEYSTORE_BASE64 is missing." >&2
+            exit 1
+          fi
+          echo "$KEYSTORE_BASE64" | base64 --decode > android/upload-keystore.jks
+
+      - name: Write android/key.properties
+        shell: bash
+        env:
+          STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        run: |
+          set -euo pipefail
+          cat > android/key.properties <<EOF
+          storePassword=$STORE_PASSWORD
+          keyPassword=$KEY_PASSWORD
+          keyAlias=$KEY_ALIAS
+          storeFile=upload-keystore.jks
+          EOF
+
+      - name: Build the signed App Bundle
+        run: flutter build appbundle --release --no-pub
+
+      - name: Build the signed APKs
+        run: flutter build apk --release --split-per-abi --no-pub
+
+      - name: Verify the published artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          AAPT2=$(ls "$ANDROID_HOME"/build-tools/*/aapt2 | head -n 1)
+          for apk in build/app/outputs/flutter-apk/*-release.apk; do
+            echo "--- $(basename "$apk") ---"
+            "$AAPT2" dump badging "$apk" \
+              | grep -E "^(package|application-label|sdkVersion|targetSdkVersion)" \
+              | head -n 4
+          done
+          if ! "$AAPT2" dump badging build/app/outputs/flutter-apk/app-arm64-v8a-release.apk \
+               | grep -q "application-label:'Logic Lab'"; then
+            echo "The launcher label is not 'Logic Lab'" >&2
+            exit 1
+          fi
+
+      - name: Publish the GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.release.outputs.tag }}
+          name: Logic Lab ${{ steps.release.outputs.version }}
+          generate_release_notes: true
+          prerelease: ${{ contains(steps.release.outputs.version, '-') }}
+          fail_on_unmatched_files: true
+          files: |
+            build/app/outputs/flutter-apk/*-release.apk
+            build/app/outputs/bundle/release/app-release.aab

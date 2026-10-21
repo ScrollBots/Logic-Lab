@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Adaptive launcher icon foreground: the white NAND-gate glyph of the app.
+  Everything stays inside the 72x72dp adaptive-icon safe zone (18..90) so
+  no mask crops the symbol.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- input stubs -->
+    <path
+        android:pathData="M22,44 L34,44"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="4"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M22,64 L34,64"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="4"
+        android:strokeLineCap="round" />
+    <!-- AND body -->
+    <path
+        android:pathData="M34,34 L50,34 C60,34 66,42 66,54 C66,66 60,74 50,74 L34,74 Z"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="4"
+        android:strokeLineJoin="round" />
+    <!-- inversion bubble -->
+    <path
+        android:pathData="M70.5,54m-4.5,0a4.5,4.5 0 1,0 9,0a4.5,4.5 0 1,0 -9,0"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="4" />
+    <!-- output stub -->
+    <path
+        android:pathData="M75,54 L86,54"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="4"
+        android:strokeLineCap="round" />
+</vector>
