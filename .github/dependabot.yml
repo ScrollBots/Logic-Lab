@@ -14,15 +14,32 @@ updates:
     directory: "/"
     schedule:
       interval: weekly
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 3
     labels:
       - "dependencies"
+    # Bundle the safe updates into a single pull request instead of one PR per
+    # package.
+    groups:
+      pub-minor-and-patch:
+        update-types:
+          - "version-update:semver-minor"
+          - "version-update:semver-patch"
     ignore:
-      # share_plus 11 and newer require the Kotlin 2.x Gradle plugin, which the
-      # pinned Flutter 3.29 toolchain does not ship yet. Bump the Flutter
-      # version in the workflows first, then remove this rule.
+      # The toolchain is pinned to Flutter 3.29.3 (see FLUTTER_VERSION in the
+      # workflows). The versions below require a newer Flutter/Dart SDK, or a
+      # Kotlin 2.x Gradle plugin that Flutter 3.29 does not ship. Remove the
+      # corresponding rule when the pinned Flutter version is raised.
       - dependency-name: "share_plus"
-        update-types: ["version-update:semver-major"]
-      # cupertino_icons 2.x expects a newer Flutter SDK than the pinned one.
+        versions: [">=11.0.0"]
       - dependency-name: "cupertino_icons"
-        update-types: ["version-update:semver-major"]
+        versions: [">=2.0.0"]
+      - dependency-name: "flutter_lints"
+        versions: [">=6.0.0"]
+      - dependency-name: "path_provider"
+        versions: [">=2.1.5"]
+      - dependency-name: "shared_preferences"
+        versions: [">=2.5.5"]
+      - dependency-name: "url_launcher"
+        versions: [">=6.3.2"]
+      - dependency-name: "file_picker"
+        versions: [">=11.0.4"]
