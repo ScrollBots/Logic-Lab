@@ -29,13 +29,16 @@ void main() {
     exit(66);
   }
 
-  final List<File> workflows = directory
-      .listSync()
-      .whereType<File>()
-      .where((File file) => file.path.endsWith('.yml') ||
-          file.path.endsWith('.yaml'))
-      .toList()
-    ..sort((File a, File b) => a.path.compareTo(b.path));
+  final List<File> workflows =
+      directory
+          .listSync()
+          .whereType<File>()
+          .where(
+            (File file) =>
+                file.path.endsWith('.yml') || file.path.endsWith('.yaml'),
+          )
+          .toList()
+        ..sort((File a, File b) => a.path.compareTo(b.path));
 
   if (workflows.isEmpty) {
     stderr.writeln('No workflows found.');
@@ -81,8 +84,9 @@ void main() {
         if (run is! String) {
           continue;
         }
-        for (final RegExpMatch match
-            in RegExp(r'tool/[A-Za-z0-9_./-]+').allMatches(run)) {
+        for (final RegExpMatch match in RegExp(
+          r'tool/[A-Za-z0-9_./-]+',
+        ).allMatches(run)) {
           final String path = match.group(0)!;
           if (!File(path).existsSync()) {
             _fail('$name / job "${job.key}" refers to a missing file: $path');

@@ -25,7 +25,9 @@ void main(List<String> arguments) {
   final String requested = arguments.first.trim();
   final RegExpMatch? match = _versionPattern.firstMatch(requested);
   if (match == null) {
-    stderr.writeln('Invalid version "$requested". Expected MAJOR.MINOR.PATCH[-prerelease][+build]');
+    stderr.writeln(
+      'Invalid version "$requested". Expected MAJOR.MINOR.PATCH[-prerelease][+build]',
+    );
     exit(64);
   }
 
@@ -46,10 +48,9 @@ void main(List<String> arguments) {
   }
 
   final String currentVersion = current.group(1)!;
-  final String buildNumber = match.group(5) ??
-      (currentVersion.contains('+')
-          ? currentVersion.split('+').last
-          : '1');
+  final String buildNumber =
+      match.group(5) ??
+      (currentVersion.contains('+') ? currentVersion.split('+').last : '1');
 
   final String version =
       '${match.group(1)}.${match.group(2)}.${match.group(3)}'
