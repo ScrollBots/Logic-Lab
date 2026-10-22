@@ -1,8 +1,6 @@
 name: Web preview
-
-# Publishes the Flutter web build to GitHub Pages, so the interface can be
-# reviewed on a phone browser without building the app locally.
-# Note: the web target is a preview build and keeps its data in memory only.
+run-name: >-
+  ${{ format('Logic Lab | Optional web preview | {0} | Run #{1}', github.ref_name, github.run_number) }}
 
 on:
   push:
@@ -23,49 +21,66 @@ env:
 
 jobs:
   deploy:
-    name: Deploy to GitHub Pages
-    # The automatic deployment only runs when the repository variable
-    # ENABLE_WEB_PREVIEW is set to "true" and GitHub Pages is enabled
-    # (Settings -> Pages -> Source: GitHub Actions). A manual run always
-    # executes, so the preview can be tested without touching the settings.
+    name: Optional preview | Build and deploy to GitHub Pages
     if: >-
       vars.ENABLE_WEB_PREVIEW == 'true' || github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - name: Check out the source
+        uses: actions/checkout@v7
 
-      - name: Set up Flutter ${{ env.FLUTTER_VERSION }}
+      - name: Configure the GitHub Pages target
+        id: pages
+        uses: actions/configure-pages@v6
+
+      - name: Install Flutter ${{ env.FLUTTER_VERSION }}
         uses: subosito/flutter-action@v2
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
           cache: true
 
-      - name: Install dependencies
+      - name: Resolve Flutter dependencies
         run: flutter pub get
 
-      - name: Build the web bundle
-        run: flutter build web --release --no-pub --base-hash "${{ github.sha }}"
+      - name: Build the optional web preview
+        id: build
+        env:
+          PAGES_BASE_PATH: ${{ steps.pages.outputs.base_path }}
+        run: flutter build web --release --no-pub --base-href "$PAGES_BASE_PATH/"
 
-      - name: Configure GitHub Pages
-        # Pages has to be enabled once (Settings -> Pages -> Source:
-        # GitHub Actions). Until then the preview deployment is skipped
-        # instead of failing the whole run.
-        continue-on-error: true
-        uses: actions/configure-pages@v5
-
-      - name: Upload the Pages artifact
-        continue-on-error: true
-        uses: actions/upload-pages-artifact@v3
+      - name: Save the GitHub Pages artifact
+        id: artifact
+        uses: actions/upload-pages-artifact@v5
         with:
           path: build/web
 
-      - name: Deploy
+      - name: Deploy the optional preview
         id: deployment
-        continue-on-error: true
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
+
+      - name: Report optional-preview results
+        if: always()
+        env:
+          PAGES: ${{ steps.pages.outcome || 'skipped' }}
+          BUILD: ${{ steps.build.outcome || 'skipped' }}
+          ARTIFACT: ${{ steps.artifact.outcome || 'skipped' }}
+          DEPLOYMENT: ${{ steps.deployment.outcome || 'skipped' }}
+          PAGE_URL: ${{ steps.deployment.outputs.page_url }}
+        run: |
+          {
+            printf '## Logic Lab — پیش‌نمایش اختیاری وب\n\n'
+            printf '| مرحله | نتیجه |\n|---|---|\n'
+            printf '| پیکربندی Pages | %s |\n' "$PAGES"
+            printf '| بیلد وب | %s |\n' "$BUILD"
+            printf '| ذخیرهٔ خروجی | %s |\n' "$ARTIFACT"
+            printf '| استقرار | %s |\n' "$DEPLOYMENT"
+            printf '\nاین گردش‌کار مستقل از انتشار اندروید است؛ داده‌های پیش‌نمایش در حافظه نگهداری می‌شوند.\n'
+            if [ "$DEPLOYMENT" = success ]; then
+              printf '\n[بازکردن پیش‌نمایش](%s)\n' "$PAGE_URL"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"

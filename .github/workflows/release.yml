@@ -1,12 +1,6 @@
 name: Release
-
-# Publishes a signed release when a version tag is pushed:
-#
-#   git tag v1.1.0 && git push origin v1.1.0
-#
-# The tag becomes the version of the build (the build number is the run
-# number), the upload keystore is restored from the repository secrets and the
-# signed APK (per ABI) and App Bundle are attached to a GitHub release.
+run-name: >-
+  ${{ format('Logic Lab | Android release {0} | Run #{1}', inputs.version || github.ref_name, github.run_number) }}
 
 on:
   push:
@@ -15,98 +9,173 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Version to release, for example 1.1.0"
+        description: "New version without v (for example 1.3.0); matching README release notes are required"
         required: true
         type: string
 
 permissions:
   contents: write
 
+concurrency:
+  group: release-${{ inputs.version && format('v{0}', inputs.version) || github.ref_name }}
+  cancel-in-progress: false
+
 env:
   FLUTTER_VERSION: "3.29.3"
+  JAVA_VERSION: "17"
 
 jobs:
   quality:
-    name: Format · Analyze · Test
-    runs-on: ubuntu-latest
+    name: Release quality gate | Configuration, analysis and tests
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     permissions:
       contents: read
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - name: Check out the source
+        uses: actions/checkout@v7
 
-      - name: Set up Flutter ${{ env.FLUTTER_VERSION }}
+      - name: Install Flutter ${{ env.FLUTTER_VERSION }}
         uses: subosito/flutter-action@v2
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
           cache: true
 
-      - name: Install dependencies
+      - name: Resolve Flutter dependencies
+        id: dependencies
         run: flutter pub get
 
-      - name: Validate the CI configuration
+      - name: Validate workflow configuration
+        id: workflows
         run: dart run tool/validate_ci.dart
 
-      - name: Check code formatting
+      - name: Test release-note generation
+        id: release_notes
+        run: python3 -m unittest discover --start-directory tool --pattern 'test_*.py' --verbose
+
+      - name: Verify Dart formatting
+        id: formatting
         run: dart format --output=none --set-exit-if-changed lib test tool
 
-      - name: Static analysis
+      - name: Analyze application and test code
+        id: analysis
         run: flutter analyze --no-pub
 
-      - name: Unit and widget tests
+      - name: Run all unit and widget tests before signing
+        id: tests
         run: flutter test --no-pub --reporter expanded
 
+      - name: Report release quality-gate results
+        if: always()
+        env:
+          DEPENDENCIES: ${{ steps.dependencies.outcome || 'skipped' }}
+          WORKFLOWS: ${{ steps.workflows.outcome || 'skipped' }}
+          RELEASE_NOTES: ${{ steps.release_notes.outcome || 'skipped' }}
+          FORMATTING: ${{ steps.formatting.outcome || 'skipped' }}
+          ANALYSIS: ${{ steps.analysis.outcome || 'skipped' }}
+          TESTS: ${{ steps.tests.outcome || 'skipped' }}
+        run: |
+          {
+            printf '## Logic Lab — کنترل کیفیت پیش از انتشار\n\n'
+            printf '| بررسی | نتیجه |\n|---|---|\n'
+            printf '| وابستگی‌ها | %s |\n' "$DEPENDENCIES"
+            printf '| تنظیمات گردش‌کارها | %s |\n' "$WORKFLOWS"
+            printf '| تولید متن انتشار | %s |\n' "$RELEASE_NOTES"
+            printf '| فرمت Dart | %s |\n' "$FORMATTING"
+            printf '| تحلیل ایستا | %s |\n' "$ANALYSIS"
+            printf '| همهٔ تست‌های واحد و ویجت | %s |\n' "$TESTS"
+            printf '\nsuccess = موفق، failure = ناموفق، skipped = اجرا نشده، cancelled = لغوشده.\n'
+            printf '\nشکست هر بررسی الزامی جلوی امضا، بیلد و انتشار را می‌گیرد.\n'
+          } >> "$GITHUB_STEP_SUMMARY"
+
   release:
-    name: Build and publish
-    runs-on: ubuntu-latest
+    name: Android release | Signed builds and publication
+    runs-on: ubuntu-24.04
     needs: quality
     timeout-minutes: 60
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - name: Check out the source and release tags
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
-      - name: Set up Flutter ${{ env.FLUTTER_VERSION }}
+      - name: Install Java ${{ env.JAVA_VERSION }} for Android builds
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Install Flutter ${{ env.FLUTTER_VERSION }}
         uses: subosito/flutter-action@v2
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
           cache: true
 
-      - name: Install dependencies
+      - name: Resolve Flutter dependencies
         run: flutter pub get
 
-      - name: Resolve the release version
+      - name: Validate the requested release version
         id: release
         shell: bash
+        env:
+          REQUESTED_VERSION: ${{ inputs.version }}
         run: |
           set -euo pipefail
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            RAW_VERSION="${{ inputs.version }}"
+          if [ "$GITHUB_EVENT_NAME" = workflow_dispatch ]; then
+            RAW_VERSION="$REQUESTED_VERSION"
           else
             RAW_VERSION="${GITHUB_REF_NAME#v}"
           fi
-          if ! echo "$RAW_VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$'; then
-            echo "Invalid version: $RAW_VERSION" >&2
+          if ! [[ "$RAW_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+            printf '::error title=Invalid release version::Use MAJOR.MINOR.PATCH, optionally followed by a prerelease suffix.\n'
             exit 1
           fi
-          echo "version=$RAW_VERSION" >> "$GITHUB_OUTPUT"
-          echo "tag=v$RAW_VERSION" >> "$GITHUB_OUTPUT"
-          echo "Releasing Logic Lab $RAW_VERSION"
+          printf 'version=%s\ntag=v%s\n' "$RAW_VERSION" "$RAW_VERSION" >> "$GITHUB_OUTPUT"
+          printf 'Preparing Logic Lab %s | Android build %s\n' "$RAW_VERSION" "$GITHUB_RUN_NUMBER"
 
-      - name: Apply the release version
-        run: dart run tool/set_version.dart "${{ steps.release.outputs.version }}+${{ github.run_number }}"
+      - name: Protect existing release tags and publications
+        id: publication_guard
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.release.outputs.tag }}
+        run: |
+          set -euo pipefail
+          if git show-ref --verify --quiet "refs/tags/$RELEASE_TAG"; then
+            if [ "$(git rev-parse "$RELEASE_TAG^{}")" != "$GITHUB_SHA" ]; then
+              printf '::error title=Release tag mismatch::The release tag points to a different commit.\n'
+              exit 1
+            fi
+          fi
+          RELEASES=$(gh api --paginate "repos/$GITHUB_REPOSITORY/releases" --jq '.[].tag_name')
+          if printf '%s\n' "$RELEASES" | grep -Fxq "$RELEASE_TAG"; then
+            printf '::error title=Release already exists::Choose a new version; published release assets must not be overwritten.\n'
+            exit 1
+          fi
 
-      - name: Refresh the dependencies
+      - name: Synchronize application version and build number
+        env:
+          RELEASE_VERSION: ${{ steps.release.outputs.version }}
+        run: dart run tool/set_version.dart "$RELEASE_VERSION+$GITHUB_RUN_NUMBER"
+
+      - name: Refresh dependencies after version synchronization
         run: flutter pub get
 
-      - name: Verify the version constants
+      - name: Verify the synchronized version constants
+        id: version_test
         run: flutter test --no-pub test/core/app_info_test.dart
 
-      - name: Restore the upload keystore
+      - name: Prepare version-specific Persian release notes
+        id: notes
+        env:
+          RELEASE_VERSION: ${{ steps.release.outputs.version }}
+        run: >-
+          python3 tool/release_notes.py --version "$RELEASE_VERSION"
+          --build "$GITHUB_RUN_NUMBER" --output "$RUNNER_TEMP/release-notes.md"
+
+      - name: Restore the Android signing keystore
+        id: keystore
         shell: bash
         env:
           KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
@@ -118,7 +187,8 @@ jobs:
           fi
           echo "$KEYSTORE_BASE64" | base64 --decode > android/upload-keystore.jks
 
-      - name: Write android/key.properties
+      - name: Configure Android release signing
+        id: signing
         shell: bash
         env:
           STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
@@ -126,6 +196,12 @@ jobs:
           KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
         run: |
           set -euo pipefail
+          for name in STORE_PASSWORD KEY_PASSWORD KEY_ALIAS; do
+            if [ -z "${!name}" ]; then
+              printf '::error title=Missing signing secret::%s is not configured.\n' "$name"
+              exit 1
+            fi
+          done
           cat > android/key.properties <<EOF
           storePassword=$STORE_PASSWORD
           keyPassword=$KEY_PASSWORD
@@ -133,37 +209,90 @@ jobs:
           storeFile=upload-keystore.jks
           EOF
 
-      - name: Build the signed App Bundle
+      - name: Build the signed Android App Bundle
+        id: bundle
         run: flutter build appbundle --release --no-pub
 
-      - name: Build the signed APKs
+      - name: Build the signed APKs for all supported architectures
+        id: apks
         run: flutter build apk --release --split-per-abi --no-pub
 
-      - name: Verify the published artifacts
+      - name: Verify Android package identities, versions and signatures
+        id: verification
         shell: bash
         run: |
           set -euo pipefail
-          AAPT2=$(ls "$ANDROID_HOME"/build-tools/*/aapt2 | head -n 1)
-          for apk in build/app/outputs/flutter-apk/*-release.apk; do
-            echo "--- $(basename "$apk") ---"
-            "$AAPT2" dump badging "$apk" \
-              | grep -E "^(package|application-label|sdkVersion|targetSdkVersion)" \
-              | head -n 4
-          done
-          if ! "$AAPT2" dump badging build/app/outputs/flutter-apk/app-arm64-v8a-release.apk \
-               | grep -q "application-label:'Logic Lab'"; then
-            echo "The launcher label is not 'Logic Lab'" >&2
-            exit 1
-          fi
+          python3 - <<'PY'
+          import os
+          import re
+          import subprocess
+          from pathlib import Path
 
-      - name: Publish the GitHub release
-        uses: softprops/action-gh-release@v2
+          version, build = re.search(r'^version:\s*(\S+)\+(\d+)\s*$', Path('pubspec.yaml').read_text(), re.M).groups()
+          aapt2 = next(Path(os.environ['ANDROID_HOME']).glob('build-tools/*/aapt2'))
+          apksigner = aapt2.with_name('apksigner')
+          expected = ('ir.logiclab.logic_lab', build, version)
+          for abi in ('arm64-v8a', 'armeabi-v7a', 'x86_64'):
+              apk = Path(f'build/app/outputs/flutter-apk/app-{abi}-release.apk')
+              badging = subprocess.check_output([str(aapt2), 'dump', 'badging', str(apk)], text=True)
+              package = re.search(r"^package: name='([^']+)' versionCode='([^']+)' versionName='([^']+)'", badging, re.M).groups()
+              if package != expected or "application-label:'Logic Lab'" not in badging:
+                  raise SystemExit(f'{apk.name}: expected {expected}, received {package}')
+              subprocess.run([str(apksigner), 'verify', str(apk)], check=True)
+              print(f'Verified signed APK: {abi} | {version} | build {build}')
+          bundle = Path('build/app/outputs/bundle/release/app-release.aab')
+          signature = subprocess.check_output(['jarsigner', '-J-Duser.language=en', '-verify', str(bundle)], text=True)
+          if 'jar verified.' not in signature:
+              raise SystemExit('The App Bundle signature could not be verified.')
+          print(f'Verified signed App Bundle: {version} | build {build}')
+          PY
+
+      - name: Publish the signed Android release with Persian notes
+        id: publication
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ steps.release.outputs.tag }}
           name: Logic Lab ${{ steps.release.outputs.version }}
+          target_commitish: ${{ github.sha }}
+          body_path: ${{ runner.temp }}/release-notes.md
           generate_release_notes: true
           prerelease: ${{ contains(steps.release.outputs.version, '-') }}
           fail_on_unmatched_files: true
           files: |
             build/app/outputs/flutter-apk/*-release.apk
             build/app/outputs/bundle/release/app-release.aab
+
+      - name: Report Android release results
+        if: always()
+        env:
+          VERSION: ${{ steps.release.outputs.version }}
+          GUARD: ${{ steps.publication_guard.outcome || 'skipped' }}
+          VERSION_TEST: ${{ steps.version_test.outcome || 'skipped' }}
+          NOTES: ${{ steps.notes.outcome || 'skipped' }}
+          KEYSTORE: ${{ steps.keystore.outcome || 'skipped' }}
+          SIGNING: ${{ steps.signing.outcome || 'skipped' }}
+          BUNDLE: ${{ steps.bundle.outcome || 'skipped' }}
+          APKS: ${{ steps.apks.outcome || 'skipped' }}
+          VERIFICATION: ${{ steps.verification.outcome || 'skipped' }}
+          PUBLICATION: ${{ steps.publication.outcome || 'skipped' }}
+          RELEASE_URL: ${{ steps.publication.outputs.url }}
+        run: |
+          {
+            printf '## Logic Lab — گزارش انتشار اندروید\n\n'
+            printf 'نسخه: `%s` — شمارهٔ بیلد: `%s`\n\n' "${VERSION:-نامعتبر}" "$GITHUB_RUN_NUMBER"
+            printf '| مرحله | نتیجه |\n|---|---|\n'
+            printf '| حفاظت از تگ و انتشار قبلی | %s |\n' "$GUARD"
+            printf '| هماهنگی نسخهٔ برنامه | %s |\n' "$VERSION_TEST"
+            printf '| متن فارسی این نسخه | %s |\n' "$NOTES"
+            printf '| بازیابی کلید امضا | %s |\n' "$KEYSTORE"
+            printf '| پیکربندی امضا | %s |\n' "$SIGNING"
+            printf '| AAB امضاشده | %s |\n' "$BUNDLE"
+            printf '| سه APK امضاشده | %s |\n' "$APKS"
+            printf '| شناسه، برچسب، نسخه و امضا | %s |\n' "$VERIFICATION"
+            printf '| انتشار GitHub | %s |\n' "$PUBLICATION"
+            if [ "$PUBLICATION" = success ]; then
+              printf '\n[دریافت نسخهٔ منتشرشده](%s)\n' "$RELEASE_URL"
+            else
+              printf '\nانتشار کامل نشده است؛ نخستین مرحلهٔ ناموفق را در log بررسی کنید.\n'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"

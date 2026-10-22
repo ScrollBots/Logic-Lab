@@ -60,6 +60,9 @@ void main() {
     if (document['name'] == null) {
       _fail('$name has no "name"');
     }
+    if (document['run-name'] is! String) {
+      _fail('$name has no descriptive "run-name"');
+    }
     final Object? triggers = document['on'] ?? document[true];
     if (triggers == null) {
       _fail('$name has no "on" trigger');
@@ -79,6 +82,13 @@ void main() {
       for (final Object? step in steps) {
         if (step is! YamlMap) {
           continue;
+        }
+        if (step['name'] is! String) {
+          _fail('$name / job "${job.key}" has an unnamed step');
+        }
+        if (step['continue-on-error'] != null &&
+            step['continue-on-error'] != false) {
+          _fail('$name / job "${job.key}" must not hide failed steps');
         }
         final Object? run = step['run'];
         if (run is! String) {
@@ -102,11 +112,75 @@ void main() {
         }
       }
     }
+
+    final String filename = workflow.uri.pathSegments.last;
+    if (filename == 'ci.yml' || filename == 'release.yml') {
+      final String buildJob = filename == 'ci.yml' ? 'build' : 'release';
+      final Object? build = jobs[buildJob];
+      if (jobs['quality'] is! YamlMap ||
+          build is! YamlMap ||
+          build['needs'] != 'quality' ||
+          build['if'] != null) {
+        _fail('$name must gate Android builds on the quality job');
+      }
+    }
+    if (filename == 'release.yml') {
+      final Object? release = jobs['release'];
+      final Object? steps = release is YamlMap ? release['steps'] : null;
+      final bool hasReleaseBody =
+          steps is List &&
+          steps.whereType<YamlMap>().any((YamlMap step) {
+            final Object? action = step['uses'];
+            final Object? inputs = step['with'];
+            return action is String &&
+                action.startsWith('softprops/action-gh-release@') &&
+                inputs is YamlMap &&
+                inputs['body_path'] is String &&
+                (inputs['body_path'] as String).trim().isNotEmpty;
+          });
+      if (!hasReleaseBody) {
+        _fail('$name must publish version-specific release notes');
+      }
+    }
   }
 
+  _validateDependabot();
   if (_errors > 0) {
     stderr.writeln('$_errors problem(s) found.');
     exit(1);
   }
-  stdout.writeln('All workflows are valid.');
+  stdout.writeln('Workflow configuration and Dependabot groups are valid.');
+}
+
+void _validateDependabot() {
+  const String path = '.github/dependabot.yml';
+  const List<String> allowedTypes = <String>['major', 'minor', 'patch'];
+  final YamlMap document;
+  try {
+    document = loadYaml(File(path).readAsStringSync()) as YamlMap;
+  } on Object catch (error) {
+    _fail('$path is not valid YAML: $error');
+    return;
+  }
+  final Object? updates = document['updates'];
+  if (updates is! List) {
+    _fail('$path has no update configuration');
+    return;
+  }
+  for (final YamlMap update in updates.whereType<YamlMap>()) {
+    final Object? groups = update['groups'];
+    if (groups is! YamlMap) {
+      continue;
+    }
+    for (final MapEntry<dynamic, dynamic> group in groups.entries) {
+      final Object? configuration = group.value;
+      final Object? types =
+          configuration is YamlMap ? configuration['update-types'] : null;
+      if (types != null &&
+          (types is! List ||
+              types.any((Object? type) => !allowedTypes.contains(type)))) {
+        _fail('$path / group "${group.key}" has invalid update-types');
+      }
+    }
+  }
 }

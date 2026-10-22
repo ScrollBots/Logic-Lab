@@ -1,13 +1,6 @@
 name: CI
-
-# Quality gate for every push and pull request:
-#   1. formatting check  (dart format --set-exit-if-changed)
-#   2. static analysis   (flutter analyze)
-#   3. unit + widget tests (flutter test)
-#   4. a real Android build (APK + App Bundle) as a smoke test
-#
-# The build artifacts of the smoke test can be downloaded from the run summary,
-# so there is no need to build on a local machine.
+run-name: >-
+  ${{ github.event_name == 'pull_request' && format('Logic Lab | CI | PR #{0} | {1}', github.event.pull_request.number, github.head_ref) || format('Logic Lab | CI | {0} | Run #{1}', github.ref_name, github.run_number) }}
 
 on:
   push:
@@ -24,92 +17,144 @@ permissions:
   contents: read
 
 env:
-  # Keep this in sync with the version used locally (Flutter 3.29.3 / Dart 3.7.2).
   FLUTTER_VERSION: "3.29.3"
   JAVA_VERSION: "17"
 
 jobs:
   quality:
-    name: Format · Analyze · Test
-    runs-on: ubuntu-latest
+    name: Quality gate | Configuration, analysis and tests
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - name: Check out the source
+        uses: actions/checkout@v7
 
-      - name: Set up Flutter ${{ env.FLUTTER_VERSION }}
+      - name: Install Flutter ${{ env.FLUTTER_VERSION }}
         uses: subosito/flutter-action@v2
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
           cache: true
 
-      - name: Install dependencies
+      - name: Resolve Flutter dependencies
+        id: dependencies
         run: flutter pub get
 
-      - name: Validate the CI configuration
+      - name: Validate workflow configuration
+        id: workflows
         run: dart run tool/validate_ci.dart
 
-      - name: Check code formatting
+      - name: Test release-note generation
+        id: release_notes
+        run: python3 -m unittest discover --start-directory tool --pattern 'test_*.py' --verbose
+
+      - name: Verify Dart formatting
+        id: formatting
         run: dart format --output=none --set-exit-if-changed lib test tool
 
-      - name: Static analysis
+      - name: Analyze application and test code
+        id: analysis
         run: flutter analyze --no-pub
 
-      - name: Unit and widget tests
+      - name: Run all unit and widget tests with coverage
+        id: tests
         run: flutter test --no-pub --coverage --reporter expanded
 
-      - name: Upload the coverage report
+      - name: Save the test coverage report
+        id: coverage
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-${{ github.run_id }}
           path: coverage/lcov.info
           if-no-files-found: ignore
           retention-days: 14
 
+      - name: Report quality-gate results
+        if: always()
+        env:
+          DEPENDENCIES: ${{ steps.dependencies.outcome || 'skipped' }}
+          WORKFLOWS: ${{ steps.workflows.outcome || 'skipped' }}
+          RELEASE_NOTES: ${{ steps.release_notes.outcome || 'skipped' }}
+          FORMATTING: ${{ steps.formatting.outcome || 'skipped' }}
+          ANALYSIS: ${{ steps.analysis.outcome || 'skipped' }}
+          TESTS: ${{ steps.tests.outcome || 'skipped' }}
+          COVERAGE_URL: ${{ steps.coverage.outputs.artifact-url }}
+        run: |
+          {
+            printf '## Logic Lab — گزارش کنترل کیفیت\n\n'
+            printf '| بررسی | نتیجه |\n|---|---|\n'
+            printf '| وابستگی‌ها | %s |\n' "$DEPENDENCIES"
+            printf '| تنظیمات گردش‌کارها | %s |\n' "$WORKFLOWS"
+            printf '| تولید متن انتشار | %s |\n' "$RELEASE_NOTES"
+            printf '| فرمت Dart | %s |\n' "$FORMATTING"
+            printf '| تحلیل ایستا | %s |\n' "$ANALYSIS"
+            printf '| همهٔ تست‌های واحد و ویجت | %s |\n' "$TESTS"
+            printf '\nsuccess = موفق، failure = ناموفق، skipped = اجرا نشده، cancelled = لغوشده.\n'
+            printf '\nبیلد اندروید فقط پس از موفقیت تمام بررسی‌های الزامی اجرا می‌شود.\n'
+            if [ -n "$COVERAGE_URL" ]; then
+              printf '\n[دریافت گزارش پوشش تست](%s) — ماندگاری ۱۴ روز.\n' "$COVERAGE_URL"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
   build:
-    name: Android build smoke test
-    runs-on: ubuntu-latest
+    name: Android smoke build | APK and App Bundle
+    runs-on: ubuntu-24.04
     needs: quality
     timeout-minutes: 45
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - name: Check out the source
+        uses: actions/checkout@v7
 
-      - name: Set up Flutter ${{ env.FLUTTER_VERSION }}
+      - name: Install Java ${{ env.JAVA_VERSION }} for Android builds
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Install Flutter ${{ env.FLUTTER_VERSION }}
         uses: subosito/flutter-action@v2
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
           cache: true
 
-      - name: Install dependencies
+      - name: Resolve Flutter dependencies
         run: flutter pub get
 
-      - name: Build the debug APK
+      - name: Build the debug APK for smoke testing
+        id: apk
         run: flutter build apk --debug --no-pub
 
-      - name: Build the release App Bundle
+      - name: Build the App Bundle for smoke testing
+        id: bundle
         run: flutter build appbundle --release --no-pub
 
-      - name: Verify the application label and version
+      - name: Verify the APK identity and version
+        id: verification
         shell: bash
         run: |
           set -euo pipefail
-          AAPT2=$(ls "$ANDROID_HOME"/build-tools/*/aapt2 | head -n 1)
-          echo "--- badging ---"
-          "$AAPT2" dump badging build/app/outputs/flutter-apk/app-debug.apk \
-            | grep -E "^(package|application-label|sdkVersion|targetSdkVersion)" \
-            | head -n 5
-          if ! "$AAPT2" dump badging build/app/outputs/flutter-apk/app-debug.apk \
-               | grep -q "application-label:'Logic Lab'"; then
-            echo "The launcher label is not 'Logic Lab'" >&2
-            exit 1
-          fi
+          python3 - <<'PY'
+          import os
+          import re
+          import subprocess
+          from pathlib import Path
 
-      - name: Upload the build artifacts
-        uses: actions/upload-artifact@v4
+          version, build = re.search(r'^version:\s*(\S+)\+(\d+)\s*$', Path('pubspec.yaml').read_text(), re.M).groups()
+          aapt2 = next(Path(os.environ['ANDROID_HOME']).glob('build-tools/*/aapt2'))
+          apk = Path('build/app/outputs/flutter-apk/app-debug.apk')
+          badging = subprocess.check_output([str(aapt2), 'dump', 'badging', str(apk)], text=True)
+          package = re.search(r"^package: name='([^']+)' versionCode='([^']+)' versionName='([^']+)'", badging, re.M).groups()
+          expected = ('ir.logiclab.logic_lab.debug', build, f'{version}-debug')
+          if package != expected or "application-label:'Logic Lab'" not in badging:
+              raise SystemExit(f'APK identity mismatch: expected {expected}, received {package}')
+          print(f'Verified debug APK: {package[0]} | {package[2]} | build {package[1]}')
+          PY
+
+      - name: Save the Android smoke-build artifacts
+        id: artifacts
+        uses: actions/upload-artifact@v7
         with:
           name: app-build-${{ github.run_id }}
           path: |
@@ -117,3 +162,24 @@ jobs:
             build/app/outputs/bundle/release/app-release.aab
           if-no-files-found: error
           retention-days: 14
+
+      - name: Report Android build results
+        if: always()
+        env:
+          APK: ${{ steps.apk.outcome || 'skipped' }}
+          BUNDLE: ${{ steps.bundle.outcome || 'skipped' }}
+          VERIFICATION: ${{ steps.verification.outcome || 'skipped' }}
+          ARTIFACT_URL: ${{ steps.artifacts.outputs.artifact-url }}
+        run: |
+          {
+            printf '## Logic Lab — گزارش بیلد اندروید\n\n'
+            printf '| خروجی | نتیجه |\n|---|---|\n'
+            printf '| APK دیباگ | %s |\n' "$APK"
+            printf '| App Bundle | %s |\n' "$BUNDLE"
+            printf '| شناسه، برچسب و نسخهٔ APK | %s |\n' "$VERIFICATION"
+            printf '\nاین خروجی‌ها برای تست دود هستند، با کلید debug ساخته می‌شوند و انتشار رسمی نیستند.\n'
+            printf '\nموفقیت CI جای بررسی لمس، عملکرد و لرزش روی گوشی واقعی را نمی‌گیرد.\n'
+            if [ -n "$ARTIFACT_URL" ]; then
+              printf '\n[دریافت APK و AAB آزمایشی](%s) — ماندگاری ۱۴ روز.\n' "$ARTIFACT_URL"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
