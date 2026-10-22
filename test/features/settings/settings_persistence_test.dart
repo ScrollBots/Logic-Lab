@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:logic_lab/features/settings/application/settings_controller.dart';
@@ -63,6 +65,33 @@ void main() {
       );
       expect(controller.themeMode, ThemeMode.system);
       expect(controller.value.paletteId, 'engineering_blue');
+    });
+
+    test('wrong value types fall back to the defaults', () async {
+      SharedPreferences.setMockInitialValues(<String, Object>{
+        'logic_lab.settings.v1': jsonEncode(<String, Object?>{
+          'themeMode': 'dark',
+          'paletteId': 17,
+          'customAccent': 'green',
+          'hapticsEnabled': 'no',
+          'animationsEnabled': 1,
+          'highSignalValue': 'red',
+          'lowSignalValue': -1,
+          'localeCode': 42,
+        }),
+      });
+      final SettingsController controller = await SettingsController.load(
+        await SharedPreferencesSettingsStore.create(),
+      );
+
+      expect(controller.themeMode, ThemeMode.dark);
+      expect(controller.value.paletteId, 'engineering_blue');
+      expect(controller.value.customAccent, isNull);
+      expect(controller.value.hapticsEnabled, isTrue);
+      expect(controller.value.animationsEnabled, isTrue);
+      expect(controller.value.highSignalValue, 0xFF1D9B72);
+      expect(controller.value.lowSignalValue, 0xFF6D7B8E);
+      expect(controller.value.localeCode, 'fa');
     });
   });
 }

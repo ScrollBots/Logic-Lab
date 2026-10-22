@@ -1,14 +1,44 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
-import '../../../../core/localization/persian_format.dart';
-import '../../../../core/services/file_exchange.dart';
-import '../../../../core/theme/logic_lab_theme.dart';
-import '../../../../core/widgets/common.dart';
+import '../../../core/localization/persian_format.dart';
+import '../../../core/services/file_exchange.dart';
+import '../../../core/theme/logic_lab_theme.dart';
+import '../../../core/widgets/common.dart';
 import '../../../features/settings/application/settings_controller.dart';
 import '../../editor/domain/circuit_models.dart';
 import '../domain/truth_table.dart';
+
+class _TruthTableRequest {
+  const _TruthTableRequest(this.graph, this.limits);
+
+  final CircuitGraph graph;
+  final TruthTableLimits limits;
+}
+
+class _TruthTableComputation {
+  const _TruthTableComputation({this.result, this.error});
+
+  final TruthTableResult? result;
+  final String? error;
+}
+
+_TruthTableComputation _generateTruthTable(_TruthTableRequest request) {
+  try {
+    return _TruthTableComputation(
+      result: const TruthTableGenerator().generate(
+        request.graph,
+        limits: request.limits,
+      ),
+    );
+  } on TruthTableGenerationException catch (error) {
+    return _TruthTableComputation(error: error.message);
+  }
+}
 
 class TruthTableScreen extends StatefulWidget {
   const TruthTableScreen({
@@ -25,10 +55,11 @@ class TruthTableScreen extends StatefulWidget {
 }
 
 class _TruthTableScreenState extends State<TruthTableScreen> {
-  static const TruthTableGenerator _generator = TruthTableGenerator();
   TruthTableResult? _table;
   TruthTableGenerationException? _error;
   TruthTableLimits _limits = const TruthTableLimits();
+  bool _generating = false;
+  int _generation = 0;
   final ScrollController _verticalScroll = ScrollController();
   final ScrollController _horizontalScroll = ScrollController();
   final TextEditingController _filterController = TextEditingController();
@@ -37,7 +68,7 @@ class _TruthTableScreenState extends State<TruthTableScreen> {
   @override
   void initState() {
     super.initState();
-    _generate();
+    unawaited(_generate());
   }
 
   @override
@@ -74,14 +105,35 @@ class _TruthTableScreenState extends State<TruthTableScreen> {
         .toList(growable: false);
   }
 
-  void _generate() {
-    try {
-      _table = _generator.generate(widget.graph, limits: _limits);
-      _error = null;
-    } on TruthTableGenerationException catch (error) {
+  Future<void> _generate() async {
+    final int generation = ++_generation;
+    setState(() {
+      _generating = true;
       _table = null;
-      _error = error;
+      _error = null;
+    });
+    _TruthTableComputation computation;
+    try {
+      computation = await compute<_TruthTableRequest, _TruthTableComputation>(
+        _generateTruthTable,
+        _TruthTableRequest(widget.graph, _limits),
+      );
+    } catch (_) {
+      computation = const _TruthTableComputation(
+        error: 'محاسبه جدول حقیقت انجام نشد. دوباره تلاش کنید.',
+      );
     }
+    if (!mounted || generation != _generation) {
+      return;
+    }
+    setState(() {
+      _generating = false;
+      _table = computation.result;
+      _error =
+          computation.error == null
+              ? null
+              : TruthTableGenerationException(computation.error!);
+    });
   }
 
   Future<void> _showLimits() async {
@@ -161,14 +213,17 @@ class _TruthTableScreenState extends State<TruthTableScreen> {
         );
       },
     );
+    if (!mounted) {
+      return;
+    }
     if (selection != null && selection != _limits.maxRows) {
       setState(() {
         _limits = TruthTableLimits(
           maxInputs: _inputsForRows(selection),
           maxRows: selection,
         );
-        _generate();
       });
+      await _generate();
     }
   }
 
@@ -290,7 +345,11 @@ class _TruthTableScreenState extends State<TruthTableScreen> {
             children: <Widget>[
               _summary(context, table),
               const SizedBox(height: 12),
-              if (_error != null)
+              if (_generating)
+                const Expanded(
+                  child: Center(child: CircularProgressIndicator()),
+                )
+              else if (_error != null)
                 Expanded(
                   child: Center(
                     child: EmptyState(
@@ -641,7 +700,9 @@ class _TruthTableScreenState extends State<TruthTableScreen> {
                                 final String outputSemantics = outputs
                                     .map((TruthTableOutput output) {
                                       final bool? value =
-                                          row.outputs['${output.nodeId}#${output.port}'];
+                                          row.outputs[output.port == 0
+                                              ? output.nodeId
+                                              : '${output.nodeId}#${output.port}'];
                                       final String state =
                                           value == null
                                               ? 'نامشخص'
@@ -719,7 +780,9 @@ class _TruthTableScreenState extends State<TruthTableScreen> {
                                             context,
                                             width: outputCellWidth,
                                             value:
-                                                row.outputs['${output.nodeId}#${output.port}'],
+                                                row.outputs[output.port == 0
+                                                    ? output.nodeId
+                                                    : '${output.nodeId}#${output.port}'],
                                             active: active,
                                             emphasis: true,
                                           ),

@@ -1,9 +1,12 @@
 import 'dart:math' as math;
 import 'dart:ui';
 
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
-import '../../../../core/theme/logic_lab_theme.dart';
+import '../../../core/theme/logic_lab_theme.dart';
+import '../../settings/application/settings_controller.dart';
 import '../application/circuit_editor_controller.dart';
 import '../domain/circuit_geometry.dart';
 import '../domain/circuit_models.dart';
@@ -22,6 +25,8 @@ class CircuitCanvasController {
   /// Returns the center of the current viewport in circuit coordinates, so a
   /// newly added component appears where the user is looking.
   CanvasPoint? visibleCenter() => _state?._visibleCenter();
+
+  double? currentScale() => _state?._transform.value.getMaxScaleOnAxis();
 }
 
 class CircuitCanvas extends StatefulWidget {
@@ -30,20 +35,30 @@ class CircuitCanvas extends StatefulWidget {
     required this.editor,
     required this.canvasController,
     this.showGrid = true,
+    this.animationsEnabled = true,
+    this.hapticsEnabled = false,
   });
 
   final CircuitEditorController editor;
   final CircuitCanvasController canvasController;
   final bool showGrid;
+  final bool animationsEnabled;
+  final bool hapticsEnabled;
 
   @override
   State<CircuitCanvas> createState() => _CircuitCanvasState();
 }
 
-class _CircuitCanvasState extends State<CircuitCanvas> {
+class _CircuitCanvasState extends State<CircuitCanvas>
+    with SingleTickerProviderStateMixin {
   final TransformationController _transform = TransformationController();
+  late final AnimationController _flowAnimation;
+  final GlobalKey _viewportKey = GlobalKey();
   Size _viewport = Size.zero;
   bool _didInitialFit = false;
+  CanvasPoint? _lastDragScenePoint;
+  CanvasPoint? _wireDragPoint;
+  bool _nodeDragMoved = false;
 
   CircuitEditorController get editor => widget.editor;
 
@@ -51,6 +66,18 @@ class _CircuitCanvasState extends State<CircuitCanvas> {
   void initState() {
     super.initState();
     widget.canvasController._state = this;
+    _flowAnimation = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    );
+    editor.addListener(_syncFlowAnimation);
+    _transform.addListener(_syncFlowAnimation);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _syncFlowAnimation();
   }
 
   @override
@@ -60,6 +87,11 @@ class _CircuitCanvasState extends State<CircuitCanvas> {
       oldWidget.canvasController._state = null;
       widget.canvasController._state = this;
     }
+    if (oldWidget.editor != editor) {
+      oldWidget.editor.removeListener(_syncFlowAnimation);
+      editor.addListener(_syncFlowAnimation);
+    }
+    _syncFlowAnimation();
   }
 
   @override
@@ -67,8 +99,54 @@ class _CircuitCanvasState extends State<CircuitCanvas> {
     if (widget.canvasController._state == this) {
       widget.canvasController._state = null;
     }
+    editor.removeListener(_syncFlowAnimation);
+    _transform.removeListener(_syncFlowAnimation);
+    _flowAnimation.dispose();
     _transform.dispose();
     super.dispose();
+  }
+
+  bool get _canAnimate =>
+      widget.animationsEnabled &&
+      !MediaQuery.disableAnimationsOf(context) &&
+      TickerMode.of(context);
+
+  void _syncFlowAnimation() {
+    final Rect visible = _visibleSceneBounds();
+    final bool active =
+        _canAnimate &&
+        editor.graph.wires.any((CircuitWire wire) {
+          if (editor.report.signalForWire(wire) != LogicSignal.high) {
+            return false;
+          }
+          final CircuitNode? source = editor.graph.nodeById(wire.fromNodeId);
+          final CircuitNode? target = editor.graph.nodeById(wire.toNodeId);
+          if (source == null || target == null) {
+            return false;
+          }
+          final CanvasPoint? start = CircuitGeometry.portPosition(
+            source,
+            CircuitPin.output(source.id, wire.fromPortIndex),
+          );
+          final CanvasPoint? end = CircuitGeometry.portPosition(
+            target,
+            CircuitPin.input(target.id, wire.toInputIndex),
+          );
+          if (start == null || end == null) {
+            return false;
+          }
+          return visible.overlaps(
+            Rect.fromPoints(
+              Offset(start.x, start.y),
+              Offset(end.x, end.y),
+            ).inflate(180),
+          );
+        });
+    if (active && !_flowAnimation.isAnimating) {
+      _flowAnimation.repeat();
+    } else if (!active && _flowAnimation.isAnimating) {
+      _flowAnimation.stop();
+    }
   }
 
   void _fitToCircuit({bool animated = false}) {
@@ -108,11 +186,12 @@ class _CircuitCanvasState extends State<CircuitCanvas> {
     final double currentScale = current.getMaxScaleOnAxis();
     final double targetScale = (currentScale * factor).clamp(0.28, 2.6);
     final double actualFactor = targetScale / currentScale;
+    final Offset sceneCenter = _transform.toScene(center);
     final Matrix4 next =
         Matrix4.copy(current)
-          ..translate(center.dx, center.dy)
+          ..translate(sceneCenter.dx, sceneCenter.dy)
           ..scale(actualFactor, actualFactor)
-          ..translate(-center.dx, -center.dy);
+          ..translate(-sceneCenter.dx, -sceneCenter.dy);
     _transform.value = next;
   }
 
@@ -129,17 +208,161 @@ class _CircuitCanvasState extends State<CircuitCanvas> {
     return CanvasPoint(center.dx, center.dy);
   }
 
+  Rect _visibleSceneBounds() {
+    if (_viewport.isEmpty) {
+      return const Rect.fromLTWH(
+        0,
+        0,
+        CircuitGeometry.canvasWidth,
+        CircuitGeometry.canvasHeight,
+      );
+    }
+    final Offset topLeft = _transform.toScene(Offset.zero);
+    final Offset bottomRight = _transform.toScene(
+      Offset(_viewport.width, _viewport.height),
+    );
+    return Rect.fromPoints(topLeft, bottomRight).inflate(120);
+  }
+
+  bool _isNodeVisible(CircuitNode node, Rect visibleBounds) {
+    final CanvasRect bounds = CircuitGeometry.nodeBounds(node);
+    return visibleBounds.overlaps(
+      Rect.fromLTWH(bounds.left, bounds.top, bounds.width, bounds.height),
+    );
+  }
+
+  CanvasPoint? _scenePointFromGlobal(Offset globalPosition) {
+    final RenderObject? renderObject =
+        _viewportKey.currentContext?.findRenderObject();
+    if (renderObject is! RenderBox) {
+      return null;
+    }
+    final Offset viewportPosition = renderObject.globalToLocal(globalPosition);
+    final Offset scenePosition = _transform.toScene(viewportPosition);
+    return CanvasPoint(scenePosition.dx, scenePosition.dy);
+  }
+
+  void _startNodeDrag(String nodeId, DragStartDetails details) {
+    final CanvasPoint? scenePoint = _scenePointFromGlobal(
+      details.globalPosition,
+    );
+    if (scenePoint == null) {
+      return;
+    }
+    _lastDragScenePoint = scenePoint;
+    _nodeDragMoved = false;
+    editor.beginNodeDrag(nodeId);
+  }
+
+  void _updateNodeDrag(DragUpdateDetails details) {
+    final CanvasPoint? previous = _lastDragScenePoint;
+    final CanvasPoint? current = _scenePointFromGlobal(details.globalPosition);
+    if (previous == null || current == null) {
+      return;
+    }
+    _lastDragScenePoint = current;
+    final CircuitGraph previousGraph = editor.graph;
+    editor.dragSelected(
+      CanvasPoint(current.x - previous.x, current.y - previous.y),
+    );
+    _nodeDragMoved = _nodeDragMoved || editor.graph != previousGraph;
+  }
+
+  void _endNodeDrag({bool cancelled = false}) {
+    if (_lastDragScenePoint == null) {
+      return;
+    }
+    _lastDragScenePoint = null;
+    editor.endNodeDrag();
+    if (_nodeDragMoved && !cancelled) {
+      AppHaptics.impact(widget.hapticsEnabled);
+    }
+    _nodeDragMoved = false;
+  }
+
+  void _startWireDrag(DragStartDetails details) {
+    final CanvasPoint? point = _scenePointFromGlobal(details.globalPosition);
+    if (point == null) {
+      return;
+    }
+    final CircuitPin? source = CircuitGeometry.portAt(
+      editor.graph,
+      point,
+      radius:
+          CircuitGeometry.portHitRadius / _transform.value.getMaxScaleOnAxis(),
+      outputOnly: true,
+    );
+    if (source == null) {
+      return;
+    }
+    if (editor.pendingSourceId != source.nodeId ||
+        editor.pendingSourcePort != source.index) {
+      editor.tapOutputPort(source.nodeId, source.index);
+    }
+    setState(() => _wireDragPoint = point);
+  }
+
+  void _updateWireDrag(DragUpdateDetails details) {
+    if (_wireDragPoint == null) {
+      return;
+    }
+    final CanvasPoint? point = _scenePointFromGlobal(details.globalPosition);
+    if (point != null) {
+      setState(() => _wireDragPoint = point);
+    }
+  }
+
+  void _endWireDrag() {
+    final CanvasPoint? point = _wireDragPoint;
+    if (point == null) {
+      return;
+    }
+    final double scale = _transform.value.getMaxScaleOnAxis();
+    final CircuitPin? target = CircuitGeometry.portAt(
+      editor.graph,
+      point,
+      radius: CircuitGeometry.portHitRadius / scale,
+      inputOnly: true,
+    );
+    setState(() => _wireDragPoint = null);
+    if (target != null && target.isInput) {
+      _handlePinTap(target);
+      if (editor.hasPendingConnection) {
+        editor.cancelPendingConnection(preserveFeedback: true);
+      }
+    } else {
+      editor.cancelPendingConnection();
+    }
+  }
+
+  void _cancelWireDrag() {
+    if (_wireDragPoint == null) {
+      return;
+    }
+    setState(() => _wireDragPoint = null);
+    editor.cancelPendingConnection();
+  }
+
   void _handleCanvasTap(TapUpDetails details) {
     final CanvasPoint point = CanvasPoint(
       details.localPosition.dx,
       details.localPosition.dy,
     );
-    final CircuitPin? pin = CircuitGeometry.portAt(editor.graph, point);
+    final double scale = _transform.value.getMaxScaleOnAxis();
+    final CircuitPin? pin = CircuitGeometry.portAt(
+      editor.graph,
+      point,
+      radius: CircuitGeometry.portHitRadius / scale,
+    );
     if (pin != null) {
       _handlePinTap(pin);
       return;
     }
-    final String? wireId = CircuitGeometry.wireAt(editor.graph, point);
+    final String? wireId = CircuitGeometry.wireAt(
+      editor.graph,
+      point,
+      radius: 12 / scale,
+    );
     if (wireId != null) {
       editor.selectWire(wireId);
       return;
@@ -147,7 +370,7 @@ class _CircuitCanvasState extends State<CircuitCanvas> {
     final CircuitNode? node = CircuitGeometry.nodeAt(editor.graph, point);
     if (node != null) {
       if (node.type.isInput) {
-        editor.toggleInput(node.id);
+        _toggleInput(node.id);
       } else {
         editor.selectNode(node.id);
       }
@@ -158,10 +381,20 @@ class _CircuitCanvasState extends State<CircuitCanvas> {
 
   void _handlePinTap(CircuitPin pin) {
     if (pin.isInput) {
+      final CircuitGraph previous = editor.graph;
       editor.tapInputPort(pin.nodeId, pin.index);
+      if (editor.graph != previous) {
+        AppHaptics.impact(widget.hapticsEnabled);
+      }
     } else {
-      editor.tapOutputPort(pin.nodeId);
+      editor.tapOutputPort(pin.nodeId, pin.index);
+      AppHaptics.selection(widget.hapticsEnabled);
     }
+  }
+
+  void _toggleInput(String nodeId) {
+    editor.toggleInput(nodeId);
+    AppHaptics.selection(widget.hapticsEnabled);
   }
 
   @override
@@ -174,23 +407,35 @@ class _CircuitCanvasState extends State<CircuitCanvas> {
         );
         if (newViewport != _viewport) {
           _viewport = newViewport;
-          if (!_didInitialFit && !_viewport.isEmpty) {
+          final bool fit = !_didInitialFit && !_viewport.isEmpty;
+          if (fit) {
             _didInitialFit = true;
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (mounted) {
-                _fitToCircuit();
-              }
-            });
           }
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted) {
+              return;
+            }
+            if (fit) {
+              _fitToCircuit();
+            }
+            _syncFlowAnimation();
+          });
         }
         return AnimatedBuilder(
-          animation: editor,
+          animation: Listenable.merge(<Listenable>[editor, _transform]),
           builder: (BuildContext context, Widget? child) {
             final ThemeData theme = Theme.of(context);
             final LogicLabColors logicColors = LogicLabColors.of(context);
+            final Rect visibleBounds = _visibleSceneBounds();
+            final List<CircuitNode> visibleNodes = editor.graph.nodes
+                .where(
+                  (CircuitNode node) => _isNodeVisible(node, visibleBounds),
+                )
+                .toList(growable: false);
             return ClipRect(
+              key: _viewportKey,
               child: ColoredBox(
-                color: theme.colorScheme.surfaceContainerLow,
+                color: logicColors.canvas,
                 child: InteractiveViewer(
                   transformationController: _transform,
                   minScale: 0.28,
@@ -210,26 +455,43 @@ class _CircuitCanvasState extends State<CircuitCanvas> {
                           child: GestureDetector(
                             behavior: HitTestBehavior.opaque,
                             onTapUp: _handleCanvasTap,
-                            child: CustomPaint(
-                              painter: CircuitPainter(
-                                graph: editor.graph,
-                                report: editor.report,
-                                selectedNodeId: editor.selectedNodeId,
-                                selectedWireId: editor.selectedWireId,
-                                pendingSourceId: editor.pendingSourceId,
-                                pendingSourcePort: editor.pendingSourcePort,
-                                selectedNodeIds: editor.selectedNodeIds,
-                                showGrid: widget.showGrid,
-                                theme: theme,
-                                colors: logicColors,
-                              ),
-                              child: const SizedBox.expand(),
+                            child: Stack(
+                              fit: StackFit.expand,
+                              children: <Widget>[
+                                for (final CircuitPaintLayer layer
+                                    in CircuitPaintLayer.values)
+                                  RepaintBoundary(
+                                    child: CustomPaint(
+                                      painter: CircuitPainter(
+                                        graph: editor.graph,
+                                        report: editor.report,
+                                        selectedNodeId: editor.selectedNodeId,
+                                        selectedWireId: editor.selectedWireId,
+                                        pendingSourceId: editor.pendingSourceId,
+                                        pendingSourcePort:
+                                            editor.pendingSourcePort,
+                                        selectedNodeIds: editor.selectedNodeIds,
+                                        showGrid: widget.showGrid,
+                                        theme: theme,
+                                        colors: logicColors,
+                                        layer: layer,
+                                        visibleBounds: visibleBounds,
+                                        connectionPreview: _wireDragPoint,
+                                        flowAnimation:
+                                            layer == CircuitPaintLayer.wires &&
+                                                    _canAnimate
+                                                ? _flowAnimation
+                                                : null,
+                                      ),
+                                    ),
+                                  ),
+                              ],
                             ),
                           ),
                         ),
-                        for (final CircuitNode node in editor.graph.nodes)
+                        for (final CircuitNode node in visibleNodes)
                           ..._nodeOverlays(context, node),
-                        for (final CircuitNode node in editor.graph.nodes)
+                        for (final CircuitNode node in visibleNodes)
                           ..._portOverlays(context, node, theme),
                       ],
                     ),
@@ -262,7 +524,7 @@ class _CircuitCanvasState extends State<CircuitCanvas> {
           button: true,
           onTap: () {
             if (isInput) {
-              editor.toggleInput(node.id);
+              _toggleInput(node.id);
             } else {
               editor.selectNode(node.id);
             }
@@ -271,7 +533,7 @@ class _CircuitCanvasState extends State<CircuitCanvas> {
             behavior: HitTestBehavior.translucent,
             onTap: () {
               if (isInput) {
-                editor.toggleInput(node.id);
+                _toggleInput(node.id);
               } else if (editor.selectedNodeIds.contains(node.id)) {
                 editor.toggleNodeSelection(node.id);
               } else {
@@ -279,14 +541,13 @@ class _CircuitCanvasState extends State<CircuitCanvas> {
               }
             },
             onLongPress: () => editor.toggleNodeSelection(node.id),
-            onPanStart: (_) => editor.beginNodeDrag(node.id),
-            onPanUpdate: (DragUpdateDetails details) {
-              editor.dragSelected(
-                CanvasPoint(details.delta.dx, details.delta.dy),
-              );
+            dragStartBehavior: DragStartBehavior.down,
+            onPanStart: (DragStartDetails details) {
+              _startNodeDrag(node.id, details);
             },
-            onPanEnd: (_) => editor.endNodeDrag(),
-            onPanCancel: editor.endNodeDrag,
+            onPanUpdate: _updateNodeDrag,
+            onPanEnd: (_) => _endNodeDrag(),
+            onPanCancel: () => _endNodeDrag(cancelled: true),
             child: const SizedBox.expand(),
           ),
         ),
@@ -316,7 +577,8 @@ class _CircuitCanvasState extends State<CircuitCanvas> {
             node: node,
             position: position,
             label: 'پایه خروجی $portName از ${node.label}',
-            onTap: () => editor.tapOutputPort(node.id, port),
+            pin: CircuitPin.output(node.id, port),
+            onTap: () => _handlePinTap(CircuitPin.output(node.id, port)),
           ),
         );
       }
@@ -334,7 +596,8 @@ class _CircuitCanvasState extends State<CircuitCanvas> {
             node: node,
             position: position,
             label: 'پایه ورودی $portName از ${node.label}',
-            onTap: () => editor.tapInputPort(node.id, i),
+            pin: CircuitPin.input(node.id, i),
+            onTap: () => _handlePinTap(CircuitPin.input(node.id, i)),
           ),
         );
       }
@@ -347,14 +610,19 @@ class _CircuitCanvasState extends State<CircuitCanvas> {
     required CircuitNode node,
     required CanvasPoint position,
     required String label,
+    required CircuitPin pin,
     required VoidCallback onTap,
   }) {
-    const double hit = CircuitGeometry.portHitRadius * 2;
+    final double scale = _transform.value.getMaxScaleOnAxis();
+    final double radius = math.min(
+      CircuitGeometry.portHitRadius / scale,
+      CircuitGeometry.widthOf(node) / 3,
+    );
     return Positioned(
-      left: position.x - CircuitGeometry.portHitRadius,
-      top: position.y - CircuitGeometry.portHitRadius,
-      width: hit,
-      height: hit,
+      left: position.x - radius,
+      top: position.y - radius,
+      width: radius * 2,
+      height: radius * 2,
       child: Tooltip(
         message: label,
         excludeFromSemantics: true,
@@ -364,7 +632,32 @@ class _CircuitCanvasState extends State<CircuitCanvas> {
           onTap: onTap,
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
-            onTap: onTap,
+            onTapUp: (TapUpDetails details) {
+              final CanvasPoint? point = _scenePointFromGlobal(
+                details.globalPosition,
+              );
+              if (point == null) {
+                return;
+              }
+              final CircuitPin? closest = CircuitGeometry.portAt(
+                editor.graph,
+                point,
+                radius: CircuitGeometry.portHitRadius / scale,
+              );
+              if (closest != null) {
+                _handlePinTap(closest);
+              }
+            },
+            dragStartBehavior: DragStartBehavior.down,
+            onPanStart:
+                pin.isInput
+                    ? null
+                    : (DragStartDetails details) {
+                      _startWireDrag(details);
+                    },
+            onPanUpdate: pin.isInput ? null : _updateWireDrag,
+            onPanEnd: pin.isInput ? null : (_) => _endWireDrag(),
+            onPanCancel: pin.isInput ? null : _cancelWireDrag,
             child: const SizedBox.expand(),
           ),
         ),
@@ -372,6 +665,8 @@ class _CircuitCanvasState extends State<CircuitCanvas> {
     );
   }
 }
+
+enum CircuitPaintLayer { grid, wires, nodes }
 
 class CircuitPainter extends CustomPainter {
   CircuitPainter({
@@ -385,7 +680,11 @@ class CircuitPainter extends CustomPainter {
     required this.showGrid,
     required this.theme,
     required this.colors,
-  });
+    this.layer = CircuitPaintLayer.nodes,
+    this.visibleBounds,
+    this.connectionPreview,
+    this.flowAnimation,
+  }) : super(repaint: flowAnimation);
 
   final CircuitGraph graph;
   final SimulationResult report;
@@ -397,20 +696,103 @@ class CircuitPainter extends CustomPainter {
   final bool showGrid;
   final ThemeData theme;
   final LogicLabColors colors;
+  final CircuitPaintLayer layer;
+  final Rect? visibleBounds;
+  final CanvasPoint? connectionPreview;
+  final Animation<double>? flowAnimation;
 
   static const Color _gateFillLight = Color(0xFFFFFFFF);
   static const Color _gateFillDark = Color(0xFF151E2B);
 
   @override
   void paint(Canvas canvas, Size size) {
-    _paintGrid(canvas, size);
-    _paintWires(canvas);
-    for (final CircuitNode node in graph.nodes) {
-      _paintNode(canvas, node);
+    switch (layer) {
+      case CircuitPaintLayer.grid:
+        _paintGrid(canvas, size);
+        break;
+      case CircuitPaintLayer.wires:
+        _paintWires(canvas);
+        _paintConnectionPreview(canvas);
+        break;
+      case CircuitPaintLayer.nodes:
+        for (final CircuitNode node in graph.nodes) {
+          if (_isNodeVisible(node)) {
+            _paintNode(canvas, node);
+          }
+        }
+        if (pendingSourceId != null) {
+          _paintPendingTargets(canvas);
+        }
+        break;
     }
-    if (pendingSourceId != null) {
-      _paintPendingTargets(canvas);
+  }
+
+  void _paintConnectionPreview(Canvas canvas) {
+    final CanvasPoint? end = connectionPreview;
+    final CircuitNode? source = graph.nodeById(pendingSourceId ?? '');
+    if (end == null || source == null) {
+      return;
     }
+    final CanvasPoint? start = CircuitGeometry.portPosition(
+      source,
+      CircuitPin.output(source.id, pendingSourcePort),
+    );
+    if (start == null) {
+      return;
+    }
+    final List<CanvasPoint> controls = CircuitGeometry.wireControlPoints(
+      start,
+      end,
+    );
+    final Path path =
+        Path()
+          ..moveTo(start.x, start.y)
+          ..cubicTo(
+            controls[1].x,
+            controls[1].y,
+            controls[2].x,
+            controls[2].y,
+            end.x,
+            end.y,
+          );
+    _drawDashedPath(
+      canvas,
+      path,
+      Paint()
+        ..color = theme.colorScheme.primary
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.4
+        ..strokeCap = StrokeCap.round,
+    );
+  }
+
+  bool _isNodeVisible(CircuitNode node) {
+    final Rect? viewport = visibleBounds;
+    if (viewport == null) {
+      return true;
+    }
+    final CanvasRect bounds = CircuitGeometry.nodeBounds(node);
+    return viewport.overlaps(
+      Rect.fromLTWH(bounds.left, bounds.top, bounds.width, bounds.height),
+    );
+  }
+
+  bool _isWireVisible(List<CanvasPoint> controls) {
+    final Rect? viewport = visibleBounds;
+    if (viewport == null) {
+      return true;
+    }
+    double minX = controls.first.x;
+    double minY = controls.first.y;
+    double maxX = controls.first.x;
+    double maxY = controls.first.y;
+    for (final CanvasPoint point in controls.skip(1)) {
+      minX = math.min(minX, point.x);
+      minY = math.min(minY, point.y);
+      maxX = math.max(maxX, point.x);
+      maxY = math.max(maxY, point.y);
+    }
+    return viewport.overlaps(Rect.fromLTRB(minX, minY, maxX, maxY).inflate(16));
   }
 
   void _paintGrid(Canvas canvas, Size size) {
@@ -419,8 +801,19 @@ class CircuitPainter extends CustomPainter {
     }
     final Paint dot = Paint()..color = colors.canvasGrid;
     const double spacing = CircuitGeometry.gridSize;
-    for (double x = 0; x < size.width; x += spacing) {
-      for (double y = 0; y < size.height; y += spacing) {
+    final Rect viewport = visibleBounds ?? (Offset.zero & size);
+    final double startX = math.max(
+      0,
+      (viewport.left / spacing).floor() * spacing,
+    );
+    final double startY = math.max(
+      0,
+      (viewport.top / spacing).floor() * spacing,
+    );
+    final double endX = math.min(size.width, viewport.right);
+    final double endY = math.min(size.height, viewport.bottom);
+    for (double x = startX; x < endX; x += spacing) {
+      for (double y = startY; y < endY; y += spacing) {
         final bool major =
             (x / spacing).round() % 5 == 0 && (y / spacing).round() % 5 == 0;
         canvas.drawCircle(
@@ -433,58 +826,38 @@ class CircuitPainter extends CustomPainter {
   }
 
   void _paintWires(Canvas canvas) {
-    // Junction dots make branching visible: a filled dot marks an output
-    // that drives more than one net.
-    final Map<String, int> fanOut = <String, int>{};
+    final Map<(String, int), int> fanOut = <(String, int), int>{};
     for (final CircuitWire wire in graph.wires) {
-      fanOut[wire.fromNodeId] = (fanOut[wire.fromNodeId] ?? 0) + 1;
+      final (String, int) key = (wire.fromNodeId, wire.fromPortIndex);
+      fanOut[key] = (fanOut[key] ?? 0) + 1;
     }
-    for (final MapEntry<String, int> entry in fanOut.entries) {
+    for (final MapEntry<(String, int), int> entry in fanOut.entries) {
       if (entry.value < 2) {
         continue;
       }
-      final CircuitNode? source = graph.nodeById(entry.key);
+      final CircuitNode? source = graph.nodeById(entry.key.$1);
       if (source == null) {
         continue;
       }
-      for (int port = 0; port < source.outputCount; port++) {
-        final bool drivesTwo = graph.wires.any(
-          (CircuitWire wire) =>
-              wire.fromNodeId == entry.key && wire.fromPortIndex == port,
-        );
-        if (!drivesTwo) {
-          continue;
-        }
-        final CanvasPoint? point = CircuitGeometry.portPosition(
-          source,
-          CircuitPin.output(source.id, port),
-        );
-        if (point == null) {
-          continue;
-        }
-        final bool hasBranch =
-            graph.wires
-                .where(
-                  (CircuitWire wire) =>
-                      wire.fromNodeId == entry.key &&
-                      wire.fromPortIndex == port,
-                )
-                .length >
-            1;
-        if (!hasBranch) {
-          continue;
-        }
-        canvas.drawCircle(
-          Offset(point.x, point.y),
-          7,
-          Paint()..color = theme.colorScheme.surfaceContainerLowest,
-        );
-        canvas.drawCircle(
-          Offset(point.x, point.y),
-          5.4,
-          Paint()..color = theme.colorScheme.primary,
-        );
+      final CanvasPoint? point = CircuitGeometry.portPosition(
+        source,
+        CircuitPin.output(source.id, entry.key.$2),
+      );
+      if (point == null ||
+          (visibleBounds != null &&
+              !visibleBounds!.contains(Offset(point.x, point.y)))) {
+        continue;
       }
+      canvas.drawCircle(
+        Offset(point.x, point.y),
+        7,
+        Paint()..color = colors.canvas,
+      );
+      canvas.drawCircle(
+        Offset(point.x, point.y),
+        5.4,
+        Paint()..color = theme.colorScheme.primary,
+      );
     }
 
     for (final CircuitWire wire in graph.wires) {
@@ -508,6 +881,9 @@ class CircuitPainter extends CustomPainter {
         start,
         end,
       );
+      if (!_isWireVisible(controls)) {
+        continue;
+      }
       final Path path =
           Path()
             ..moveTo(start.x, start.y)
@@ -523,6 +899,16 @@ class CircuitPainter extends CustomPainter {
       final Color color = signalColor(signal);
       final bool selected = selectedWireId == wire.id;
 
+      if (signal == LogicSignal.high && theme.brightness == Brightness.dark) {
+        canvas.drawPath(
+          path,
+          Paint()
+            ..color = color.withValues(alpha: 0.35)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 8
+            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5),
+        );
+      }
       if (selected) {
         canvas.drawPath(
           path,
@@ -553,13 +939,36 @@ class CircuitPainter extends CustomPainter {
             ..strokeCap = StrokeCap.round,
         );
       }
-      // Small signal direction dots make fan-out less ambiguous.
-      final CanvasPoint marker = CircuitGeometry.bezierPoint(controls, 0.52);
-      canvas.drawCircle(
-        Offset(marker.x, marker.y),
-        selected ? 3.4 : 2.5,
-        Paint()..color = color,
-      );
+      if (signal == LogicSignal.high && flowAnimation != null) {
+        final Paint flow =
+            Paint()
+              ..color = Color.lerp(color, Colors.white, 0.65)!
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = selected ? 3.3 : 2.2
+              ..strokeCap = StrokeCap.round;
+        const double spacing = 48;
+        const double dash = 10;
+        for (final PathMetric metric in path.computeMetrics()) {
+          for (
+            double distance = flowAnimation!.value * spacing - spacing;
+            distance < metric.length;
+            distance += spacing
+          ) {
+            final double start = math.max(0, distance);
+            final double end = math.min(metric.length, distance + dash);
+            if (end > start) {
+              canvas.drawPath(metric.extractPath(start, end), flow);
+            }
+          }
+        }
+      } else {
+        final CanvasPoint marker = CircuitGeometry.bezierPoint(controls, 0.52);
+        canvas.drawCircle(
+          Offset(marker.x, marker.y),
+          selected ? 3.4 : 2.5,
+          Paint()..color = color,
+        );
+      }
     }
   }
 
@@ -1259,9 +1668,11 @@ class CircuitPainter extends CustomPainter {
     }
     final CanvasPoint? start = CircuitGeometry.portPosition(
       source,
-      CircuitPin.output(source.id, 0),
+      CircuitPin.output(source.id, pendingSourcePort),
     );
-    if (start == null) {
+    if (start == null ||
+        (visibleBounds != null &&
+            !visibleBounds!.contains(Offset(start.x, start.y)))) {
       return;
     }
     canvas.drawCircle(
@@ -1438,12 +1849,36 @@ class CircuitPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CircuitPainter oldDelegate) {
-    return oldDelegate.graph != graph ||
-        oldDelegate.report != report ||
-        oldDelegate.selectedNodeId != selectedNodeId ||
-        oldDelegate.selectedWireId != selectedWireId ||
-        oldDelegate.pendingSourceId != pendingSourceId ||
-        oldDelegate.colors != colors ||
-        oldDelegate.theme.brightness != theme.brightness;
+    if (oldDelegate.layer != layer) {
+      return true;
+    }
+    final bool viewportChanged = oldDelegate.visibleBounds != visibleBounds;
+    switch (layer) {
+      case CircuitPaintLayer.grid:
+        return viewportChanged ||
+            oldDelegate.showGrid != showGrid ||
+            oldDelegate.colors.canvasGrid != colors.canvasGrid;
+      case CircuitPaintLayer.wires:
+        return viewportChanged ||
+            oldDelegate.graph != graph ||
+            oldDelegate.report != report ||
+            oldDelegate.flowAnimation != flowAnimation ||
+            oldDelegate.connectionPreview != connectionPreview ||
+            oldDelegate.pendingSourceId != pendingSourceId ||
+            oldDelegate.pendingSourcePort != pendingSourcePort ||
+            oldDelegate.selectedWireId != selectedWireId ||
+            oldDelegate.colors != colors ||
+            oldDelegate.theme.colorScheme != theme.colorScheme;
+      case CircuitPaintLayer.nodes:
+        return viewportChanged ||
+            oldDelegate.graph != graph ||
+            oldDelegate.report != report ||
+            oldDelegate.selectedNodeId != selectedNodeId ||
+            oldDelegate.pendingSourceId != pendingSourceId ||
+            oldDelegate.pendingSourcePort != pendingSourcePort ||
+            !setEquals(oldDelegate.selectedNodeIds, selectedNodeIds) ||
+            oldDelegate.colors != colors ||
+            oldDelegate.theme.colorScheme != theme.colorScheme;
+    }
   }
 }

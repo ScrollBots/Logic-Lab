@@ -18,15 +18,6 @@ class LearningController extends ChangeNotifier {
   int get completedCount =>
       _items.values.where((LearningProgress p) => p.completed).length;
 
-  int get totalItems => _items.length;
-
-  double get completionRatio {
-    if (_items.isEmpty) {
-      return 0;
-    }
-    return completedCount / _items.length;
-  }
-
   Future<void> load() async {
     _loading = true;
     notifyListeners();

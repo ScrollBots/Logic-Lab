@@ -89,21 +89,34 @@ class AppSettings {
       default:
         mode = ThemeMode.system;
     }
-    final Object? accent = json['customAccent'];
+    const AppSettings defaults = AppSettings();
+    final int? accent = _readColor(json['customAccent']);
     return AppSettings(
       themeMode: mode,
-      paletteId: AppPalette.byId(json['paletteId'] as String? ?? '').id,
-      customAccent: accent is int ? Color(accent) : null,
-      hapticsEnabled: json['hapticsEnabled'] as bool? ?? true,
-      animationsEnabled: json['animationsEnabled'] as bool? ?? true,
+      paletteId: AppPalette.byId(_readString(json['paletteId'], '')).id,
+      customAccent: accent == null ? null : Color(accent),
+      hapticsEnabled: _readBool(json['hapticsEnabled'], true),
+      animationsEnabled: _readBool(json['animationsEnabled'], true),
       highSignalValue:
-          json['highSignalValue'] as int? ??
-          const AppSettings().highSignalValue,
+          _readColor(json['highSignalValue']) ?? defaults.highSignalValue,
       lowSignalValue:
-          json['lowSignalValue'] as int? ?? const AppSettings().lowSignalValue,
-      localeCode: json['localeCode'] as String? ?? 'fa',
+          _readColor(json['lowSignalValue']) ?? defaults.lowSignalValue,
+      localeCode: _readString(json['localeCode'], 'fa'),
     );
   }
+}
+
+String _readString(Object? value, String fallback) =>
+    value is String ? value : fallback;
+
+bool _readBool(Object? value, bool fallback) =>
+    value is bool ? value : fallback;
+
+int? _readColor(Object? value) {
+  if (value is! int || value < 0 || value > 0xFFFFFFFF) {
+    return null;
+  }
+  return value;
 }
 
 abstract class SettingsStore {
@@ -134,8 +147,10 @@ class SharedPreferencesSettingsStore implements SettingsStore {
       if (decoded is Map<String, dynamic>) {
         return AppSettings.fromJson(decoded);
       }
-    } on FormatException {
-      // A malformed preference must never prevent the app from opening.
+    } catch (error) {
+      // A malformed preference must never prevent the app from opening; this
+      // also covers valid JSON whose values have the wrong types.
+      debugPrint('Could not read the saved settings: $error');
     }
     return const AppSettings();
   }

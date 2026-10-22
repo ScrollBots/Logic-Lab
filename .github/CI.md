@@ -1,114 +1,116 @@
 # خط لولهٔ CI و انتشار خودکار (Logic Lab)
 
-این پروژه با **GitHub Actions** ساخته شده است تا بعد از هر `push`، بدون نیاز به تست روی سیستم
-شخصی، کد به‌صورت خودکار بررسی، ساخته و منتشر شود.
+هدف اصلی پروژه اپلیکیشن اندروید است. تست‌ها و بیلد روی **GitHub Actions** اجرا می‌شوند و اجرای محلی آن‌ها ضروری نیست.
+یک push معمولی به `main` فقط CI را اجرا می‌کند؛ انتشار امضاشده به تگ نسخه یا اجرای دستی گردش کار Release نیاز دارد.
 
 | فایل | کار |
 |------|-----|
-| `.github/workflows/ci.yml` | دروازهٔ کیفیت: `dart format` + `flutter analyze` + `flutter test` + یک بیلد واقعی اندروید (APK + AAB) به‌عنوان تست دود |
-| `.github/workflows/release.yml` | با زدن تگ نسخه، بیلد **امضاشده**، بررسی مشخصات بسته و انتشار روی GitHub Release |
-| `.github/workflows/web-preview.yml` | انتشار نسخهٔ وب روی GitHub Pages برای مرور سریع رابط کاربری |
-| `.github/dependabot.yml` | به‌روزرسانی خودکار اکشن‌های گیت‌هاب و پکیج‌های Dart |
-| `tool/validate_ci.dart` | اعتبارسنجی خودِ فایل‌های YAML و وجود اسکریپت‌های引用شده (در خود CI اجرا می‌شود) |
-| `tool/set_version.dart` | تنظیم نسخه در `pubspec.yaml` از روی تگ انتشار |
+| `.github/workflows/ci.yml` | اعتبارسنجی گردش‌کارها، بررسی فرمت، تحلیل ایستا، همهٔ تست‌های واحد و ویجت و سپس بیلد اندروید APK/AAB |
+| `.github/workflows/release.yml` | دروازهٔ کیفیت مستقل و سپس بیلد امضاشده، بررسی بسته‌ها و انتشار GitHub Release |
+| `.github/workflows/web-preview.yml` | پیش‌نمایش اختیاری وب؛ بخشی از مسیر انتشار اندروید نیست |
+| `.github/dependabot.yml` | پیشنهاد به‌روزرسانی اکشن‌ها و بسته‌های Dart |
+| `tool/validate_ci.dart` | بررسی YAML گردش‌کارها و وجود اسکریپت‌های ارجاع‌شده |
+| `tool/set_version.dart` | هماهنگ‌کردن نسخهٔ `pubspec.yaml` و ثابت‌های `lib/core/app_info.dart` |
 
----
+## ۱. محیط اجرای CI
 
-## ۱. راه‌اندازی یک‌باره در GitHub
+* Flutter **3.29.3**، Dart **3.7.2** و runner از نوع `ubuntu-latest`.
+* `flutter pub get` پیش از تحلیل، تست و بیلد اجرا می‌شود.
+* CI روی push و pull request به `main` و همچنین با اجرای دستی فعال است.
+* Release با تگ `v*` یا ورودی نسخه در اجرای دستی فعال می‌شود.
+* شکست فرمت، تحلیل یا هر تست، job کیفیت را ناموفق می‌کند. هیچ‌یک از jobهای بیلد یا انتشار از `always()` یا `continue-on-error` برای عبور از این شکست استفاده نمی‌کنند.
 
-۱. یک ریپازیتوری **Private** (یا Public) با نام دلخواه بسازید.
-۲. پروژه را به ریپازیتوری وصل کنید:
+## ۲. اسرار امضای اندروید
 
-```bash
-git remote add origin https://github.com/<user>/<repo>.git
-git push -u origin main
-```
-
-۳. در `Settings → Pages → Source` مقدار **GitHub Actions** را انتخاب کنید (برای پیش‌نمایش وب).
-
----
-
-## ۲. اسکریت‌های لازم (Secrets)
-
-برای انتشار امضاشده، این چهار Secret را در
-`Settings → Secrets and variables → Actions → New repository secret` بسازید:
+چهار Secret زیر باید در `Settings → Secrets and variables → Actions` موجود باشند:
 
 | نام Secret | مقدار |
 |------------|-------|
-| `ANDROID_KEYSTORE_BASE64` | محتوای فایل keystore به‌صورت base64 |
-| `ANDROID_KEYSTORE_PASSWORD` | رمز ذخیرهٔ keystore |
-| `ANDROID_KEY_ALIAS` | نام alias (مثال: `upload`) |
+| `ANDROID_KEYSTORE_BASE64` | محتوای keystore به‌صورت base64 |
+| `ANDROID_KEYSTORE_PASSWORD` | رمز keystore |
+| `ANDROID_KEY_ALIAS` | نام alias کلید، مثلاً `upload` |
 | `ANDROID_KEY_PASSWORD` | رمز کلید |
 
-ساخت keystore (یک‌بار برای همیشه) و base64 کردن آن:
+برای ایجاد کلید اولیه:
 
 ```bash
 keytool -genkeypair -v -keystore ~/logic-lab-upload.jks -keyalg RSA \
         -keysize 2048 -validity 10000 -alias upload
-
 base64 -w0 ~/logic-lab-upload.jks > logic-lab-upload.jks.b64
-# محتوای فایل .b64 را در ANDROID_KEYSTORE_BASE64 بگذارید
 ```
 
-> ⚠️ این فایل keystore را در هیچ ریپازیتوری (حتی Private) قرار ندهید.
-> `android/key.properties` و `*.jks` در `.gitignore` هستند.
+keystore، رمزها و فایل base64 را در مخزن قرار ندهید. برای به‌روزرسانی اپ نصب‌شده، همان کلید امضای نسخه‌های قبلی را حفظ کنید؛ کلید تازه تولید نکنید.
+`android/key.properties` و فایل‌های `*.jks` در `.gitignore` هستند. Release فایل‌ها را فقط روی runner از Secretها بازیابی می‌کند.
 
----
+## ۳. روند CI اندروید
 
-## ۳. انتشار یک نسخهٔ جدید
+```text
+push / pull_request به main یا اجرای دستی
+        │
+        ├─ quality
+        │    ├─ dart run tool/validate_ci.dart
+        │    ├─ dart format --output=none --set-exit-if-changed lib test tool
+        │    ├─ flutter analyze --no-pub
+        │    └─ flutter test --no-pub --coverage --reporter expanded
+        │
+        └─ build  [needs: quality]
+             ├─ flutter build apk --debug --no-pub
+             ├─ flutter build appbundle --release --no-pub
+             └─ بررسی برچسب و نسخهٔ APK
+```
+
+تمام تست‌های موجود اجرا می‌شوند؛ تعداد تست‌ها در مستندات ثابت نگه داشته نمی‌شود.
+گزارش `coverage/lcov.info`، APK دیباگ و AAB به‌صورت artifact با ماندگاری ۱۴ روز قابل دریافت‌اند.
+آپلود گزارش پوشش حتی هنگام شکست تست‌ها تلاش می‌شود، اما این کار اجازهٔ اجرای بیلد را نمی‌دهد.
+خروجی CI تست دود است و جای خروجی امضاشدهٔ Release را نمی‌گیرد؛ بدون تنظیمات امضای release، Gradle از کلید debug استفاده می‌کند.
+
+## ۴. انتشار نسخهٔ جدید
+
+نمونهٔ انتشار `1.2.0`:
 
 ```bash
-# 1. تغییرات را push کنید و منتظر سبز شدن CI شوید
+# نسخهٔ منبع و صفحهٔ درباره را هماهنگ کنید؛ build باید از نسخهٔ قبلی بزرگ‌تر باشد.
+dart run tool/set_version.dart 1.2.0+3
+
+# تغییرات و مستندات را کامیت و push کنید.
 git push origin main
 
-# 2. نسخه را تگ بزنید (شماره باید SemVer باشد)
-git tag v1.1.0
-git push origin v1.1.0
+# فقط پس از موفقیت CI تگ نسخه را ارسال کنید.
+git tag -a v1.2.0 -m "Logic Lab 1.2.0"
+git push origin v1.2.0
 ```
 
-workflow انتشار به‌صورت خودکار:
+گردش کار Release:
 
-1. نسخه را از روی تگ می‌خواند و در `pubspec.yaml` می‌نویسد
-   (شمارهٔ build = شمارهٔ اجرای workflow).
-2. keystore را از Secretها بازیابی و `android/key.properties` را می‌سازد.
-3. سه APK مجزای `arm64-v8a`، `armeabi-v7a` و `x86_64` به‌علاوهٔ یک AAB می‌سازد.
-4. نام و نسخهٔ بسته را با `aapt2` بررسی می‌کند (اگر برچسب «Logic Lab» نباشد، build شکست می‌خورد).
-5. همهٔ فایل‌ها را روی یک **GitHub Release** منتشر می‌کند.
+1. job مستقل `quality`، اعتبارسنجی YAML، بررسی فرمت، تحلیل ایستا و **همهٔ تست‌ها** را روی همان commit اجرا می‌کند.
+2. job `release` با `needs: quality` فقط در صورت موفقیت آن شروع می‌شود.
+3. نسخه از تگ یا ورودی اجرای دستی خوانده می‌شود؛ `tool/set_version.dart` نسخه را در `pubspec.yaml` و `AppInfo` هماهنگ می‌کند. شمارهٔ build در بستهٔ انتشار برابر `github.run_number` گردش کار Release است.
+4. تست `test/core/app_info_test.dart` دوباره اجرا می‌شود تا هماهنگی نسخهٔ اعمال‌شده تأیید شود.
+5. keystore بازیابی و `android/key.properties` ساخته می‌شود.
+6. APKهای امضاشدهٔ `arm64-v8a`، `armeabi-v7a` و `x86_64` و یک AAB ساخته می‌شوند.
+7. مشخصات APKها بررسی می‌شود؛ نام لانچر باید **Logic Lab** باشد.
+8. فایل‌ها روی GitHub Release منتشر می‌شوند؛ نسخه‌های دارای پسوند پیش‌انتشار با برچسب prerelease ثبت می‌شوند.
 
-انتشار دستی هم ممکن است است: `Actions → Release → Run workflow` و وارد کردن نسخه.
+اجرای دستی: `Actions → Release → Run workflow` و وارد کردن نسخهٔ SemVer بدون پیشوند `v`.
+این مسیر نیز همان دروازهٔ کیفیت را دارد. تگ نسخه‌های منتشرشده را جابه‌جا نکنید و برای انتشار بعدی نسخهٔ تازه انتخاب کنید.
 
----
+## ۵. پیش‌نمایش وب
 
-## ۴. چه چیزی در هر `push` اجرا می‌شود؟
+وب هدف اصلی محصول نیست و برای تست یا انتشار اندروید لازم نیست.
+گردش کار موجود پیش‌نمایش تنها وقتی متغیر `ENABLE_WEB_PREVIEW` برابر `true` باشد روی push اجرا می‌شود؛ اجرای دستی آن نیز ممکن است.
+فقط در صورت نیاز به این پیش‌نمایش، GitHub Pages را روی منبع `GitHub Actions` تنظیم کنید. داده‌های نسخهٔ وب در حافظه‌اند و ماندگاری SQLite اندروید را ندارند.
 
-```
-push / pull_request
-        │
-        ├─► job: quality
-        │     ├─ dart format --set-exit-if-changed   (قالب‌بندی)
-        │     ├─ flutter analyze                     (تحلیل ایستا)
-        │     ├─ flutter test --coverage              (۱۴۹ تست)
-        │     └─ tool/validate_ci.dart               (اعتبارسنجی خود CI)
-        │
-        └─► job: build  (فقط اگر quality سبز شود)
-              ├─ flutter build apk --debug
-              ├─ flutter build appbundle --release
-              └─ بررسی برچسب و نسخهٔ APK
-```
+## ۶. عیب‌یابی
 
-خروجی‌ها (APK/AAB و گزارش پوشش) به‌صورت **artifact** در هر اجرای workflow قابل دانلود هستند.
+| مشکل | اقدام |
+|------|-------|
+| بیلد یا انتشار skipped است | ابتدا خطای job `quality` را در log رفع کنید؛ گیت تست را دور نزنید. |
+| Secret امضا موجود نیست | چهار نام جدول اسرار را بررسی کنید؛ مقدارها را در log چاپ نکنید. |
+| خطای امضا | `storeFile` باید به `upload-keystore.jks` در پوشهٔ `android` اشاره کند و رمزها/alias با همان کلید قبلی مطابقت داشته باشند. |
+| نسخهٔ صفحهٔ درباره با بسته متفاوت است | `tool/set_version.dart` و خروجی تست `app_info_test.dart` را بررسی کنید؛ `AppInfo` ثابت‌های همگام با `pubspec.yaml` دارد، نه خواندن فایل در زمان اجرای برنامه. |
+| خطای فرمت | فایل‌های گزارش‌شده در مرحلهٔ `Check code formatting` را با Dart 3.7.2 قالب‌بندی کنید. |
+| خطای تحلیل یا تست | log همان مرحله را بخوانید و اصلاح را در یک کامیت جدید ارسال کنید. |
+| نیاز به تست شاخه‌های دیگر | فیلتر `on.push.branches` در `ci.yml` را متناسب با نیاز تغییر دهید. |
 
----
-
-## ۵. نکات و عیب‌یابی
-
-| مشکل | راه‌حل |
-|------|---------|
-| `ANDROID_KEYSTORE_BASE64` خالی است | Secretها را درست ساخته‌اید؟ نام‌ها باید دقیقاً مطابق جدول بالا باشد. |
-| خطای امضا | `storeFile` در `key.properties` باید به فایل keystore اشاره کند؛ CI آن را در `android/upload-keystore.jks` می‌گذارد. |
-| نسخه در About با تگ نمی‌خواند | `AppInfo` از `pubspec.yaml` می‌خواند و یک تست CI این هم‌خوانی را بررسی می‌کند. |
-| `pub get` کند است | اکشن Flutter از کش Pub استفاده می‌کند؛ در صورت نیاز `flutter-action` را با `cache: true` نگه دارید (پیش‌فرض همین است). |
-| می‌خواهم روی هر برانچ تست شود | در `ci.yml` بخش `on.push.branches` را تغییر دهید یا خط `branches` را حذف کنید. |
-
-نسخهٔ Flutter در `env.FLUTTER_VERSION` فایل‌های workflow قفل شده است (هم‌راستا با نسخهٔ
-محلی `3.29.3`). اگر Flutter را ارتقا دادید، همان عدد را در هر سه workflow تغییر دهید.
+نسخهٔ Flutter در `env.FLUTTER_VERSION` گردش‌کارها ثابت شده است؛ هنگام ارتقا، آن‌ها را هماهنگ تغییر دهید.
+موفقیت تست‌های واحد/ویجت و بیلد CI، جای بررسی لمسی، عملکرد و haptic روی دستگاه واقعی اندروید را نمی‌گیرد.

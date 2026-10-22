@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:logic_lab/features/editor/application/circuit_editor_controller.dart';
+import 'package:logic_lab/features/editor/domain/circuit_geometry.dart';
 import 'package:logic_lab/features/editor/domain/circuit_models.dart';
 import 'package:logic_lab/features/editor/domain/circuit_simulator.dart';
 import 'package:logic_lab/features/projects/domain/circuit_project.dart';
@@ -61,6 +62,23 @@ void main() {
     expect(controller.feedback?.tone, EditorFeedbackTone.success);
   });
 
+  test('a connection preserves the selected source output port', () {
+    final CircuitNode decoder = controller.addNode(
+      ComponentType.decoder2to4,
+      const CanvasPoint(300, 150),
+    );
+    final CircuitNode output = controller.addNode(
+      ComponentType.outputPin,
+      const CanvasPoint(520, 150),
+    );
+
+    controller.tapOutputPort(decoder.id, 3);
+    expect(controller.pendingSourcePort, 3);
+    controller.tapInputPort(output.id, 0);
+
+    expect(controller.graph.wires.single.fromPortIndex, 3);
+  });
+
   test('an invalid connection is refused and reported', () {
     final CircuitNode gate = controller.addNode(
       ComponentType.andGate,
@@ -102,6 +120,40 @@ void main() {
     expect(controller.canRedo, isTrue);
     controller.redo();
     expect(controller.graph.nodes.length, 2);
+  });
+
+  test('a no-op drag preserves redo history', () {
+    controller.addNode(ComponentType.orGate, const CanvasPoint(320, 150));
+    controller.undo();
+    expect(controller.canRedo, isTrue);
+    controller.beginNodeDrag('in-a');
+    controller.endNodeDrag();
+    expect(controller.canRedo, isTrue);
+    expect(controller.canUndo, isFalse);
+    controller.redo();
+    expect(controller.graph.nodes.length, 2);
+  });
+
+  test('a drag creates one undo step and preserves attached wires', () {
+    final CircuitNode gate = controller.addNode(
+      ComponentType.andGate,
+      const CanvasPoint(288, 144),
+    );
+    controller.tapOutputPort('in-a');
+    controller.tapInputPort(gate.id, 0);
+    final CircuitWire wire = controller.graph.wires.single;
+    controller.beginNodeDrag(gate.id);
+    controller.dragSelected(const CanvasPoint(24, 0));
+    controller.dragSelected(const CanvasPoint(24, 0));
+    controller.endNodeDrag();
+    expect(controller.graph.nodeById(gate.id)!.position.x, 336);
+    expect(controller.graph.wires.single, wire);
+    controller.undo();
+    expect(controller.graph.nodeById(gate.id)!.position.x, 288);
+    expect(controller.graph.wires.single, wire);
+    controller.redo();
+    expect(controller.graph.nodeById(gate.id)!.position.x, 336);
+    expect(controller.graph.wires.single, wire);
   });
 
   test('deleting a component removes the wires attached to it', () {
@@ -150,6 +202,54 @@ void main() {
     expect(updated.inputCount, 3);
     controller.undo();
     expect(controller.graph.nodeById(gate.id)!.inputCount, 2);
+  });
+
+  test('a gate accepts every input count from two to eight', () {
+    final CircuitNode gate = controller.addNode(
+      ComponentType.andGate,
+      const CanvasPoint(300, 150),
+    );
+    controller.selectNode(gate.id);
+    controller.updateNodeProperties(gate.id, label: 'AND', inputCount: 8);
+    expect(controller.graph.nodeById(gate.id)!.inputCount, 8);
+
+    controller.updateInputCount(5);
+    expect(controller.graph.nodeById(gate.id)!.inputCount, 5);
+
+    controller.updateInputCount(12);
+    expect(controller.graph.nodeById(gate.id)!.inputCount, 8);
+
+    controller.updateInputCount(1);
+    expect(controller.graph.nodeById(gate.id)!.inputCount, 2);
+  });
+
+  test('the model clamps the stored input count to the supported range', () {
+    final CircuitNode tooMany = CircuitNode(
+      id: 'wide',
+      type: ComponentType.orGate,
+      position: const CanvasPoint(0, 0),
+      label: 'OR',
+      inputCount: 20,
+    );
+    final CircuitNode tooFew = tooMany.copyWith(inputCount: 1);
+    expect(tooMany.inputCount, 8);
+    expect(tooFew.inputCount, 2);
+  });
+
+  test('shrinking a gate removes wires that point past the new inputs', () {
+    final CircuitNode gate = controller.addNode(
+      ComponentType.andGate,
+      const CanvasPoint(300, 150),
+    );
+    controller.selectNode(gate.id);
+    controller.updateInputCount(6);
+    controller.tapOutputPort('in-a');
+    controller.tapInputPort(gate.id, 5);
+    expect(controller.graph.wires.length, 1);
+
+    controller.selectNode(gate.id);
+    controller.updateInputCount(4);
+    expect(controller.graph.wires, isEmpty);
   });
 
   test('stepping the clock advances a sequential circuit', () {
@@ -234,6 +334,40 @@ void main() {
       isFalse,
       reason: 'dropping the component refreshes the simulation once',
     );
+  });
+
+  test('small drag deltas accumulate before snapping to the visible grid', () {
+    final CircuitNode gate = controller.addNode(
+      ComponentType.andGate,
+      const CanvasPoint(288, 144),
+    );
+
+    controller.beginNodeDrag(gate.id);
+    for (int i = 0; i < 4; i++) {
+      controller.dragSelected(const CanvasPoint(4, 0));
+    }
+
+    final CircuitNode moved = controller.graph.nodeById(gate.id)!;
+    expect(moved.position.x, 312);
+    expect(moved.position.y, 144);
+    expect(moved.position.x % CircuitGeometry.gridSize, 0);
+    controller.endNodeDrag();
+  });
+
+  test('turning grid snap off preserves the accumulated scene delta', () {
+    final CircuitNode gate = controller.addNode(
+      ComponentType.andGate,
+      const CanvasPoint(288, 144),
+    );
+    controller.setGridSnapEnabled(false);
+
+    controller.beginNodeDrag(gate.id);
+    controller.dragSelected(const CanvasPoint(3.5, 2.5));
+    controller.dragSelected(const CanvasPoint(4.5, 1.5));
+
+    final CircuitNode moved = controller.graph.nodeById(gate.id)!;
+    expect(moved.position, const CanvasPoint(296, 148));
+    controller.endNodeDrag();
   });
 
   test('feedback through a flip-flop is allowed in the editor', () {

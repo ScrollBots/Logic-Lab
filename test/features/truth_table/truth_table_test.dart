@@ -1,4 +1,6 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:logic_lab/features/truth_table/presentation/truth_table_screen.dart';
 import 'package:logic_lab/features/editor/domain/circuit_models.dart';
 import 'package:logic_lab/features/editor/domain/circuit_validator.dart';
 import 'package:logic_lab/features/truth_table/domain/truth_table.dart';
@@ -40,6 +42,120 @@ CircuitGraph _andGraph() {
 }
 
 void main() {
+  testWidgets('the screen shows the asynchronously generated truth table', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: TruthTableScreen(projectName: 'AND', graph: _andGraph()),
+      ),
+    );
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    await tester.runAsync(() async {
+      final Stopwatch deadline = Stopwatch()..start();
+      while (find.byType(CircularProgressIndicator).evaluate().isNotEmpty &&
+          deadline.elapsed < const Duration(seconds: 5)) {
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+        await tester.pump();
+      }
+    });
+    await tester.pumpAndSettle();
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+    expect(find.text('همه ردیف‌ها معتبرند'), findsOneWidget);
+    for (int row = 0; row < 4; row++) {
+      final String semantics = <String>[
+        'ردیف ${<String>['۱', '۲', '۳', '۴'][row]}',
+        'A ${row >= 2 ? 'یک' : 'صفر'}',
+        'B ${row.isOdd ? 'یک' : 'صفر'}',
+        'Y ${row == 3 ? 'یک' : 'صفر'}',
+      ].join('، ');
+      expect(
+        find.byWidgetPredicate(
+          (Widget widget) =>
+              widget is Semantics && widget.properties.label == semantics,
+        ),
+        findsOneWidget,
+      );
+    }
+    expect(find.text('0'), findsNWidgets(7));
+    expect(find.text('1'), findsNWidgets(5));
+    expect(find.text('?'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('the screen keeps invalid module outputs unknown', (
+    WidgetTester tester,
+  ) async {
+    final CircuitGraph graph = CircuitGraph(
+      nodes: <CircuitNode>[
+        ..._andGraph().inputs,
+        CircuitNode(
+          id: 'adder',
+          type: ComponentType.halfAdder,
+          position: const CanvasPoint(220, 60),
+          label: 'HA',
+        ),
+      ],
+      wires: <CircuitWire>[
+        CircuitWire(
+          id: 'w1',
+          fromNodeId: 'a',
+          toNodeId: 'adder',
+          toInputIndex: 0,
+        ),
+        CircuitWire(
+          id: 'w2',
+          fromNodeId: 'b',
+          toNodeId: 'adder',
+          toInputIndex: 1,
+        ),
+      ],
+    );
+    await tester.pumpWidget(
+      MaterialApp(home: TruthTableScreen(projectName: 'HA', graph: graph)),
+    );
+    await tester.runAsync(() async {
+      final Stopwatch deadline = Stopwatch()..start();
+      while (find.byType(CircularProgressIndicator).evaluate().isNotEmpty &&
+          deadline.elapsed < const Duration(seconds: 5)) {
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+        await tester.pump();
+      }
+    });
+    await tester.pumpAndSettle();
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+    expect(
+      tester
+          .widgetList<Semantics>(find.byType(Semantics))
+          .map((Semantics widget) => widget.properties.label)
+          .whereType<String>(),
+      containsAll(<String>[
+        'ردیف ۲، A صفر، B یک، HA نامشخص، HA.1 نامشخص',
+        'ردیف ۴، A یک، B یک، HA نامشخص، HA.1 نامشخص',
+      ]),
+    );
+    expect(find.text('0'), findsNWidgets(4));
+    expect(find.text('1'), findsNWidgets(4));
+    expect(find.text('?'), findsNWidgets(8));
+    expect(find.textContaining('مدار در حال حاضر معتبر نیست.'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('leaving during truth table generation is safe', (
+    WidgetTester tester,
+  ) async {
+    await tester.runAsync(() async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: TruthTableScreen(projectName: 'AND', graph: _andGraph()),
+        ),
+      );
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pumpAndSettle();
+    });
+    expect(tester.takeException(), isNull);
+  });
+
   group('Truth table generation', () {
     test('produces every combination of the real inputs', () {
       final TruthTableResult table = const TruthTableGenerator().generate(

@@ -1,4 +1,5 @@
-// Sets the application version inside `pubspec.yaml`.
+// Sets the application version inside `pubspec.yaml` and the matching Dart
+// constants in `lib/core/app_info.dart`.
 //
 // The release workflow derives the version from the git tag and calls this
 // script, so the published artifact and the About screen always agree with
@@ -54,13 +55,41 @@ void main(List<String> arguments) {
 
   final String version =
       '${match.group(1)}.${match.group(2)}.${match.group(3)}'
-      '${match.group(4) != null ? '-${match.group(4)}' : ''}'
-      '+$buildNumber';
+      '${match.group(4) != null ? '-${match.group(4)}' : ''}';
+  final String fullVersion = '$version+$buildNumber';
+
+  final File appInfo = File('lib/core/app_info.dart');
+  if (!appInfo.existsSync()) {
+    stderr.writeln('lib/core/app_info.dart not found.');
+    exit(66);
+  }
+  final RegExp dartVersionPattern = RegExp(
+    r"static const String version = '[^']*';",
+  );
+  final RegExp dartBuildPattern = RegExp(
+    r"static const String buildNumber = '[^']*';",
+  );
+  final String dartSource = appInfo.readAsStringSync();
+  if (!dartVersionPattern.hasMatch(dartSource) ||
+      !dartBuildPattern.hasMatch(dartSource)) {
+    stderr.writeln('Could not find the version constants in app_info.dart');
+    exit(65);
+  }
+  String updatedDart = dartSource.replaceFirst(
+    dartVersionPattern,
+    "static const String version = '$version';",
+  );
+  updatedDart = updatedDart.replaceFirst(
+    dartBuildPattern,
+    "static const String buildNumber = '$buildNumber';",
+  );
 
   final String updated = content.replaceFirst(
     RegExp(r'^version:\s*\S+\s*$', multiLine: true),
-    'version: $version',
+    'version: $fullVersion',
   );
   pubspec.writeAsStringSync(updated);
-  stdout.writeln('pubspec.yaml version set to $version');
+  appInfo.writeAsStringSync(updatedDart);
+  stdout.writeln('pubspec.yaml version set to $fullVersion');
+  stdout.writeln('lib/core/app_info.dart version set to $fullVersion');
 }

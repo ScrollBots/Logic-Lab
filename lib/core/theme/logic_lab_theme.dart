@@ -483,16 +483,22 @@ class LogicLabTheme {
       ),
       extensions: <ThemeExtension<dynamic>>[
         LogicLabColors(
-          highSignal: highSignal,
-          lowSignal: lowSignal,
+          highSignal:
+              isDark && highSignal == const Color(0xFF1D9B72)
+                  ? const Color(0xFF22C55E)
+                  : highSignal,
+          lowSignal:
+              isDark && lowSignal == const Color(0xFF6D7B8E)
+                  ? const Color(0xFF334155)
+                  : lowSignal,
           unknownSignal:
               isDark ? const Color(0xFF8793A6) : const Color(0xFF7D8798),
           success: isDark ? const Color(0xFF4ADE9A) : const Color(0xFF087A55),
           warning: isDark ? const Color(0xFFF6C25B) : const Color(0xFF99600A),
           danger: isDark ? const Color(0xFFFF8A87) : const Color(0xFFB42318),
-          canvas: isDark ? const Color(0xFF0B111A) : const Color(0xFFFBFCFE),
+          canvas: isDark ? const Color(0xFF0F172A) : const Color(0xFFFBFCFE),
           canvasGrid:
-              isDark ? const Color(0xFF1B2635) : const Color(0xFFE8EDF5),
+              isDark ? const Color(0xFF334155) : const Color(0xFFE8EDF5),
           canvasBorder: outline,
           technicalBackground:
               isDark ? const Color(0xFF0C121C) : const Color(0xFFF1F4F9),

@@ -2,8 +2,8 @@
 
 import 'package:flutter/foundation.dart';
 
-import '../../../../core/localization/persian_format.dart';
-import '../../../../core/utils/id_generator.dart';
+import '../../../core/localization/persian_format.dart';
+import '../../../core/utils/id_generator.dart';
 import '../../../features/editor/domain/circuit_models.dart';
 import '../data/project_repository.dart';
 import '../domain/circuit_project.dart';

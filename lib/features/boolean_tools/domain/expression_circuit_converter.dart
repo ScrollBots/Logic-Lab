@@ -1,4 +1,4 @@
-﻿import '../../../../core/utils/id_generator.dart';
+﻿import '../../../core/utils/id_generator.dart';
 import '../../../features/editor/domain/circuit_models.dart';
 import 'boolean_expression.dart';
 

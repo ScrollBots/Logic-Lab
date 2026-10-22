@@ -15,7 +15,7 @@ void main() {
 
     final String content = pubspec.readAsStringSync();
     final RegExpMatch? match = RegExp(
-      r'^version:\s*([0-9]+\.[0-9]+\.[0-9]+)\+([0-9]+)\s*$',
+      r'^version:\s*([0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.-]+)?)\+([0-9]+)\s*$',
       multiLine: true,
     ).firstMatch(content);
     expect(match, isNotNull, reason: 'pubspec.yaml must declare a version');
@@ -28,11 +28,11 @@ void main() {
   });
 
   test('the displayed version keeps a dot separator', () {
-    expect(AppInfo.versionDisplay, '1.1.0');
+    expect(AppInfo.versionDisplay, AppInfo.version);
     expect(AppInfo.versionDisplay.contains('/'), isFalse);
     expect(AppInfo.versionDisplay.contains('٫'), isFalse);
     expect(AppInfo.versionDisplay.contains('،'), isFalse);
-    expect(AppInfo.versionDisplay.split('.').length, 3);
+    expect(AppInfo.versionDisplay, matches(RegExp(r'^[0-9]+\.[0-9]+\.[0-9]+')));
   });
 
   test('the application id stays stable', () {

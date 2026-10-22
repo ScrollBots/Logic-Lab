@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:logic_lab/features/boolean_tools/presentation/boolean_workspace_screen.dart';
 import 'package:logic_lab/features/editor/domain/circuit_models.dart';
+import 'package:logic_lab/features/editor/domain/component_spec.dart';
 import 'package:logic_lab/features/editor/presentation/circuit_editor_screen.dart';
 import 'package:logic_lab/features/projects/application/projects_controller.dart';
 import 'package:logic_lab/features/projects/data/project_repository.dart';
@@ -65,11 +66,125 @@ void main() {
       'مدارهای ترتیبی',
     ]) {
       expect(
-        find.text(category),
+        find.byKey(ValueKey<String>('component-category-heading-$category')),
         findsOneWidget,
         reason: 'the heading "$category" must not be repeated',
       );
+      expect(
+        find.descendant(
+          of: find.byType(ChoiceChip),
+          matching: find.text(category),
+        ),
+        findsOneWidget,
+      );
     }
+    expect(find.text('قطعه‌ای با این نام پیدا نشد.'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('tray search and category filters share the same results', (
+    WidgetTester tester,
+  ) async {
+    await _openTray(tester);
+    final String halfAdder =
+        ComponentLibrary.specOf(ComponentType.halfAdder).title;
+    final Finder bases = find.descendant(
+      of: find.byType(ChoiceChip),
+      matching: find.text('پایه‌ها'),
+    );
+
+    await tester.enterText(find.byType(TextField), '  HaLfAdDeR  ');
+    await tester.pumpAndSettle();
+    expect(find.text(halfAdder), findsOneWidget);
+    expect(find.text('قطعه‌ای با این نام پیدا نشد.'), findsNothing);
+    expect(
+      find.byKey(const ValueKey<String>('component-category-heading-پایه‌ها')),
+      findsNothing,
+    );
+
+    await tester.tap(bases);
+    await tester.pumpAndSettle();
+    expect(find.text(halfAdder), findsNothing);
+    expect(find.text('قطعه‌ای با این نام پیدا نشد.'), findsOneWidget);
+
+    await tester.tap(find.text('همه'));
+    await tester.pumpAndSettle();
+    expect(find.text(halfAdder), findsOneWidget);
+    expect(find.text('قطعه‌ای با این نام پیدا نشد.'), findsNothing);
+
+    await tester.tap(find.byTooltip('پاک کردن'));
+    await tester.pumpAndSettle();
+    await tester.tap(bases);
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const ValueKey<String>('component-category-heading-پایه‌ها')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(
+        const ValueKey<String>('component-category-heading-گیت‌های پایه'),
+      ),
+      findsNothing,
+    );
+
+    await tester.enterText(find.byType(TextField), 'کلاک');
+    await tester.pumpAndSettle();
+    expect(find.text('کلاک'), findsWidgets);
+    expect(find.text('قطعه‌ای با این نام پیدا نشد.'), findsNothing);
+
+    await tester.enterText(find.byType(TextField), 'no-such-component');
+    await tester.pumpAndSettle();
+    expect(find.text('قطعه‌ای با این نام پیدا نشد.'), findsOneWidget);
+    await tester.tap(find.byTooltip('پاک کردن'));
+    await tester.pumpAndSettle();
+    expect(find.text('قطعه‌ای با این نام پیدا نشد.'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('tray resizes and keeps search above a small-screen keyboard', (
+    WidgetTester tester,
+  ) async {
+    tester.view.physicalSize = const Size(320, 640);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+    await _openTray(tester);
+
+    final Finder sheetFinder = find.byType(DraggableScrollableSheet);
+    final DraggableScrollableSheet sheet = tester.widget(sheetFinder);
+    expect(sheet.expand, isFalse);
+    expect(sheet.initialChildSize, 0.6);
+    expect(sheet.minChildSize, 0.35);
+    expect(sheet.maxChildSize, 0.9);
+    final Finder scrollFinder = find.descendant(
+      of: sheetFinder,
+      matching: find.byWidgetPredicate(
+        (Widget widget) =>
+            widget is SingleChildScrollView &&
+            widget.scrollDirection == Axis.vertical,
+      ),
+    );
+    final SingleChildScrollView scroll = tester.widget(scrollFinder);
+    expect(scroll.controller, isNotNull);
+    expect(scroll.controller!.hasClients, isTrue);
+    final double initialHeight = tester.getSize(sheetFinder).height;
+    await tester.drag(
+      find.text('قطعه را انتخاب کنید؛ سپس آن را روی بوم جابه‌جا کنید.'),
+      const Offset(0, -120),
+    );
+    await tester.pumpAndSettle();
+    expect(tester.getSize(sheetFinder).height, greaterThan(initialHeight));
+
+    await tester.tap(find.byType(TextField));
+    tester.view.viewInsets = const FakeViewPadding(bottom: 220);
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'input');
+    await tester.pumpAndSettle();
+    expect(
+      tester.getRect(find.byType(TextField)).bottom,
+      lessThanOrEqualTo(420),
+    );
+    expect(find.text('قطعه‌ای با این نام پیدا نشد.'), findsNothing);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('the boolean tool header stays readable on a small screen', (
@@ -104,4 +219,21 @@ void main() {
     expect(find.text('(A & B) | !C'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+}
+
+Future<void> _openTray(WidgetTester tester) async {
+  final ProjectsController projects = ProjectsController(
+    MemoryProjectRepository(),
+  );
+  await tester.pumpWidget(
+    _wrap(
+      CircuitEditorScreen(
+        project: _emptyProject(),
+        projectsController: projects,
+      ),
+    ),
+  );
+  await tester.pumpAndSettle();
+  await tester.tap(find.text('افزودن قطعه'));
+  await tester.pumpAndSettle();
 }

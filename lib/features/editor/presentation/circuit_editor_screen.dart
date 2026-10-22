@@ -1,6 +1,9 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../core/localization/persian_format.dart';
 import '../../../core/services/file_exchange.dart';
 import '../../../core/theme/logic_lab_theme.dart';
 import '../../../core/widgets/common.dart';
@@ -256,6 +259,7 @@ class _CircuitEditorScreenState extends State<CircuitEditorScreen> {
       (center?.y ?? 320) + offset * 14,
     );
     _editor.addNode(type, position);
+    AppHaptics.impact(context.read<SettingsController>().hapticsEnabled);
   }
 
   Future<void> _showNodeSettings() async {
@@ -572,20 +576,6 @@ class _CircuitEditorScreenState extends State<CircuitEditorScreen> {
                   ],
             ),
           ],
-          bottom: PreferredSize(
-            preferredSize: const Size.fromHeight(56),
-            child: _EditorToolbar(
-              editor: _editor,
-              canvasController: _canvasController,
-              onAdd: _showComponentTray,
-              onSettings: _showNodeSettings,
-              onTruthTable: _openTruthTable,
-              onReport: _showCircuitReport,
-              onToggleGrid: () => setState(() => _showGrid = !_showGrid),
-              showGrid: _showGrid,
-              haptics: settings.hapticsEnabled,
-            ),
-          ),
         ),
         floatingActionButton: FloatingActionButton.extended(
           onPressed: _showComponentTray,
@@ -607,13 +597,53 @@ class _CircuitEditorScreenState extends State<CircuitEditorScreen> {
                       editor: _editor,
                       canvasController: _canvasController,
                       showGrid: _showGrid,
+                      animationsEnabled: settings.animationsEnabled,
+                      hapticsEnabled: settings.hapticsEnabled,
                     ),
                   ),
                   Positioned(
                     top: 10,
                     left: 12,
                     right: 12,
-                    child: _FeedbackOverlay(editor: _editor),
+                    child: AnimatedBuilder(
+                      animation: _editor,
+                      builder: (BuildContext context, Widget? child) {
+                        return Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: <Widget>[
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(16),
+                              child: BackdropFilter(
+                                filter: ImageFilter.blur(
+                                  sigmaX: 10,
+                                  sigmaY: 10,
+                                ),
+                                child: _EditorToolbar(
+                                  editor: _editor,
+                                  canvasController: _canvasController,
+                                  onAdd: _showComponentTray,
+                                  onSettings: _showNodeSettings,
+                                  onTruthTable: _openTruthTable,
+                                  onReport: _showCircuitReport,
+                                  onToggleGrid:
+                                      () => setState(
+                                        () => _showGrid = !_showGrid,
+                                      ),
+                                  showGrid: _showGrid,
+                                  haptics: settings.hapticsEnabled,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            _FeedbackOverlay(
+                              editor: _editor,
+                              animationsEnabled: settings.animationsEnabled,
+                            ),
+                          ],
+                        );
+                      },
+                    ),
                   ),
                 ],
               ),
@@ -623,6 +653,7 @@ class _CircuitEditorScreenState extends State<CircuitEditorScreen> {
         bottomNavigationBar: _StatusDock(
           editor: _editor,
           onOpenReport: _showCircuitReport,
+          haptics: settings.hapticsEnabled,
         ),
       ),
     );
@@ -759,9 +790,10 @@ class _EditorToolbar extends StatelessWidget {
     return Container(
       height: 56,
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerLow,
-        border: Border(
-          top: BorderSide(color: theme.colorScheme.outlineVariant),
+        color: theme.colorScheme.surfaceContainerLow.withValues(alpha: 0.8),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.6),
         ),
       ),
       child: SingleChildScrollView(
@@ -976,9 +1008,13 @@ class _ToolChip extends StatelessWidget {
 }
 
 class _FeedbackOverlay extends StatelessWidget {
-  const _FeedbackOverlay({required this.editor});
+  const _FeedbackOverlay({
+    required this.editor,
+    required this.animationsEnabled,
+  });
 
   final CircuitEditorController editor;
+  final bool animationsEnabled;
 
   @override
   Widget build(BuildContext context) {
@@ -986,7 +1022,10 @@ class _FeedbackOverlay extends StatelessWidget {
     return IgnorePointer(
       ignoring: feedback == null,
       child: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 220),
+        duration:
+            animationsEnabled && !MediaQuery.disableAnimationsOf(context)
+                ? const Duration(milliseconds: 220)
+                : Duration.zero,
         child:
             feedback == null
                 ? const SizedBox.shrink()
@@ -1072,12 +1111,16 @@ class _FeedbackOverlay extends StatelessWidget {
 }
 
 class _StatusDock extends StatelessWidget {
-  const _StatusDock({required this.editor, required this.onOpenReport});
+  const _StatusDock({
+    required this.editor,
+    required this.onOpenReport,
+    required this.haptics,
+  });
 
   final CircuitEditorController editor;
   final VoidCallback onOpenReport;
+  final bool haptics;
 
-  @override
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
@@ -1107,6 +1150,7 @@ class _StatusDock extends StatelessWidget {
                   valid ? colors.success : theme.colorScheme.error;
               return Column(
                 mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: <Widget>[
                   Row(
                     children: <Widget>[
@@ -1153,32 +1197,6 @@ class _StatusDock extends StatelessWidget {
                           ],
                         ),
                       ),
-                      if (valid) ...<Widget>[
-                        const SizedBox(width: 8),
-                        ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 170),
-                          child: SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            child: Row(
-                              children: <Widget>[
-                                for (final CircuitNode output
-                                    in editor.graph.outputs)
-                                  Padding(
-                                    padding: const EdgeInsets.only(left: 6),
-                                    child: SignalPill(
-                                      value:
-                                          report
-                                              .signalOf(output.id)
-                                              .booleanValue,
-                                      label: output.label,
-                                      compact: true,
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
                       IconButton(
                         tooltip: 'جزئیات وضعیت',
                         onPressed: onOpenReport,
@@ -1186,8 +1204,27 @@ class _StatusDock extends StatelessWidget {
                       ),
                     ],
                   ),
+                  if (valid && editor.graph.outputs.isNotEmpty) ...<Widget>[
+                    const SizedBox(height: 6),
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: <Widget>[
+                          for (final CircuitNode output in editor.graph.outputs)
+                            Padding(
+                              padding: const EdgeInsetsDirectional.only(end: 6),
+                              child: SignalPill(
+                                value: report.signalOf(output.id).booleanValue,
+                                label: output.label,
+                                compact: true,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 6),
-                  _SimulationBar(editor: editor),
+                  _SimulationBar(editor: editor, haptics: haptics),
                 ],
               );
             },
@@ -1200,67 +1237,94 @@ class _StatusDock extends StatelessWidget {
 
 /// Run / pause / step / reset controls plus the signal legend.
 class _SimulationBar extends StatelessWidget {
-  const _SimulationBar({required this.editor});
+  const _SimulationBar({required this.editor, required this.haptics});
 
   final CircuitEditorController editor;
+  final bool haptics;
 
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     final LogicLabColors colors = LogicLabColors.of(context);
     final bool sequential = editor.hasSequentialParts;
-    return Row(
+    return Wrap(
+      alignment: WrapAlignment.spaceBetween,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      spacing: 12,
+      runSpacing: 8,
       children: <Widget>[
-        _SimButton(
-          icon:
-              editor.isRunning ? Icons.pause_rounded : Icons.play_arrow_rounded,
-          tooltip: editor.isRunning ? 'توقف کلاک خودکار' : 'اجرای کلاک خودکار',
-          active: editor.isRunning,
-          onTap: () => editor.setRunning(!editor.isRunning),
-        ),
-        _SimButton(
-          icon: Icons.skip_next_rounded,
-          tooltip: 'یک پالس کلاک',
-          onTap: editor.stepClock,
-        ),
-        _SimButton(
-          icon: Icons.restart_alt_rounded,
-          tooltip: 'بازنشانی وضعیت ترتیبی',
-          onTap: editor.resetSimulation,
-        ),
-        const SizedBox(width: 8),
-        if (sequential)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.tertiary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
+        Wrap(
+          crossAxisAlignment: WrapCrossAlignment.center,
+          spacing: 4,
+          runSpacing: 4,
+          children: <Widget>[
+            _SimButton(
+              icon:
+                  editor.isRunning
+                      ? Icons.pause_rounded
+                      : Icons.play_arrow_rounded,
+              tooltip:
+                  editor.isRunning ? 'توقف کلاک خودکار' : 'اجرای کلاک خودکار',
+              active: editor.isRunning,
+              onTap: () {
+                editor.setRunning(!editor.isRunning);
+                AppHaptics.selection(haptics);
+              },
             ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                Icon(
-                  Icons.schedule_rounded,
-                  size: 13,
-                  color: theme.colorScheme.tertiary,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  'CLK=${editor.clockLevel ? '1' : '0'}',
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    fontFamily: 'JetBrainsMono',
-                    fontWeight: FontWeight.w700,
-                    color: theme.colorScheme.tertiary,
-                  ),
-                ),
-              ],
+            _SimButton(
+              icon: Icons.skip_next_rounded,
+              tooltip: 'یک پالس کلاک',
+              onTap: () {
+                editor.stepClock();
+                AppHaptics.selection(haptics);
+              },
             ),
-          ),
-        const Spacer(),
-        _LegendDot(color: colors.highSignal, label: '۱'),
-        _LegendDot(color: colors.lowSignal, label: '۰'),
-        _LegendDot(color: colors.unknownSignal, label: '؟'),
-        _LegendDot(color: theme.colorScheme.outline, label: 'Z'),
+            _SimButton(
+              icon: Icons.restart_alt_rounded,
+              tooltip: 'بازنشانی وضعیت ترتیبی',
+              onTap: () {
+                editor.resetSimulation();
+                AppHaptics.selection(haptics);
+              },
+            ),
+            if (sequential)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.tertiary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    Icon(
+                      Icons.schedule_rounded,
+                      size: 13,
+                      color: theme.colorScheme.tertiary,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'CLK=${editor.clockLevel ? '1' : '0'}',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        fontFamily: 'JetBrainsMono',
+                        fontWeight: FontWeight.w700,
+                        color: theme.colorScheme.tertiary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            _LegendDot(color: colors.highSignal, label: '۱'),
+            _LegendDot(color: colors.lowSignal, label: '۰'),
+            _LegendDot(color: colors.unknownSignal, label: '؟'),
+            _LegendDot(color: theme.colorScheme.outline, label: 'Z'),
+          ],
+        ),
       ],
     );
   }
@@ -1339,31 +1403,38 @@ class _ComponentTray extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
-    final double maxHeight = MediaQuery.sizeOf(context).height * 0.78;
-    return ConstrainedBox(
-      constraints: BoxConstraints(maxHeight: maxHeight),
-      child: Padding(
-        padding: const EdgeInsetsDirectional.only(
-          start: 18,
-          end: 18,
-          bottom: 18,
-        ),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Text('افزودن قطعه', style: theme.textTheme.titleLarge),
-              const SizedBox(height: 4),
-              Text(
-                'قطعه را انتخاب کنید؛ سپس آن را روی بوم جابه‌جا کنید.',
-                style: theme.textTheme.bodySmall,
-              ),
-              const SizedBox(height: 12),
-              const _TrayCatalogue(),
-            ],
-          ),
-        ),
+    return Padding(
+      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+      child: DraggableScrollableSheet(
+        expand: false,
+        initialChildSize: 0.6,
+        minChildSize: 0.35,
+        maxChildSize: 0.9,
+        builder: (BuildContext context, ScrollController scrollController) {
+          return SingleChildScrollView(
+            controller: scrollController,
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+            padding: EdgeInsetsDirectional.only(
+              start: 18,
+              end: 18,
+              bottom: 18 + MediaQuery.paddingOf(context).bottom,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text('افزودن قطعه', style: theme.textTheme.titleLarge),
+                const SizedBox(height: 4),
+                Text(
+                  'قطعه را انتخاب کنید؛ سپس آن را روی بوم جابه‌جا کنید.',
+                  style: theme.textTheme.bodySmall,
+                ),
+                const SizedBox(height: 12),
+                const _TrayCatalogue(),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
@@ -1380,6 +1451,7 @@ class _TrayCatalogue extends StatefulWidget {
 class _TrayCatalogueState extends State<_TrayCatalogue> {
   final TextEditingController _controller = TextEditingController();
   String _query = '';
+  String? _category;
 
   @override
   void dispose() {
@@ -1404,7 +1476,20 @@ class _TrayCatalogueState extends State<_TrayCatalogue> {
     final ThemeData theme = Theme.of(context);
     final Map<String, List<ComponentType>> catalogue =
         ComponentLibrary.catalogue;
-    int visible = 0;
+    final Map<String, List<ComponentType>> filtered =
+        <String, List<ComponentType>>{};
+    for (final MapEntry<String, List<ComponentType>> entry
+        in catalogue.entries) {
+      if (_category != null && _category != entry.key) {
+        continue;
+      }
+      final List<ComponentType> matches = entry.value
+          .where(_matches)
+          .toList(growable: false);
+      if (matches.isNotEmpty) {
+        filtered[entry.key] = matches;
+      }
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1430,43 +1515,51 @@ class _TrayCatalogueState extends State<_TrayCatalogue> {
             isDense: true,
           ),
         ),
+        const SizedBox(height: 8),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: <Widget>[
+              ChoiceChip(
+                label: const Text('همه'),
+                selected: _category == null,
+                showCheckmark: false,
+                visualDensity: VisualDensity.compact,
+                onSelected: (_) => setState(() => _category = null),
+              ),
+              for (final String category in catalogue.keys)
+                Padding(
+                  padding: const EdgeInsetsDirectional.only(start: 6),
+                  child: ChoiceChip(
+                    label: Text(category),
+                    selected: _category == category,
+                    showCheckmark: false,
+                    visualDensity: VisualDensity.compact,
+                    onSelected: (_) => setState(() => _category = category),
+                  ),
+                ),
+            ],
+          ),
+        ),
         const SizedBox(height: 14),
         for (final MapEntry<String, List<ComponentType>> entry
-            in catalogue.entries) ...<Widget>[
-          Builder(
-            builder: (BuildContext context) {
-              final List<ComponentType> matches =
-                  entry.value.where(_matches).toList();
-              if (matches.isEmpty) {
-                return const SizedBox.shrink();
-              }
-              visible += matches.length;
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  // The group renders its own heading, so no second title is
-                  // added here.
-                  _TrayGroup(
-                    title: entry.key,
-                    children: matches
-                        .map(
-                          (ComponentType type) => _TrayItem(
-                            type: type,
-                            title: ComponentLibrary.specOf(type).title,
-                            description:
-                                ComponentLibrary.specOf(type).description,
-                            onTap: () => Navigator.pop(context, type),
-                          ),
-                        )
-                        .toList(growable: false),
+            in filtered.entries) ...<Widget>[
+          _TrayGroup(
+            title: entry.key,
+            children: entry.value
+                .map(
+                  (ComponentType type) => _TrayItem(
+                    type: type,
+                    title: ComponentLibrary.specOf(type).title,
+                    description: ComponentLibrary.specOf(type).description,
+                    onTap: () => Navigator.pop(context, type),
                   ),
-                  const SizedBox(height: 14),
-                ],
-              );
-            },
+                )
+                .toList(growable: false),
           ),
+          const SizedBox(height: 14),
         ],
-        if (visible == 0)
+        if (filtered.isEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 20),
             child: Center(
@@ -1495,6 +1588,7 @@ class _TrayGroup extends StatelessWidget {
       children: <Widget>[
         Text(
           title,
+          key: ValueKey<String>('component-category-heading-$title'),
           style: theme.textTheme.labelMedium?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
             fontWeight: FontWeight.w700,
@@ -1653,6 +1747,7 @@ class _NodeSettingsSheetState extends State<_NodeSettingsSheet> {
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     final CircuitNode node = widget.node;
+    final ComponentSpec spec = ComponentLibrary.specOf(node.type);
     return Padding(
       padding: EdgeInsets.fromLTRB(
         20,
@@ -1718,16 +1813,22 @@ class _NodeSettingsSheetState extends State<_NodeSettingsSheet> {
               const SizedBox(height: 6),
               Text('تعداد ورودی‌ها', style: theme.textTheme.titleSmall),
               const SizedBox(height: 8),
-              SegmentedButton<int>(
-                segments: const <ButtonSegment<int>>[
-                  ButtonSegment<int>(value: 2, label: Text('۲')),
-                  ButtonSegment<int>(value: 3, label: Text('۳')),
-                  ButtonSegment<int>(value: 4, label: Text('۴')),
+              Wrap(
+                spacing: 8,
+                runSpacing: 4,
+                children: <Widget>[
+                  for (
+                    int count = spec.minInputs;
+                    count <= spec.maxInputs;
+                    count++
+                  )
+                    ChoiceChip(
+                      label: Text(PersianFormat.digits(count)),
+                      selected: _inputCount == count,
+                      showCheckmark: false,
+                      onSelected: (_) => setState(() => _inputCount = count),
+                    ),
                 ],
-                selected: <int>{_inputCount},
-                onSelectionChanged: (Set<int> value) {
-                  setState(() => _inputCount = value.first);
-                },
               ),
             ],
             if (node.type.isInput) ...<Widget>[

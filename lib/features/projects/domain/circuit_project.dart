@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 
-import '../../../../core/utils/id_generator.dart';
+import '../../../core/utils/id_generator.dart';
 import '../../../features/editor/domain/circuit_models.dart';
 
 @immutable
@@ -169,9 +169,17 @@ class ProjectCodec {
         createdAt: now,
         updatedAt: now,
       );
+    } on ProjectFileFormatException {
+      rethrow;
     } on FormatException catch (error) {
       throw ProjectFileFormatException(
         'محتوای پروژه معتبر نیست: ${error.message}',
+      );
+    } catch (_) {
+      // A hand-edited file with wrong value types must produce a readable
+      // import error, not a raw TypeError inside the editor.
+      throw const ProjectFileFormatException(
+        'محتوای پروژه معتبر نیست. فایل ممکن است آسیب دیده باشد.',
       );
     }
   }

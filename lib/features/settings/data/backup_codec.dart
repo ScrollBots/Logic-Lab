@@ -37,7 +37,9 @@ class BackupCodec {
       return null;
     }
     final Object? version = raw['version'];
-    if (version is! num || version.toInt() > formatVersion) {
+    if (version is! num ||
+        !version.isFinite ||
+        version.toInt() > formatVersion) {
       return null;
     }
     final Object? rawProjects = raw['projects'];
@@ -47,8 +49,10 @@ class BackupCodec {
     final List<CircuitProject> projects = <CircuitProject>[];
     for (final Object? item in rawProjects) {
       try {
-        projects.add(CircuitProject.fromJson(item));
-      } on FormatException {
+        final CircuitProject project = CircuitProject.fromJson(item);
+        ProjectCodec.validateCircuit(project.graph);
+        projects.add(project);
+      } catch (_) {
         // Skip broken rows instead of aborting the whole restore.
         continue;
       }
@@ -63,15 +67,15 @@ class BackupCodec {
         }
         final Object? id = item['itemId'];
         final Object? updatedAt = item['updatedAt'];
-        if (id is! String || updatedAt is! String) {
+        if (id is! String || id.trim().isEmpty || updatedAt is! String) {
           continue;
         }
         progress.add(
           LearningProgress(
             itemId: id,
-            completed: item['completed'] as bool? ?? false,
-            bestScore: item['bestScore'] as int? ?? 0,
-            attempts: item['attempts'] as int? ?? 0,
+            completed: _readBool(item['completed']),
+            bestScore: _readCount(item['bestScore']),
+            attempts: _readCount(item['attempts']),
             updatedAt: DateTime.tryParse(updatedAt) ?? DateTime.now(),
           ),
         );
@@ -84,5 +88,14 @@ class BackupCodec {
       progress: progress,
       settings: rawSettings is Map<String, Object?> ? rawSettings : null,
     );
+  }
+
+  static bool _readBool(Object? value) => value == true;
+
+  static int _readCount(Object? value) {
+    if (value is! num || !value.isFinite || value < 0) {
+      return 0;
+    }
+    return value.toInt();
   }
 }

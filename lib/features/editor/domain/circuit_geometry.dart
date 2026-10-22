@@ -39,6 +39,11 @@ class CircuitGeometry {
         spec.kind == ComponentKind.sequential) {
       return math.max(72.0, 46.0 + ports * 20.0);
     }
+    // A gate with more than four inputs needs a taller body so that every
+    // port stays on the outline instead of floating past its corners.
+    if (spec.kind == ComponentKind.gate && node.inputCount > 4) {
+      return math.max(nodeHeight, (node.inputCount - 1) * inputPortGap + 24);
+    }
     return nodeHeight;
   }
 
@@ -90,37 +95,34 @@ class CircuitGeometry {
     CircuitGraph graph,
     CanvasPoint point, {
     double radius = portHitRadius,
+    bool inputOnly = false,
+    bool outputOnly = false,
   }) {
-    // Reverse order gives visually topmost components priority.
+    CircuitPin? closest;
+    double closestDistance = radius;
     for (final CircuitNode node in graph.nodes.reversed) {
-      if (!node.type.producesSignal) {
-        continue;
-      }
-      for (int port = 0; port < node.outputCount; port++) {
-        final CanvasPoint? output = portPosition(
-          node,
-          CircuitPin.output(node.id, port),
-        );
-        if (output != null && output.distanceTo(point) <= radius) {
-          return CircuitPin.output(node.id, port);
+      final Iterable<CircuitPin> pins = <CircuitPin>[
+        if (!inputOnly && node.type.producesSignal)
+          for (int i = 0; i < node.outputCount; i++)
+            CircuitPin.output(node.id, i),
+        if (!outputOnly && node.type.acceptsInputs)
+          for (int i = 0; i < node.inputCount; i++)
+            CircuitPin.input(node.id, i),
+      ];
+      for (final CircuitPin pin in pins) {
+        final CanvasPoint? position = portPosition(node, pin);
+        if (position == null) {
+          continue;
+        }
+        final double distance = position.distanceTo(point);
+        if (distance <= radius &&
+            (closest == null || distance < closestDistance)) {
+          closest = pin;
+          closestDistance = distance;
         }
       }
     }
-    for (final CircuitNode node in graph.nodes.reversed) {
-      if (!node.type.acceptsInputs) {
-        continue;
-      }
-      for (int i = 0; i < node.inputCount; i++) {
-        final CanvasPoint? input = portPosition(
-          node,
-          CircuitPin.input(node.id, i),
-        );
-        if (input != null && input.distanceTo(point) <= radius) {
-          return CircuitPin.input(node.id, i);
-        }
-      }
-    }
-    return null;
+    return closest;
   }
 
   static CircuitNode? nodeAt(CircuitGraph graph, CanvasPoint point) {

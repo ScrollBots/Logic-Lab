@@ -109,21 +109,35 @@ class CircuitNode {
     if (!x.isFinite || !y.isFinite || x.abs() > 100000 || y.abs() > 100000) {
       throw const FormatException('موقعیت قطعه خارج از محدوده است.');
     }
-    final Object? rawInputCount = raw['inputCount'];
-    final Object? rawOutputCount = raw['outputCount'];
-    final String parsedLabel =
-        (raw['label'] as String? ?? '').trim().isEmpty
-            ? ComponentLibrary.specOf(ComponentType.fromJson(rawType)).title
-            : (raw['label'] as String).trim();
+    final Object? rawLabel = raw['label'];
+    if (rawLabel != null && rawLabel is! String) {
+      throw const FormatException('برچسب قطعه معتبر نیست.');
+    }
+    final Object? rawInputValue = raw['inputValue'];
+    if (rawInputValue != null && rawInputValue is! bool) {
+      throw const FormatException('مقدار اولیهٔ قطعه معتبر نیست.');
+    }
+    final ComponentType type = ComponentType.fromJson(rawType);
+    final String label = rawLabel is String ? rawLabel.trim() : '';
     return CircuitNode(
       id: rawId,
-      type: ComponentType.fromJson(rawType),
+      type: type,
       position: CanvasPoint(x, y),
-      label: parsedLabel,
-      inputValue: raw['inputValue'] as bool? ?? false,
-      inputCount: rawInputCount is num ? rawInputCount.toInt() : null,
-      outputCount: rawOutputCount is num ? rawOutputCount.toInt() : null,
+      label: label.isEmpty ? ComponentLibrary.specOf(type).title : label,
+      inputValue: rawInputValue == true,
+      inputCount: _readPortCount(raw['inputCount']),
+      outputCount: _readPortCount(raw['outputCount']),
     );
+  }
+
+  static int? _readPortCount(Object? value) {
+    if (value == null) {
+      return null;
+    }
+    if (value is! num || !value.isFinite || value < 0) {
+      throw const FormatException('تعداد پایه‌های قطعه معتبر نیست.');
+    }
+    return value.toInt();
   }
 
   @override
@@ -178,10 +192,20 @@ class CircuitWire {
     final Object? to = raw['to'];
     final Object? toInput = raw['toInput'];
     final Object? fromPort = raw['fromPort'] ?? 0;
-    if (id is! String || id.isEmpty || from is! String || to is! String) {
+    if (id is! String ||
+        id.trim().isEmpty ||
+        from is! String ||
+        from.trim().isEmpty ||
+        to is! String ||
+        to.trim().isEmpty) {
       throw const FormatException('اطلاعات سیم کامل نیست.');
     }
-    if (toInput is! num || fromPort is! num) {
+    if (toInput is! num ||
+        fromPort is! num ||
+        !toInput.isFinite ||
+        !fromPort.isFinite ||
+        toInput < 0 ||
+        fromPort < 0) {
       throw const FormatException('شماره پایه سیم معتبر نیست.');
     }
     return CircuitWire(

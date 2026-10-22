@@ -167,6 +167,51 @@ void main() {
         throwsA(isA<ProjectFileFormatException>()),
       );
     });
+
+    test('a node with a non-string label is rejected cleanly', () {
+      final Map<String, Object?> envelope = _envelope(_project());
+      final Map<String, Object?> project =
+          envelope['project']! as Map<String, Object?>;
+      final Map<String, Object?> circuit =
+          project['circuit']! as Map<String, Object?>;
+      final Map<String, Object?> node =
+          (circuit['nodes']! as List<Object?>).first! as Map<String, Object?>;
+      node['label'] = 42;
+      expect(
+        () => ProjectCodec.decode(jsonEncode(envelope)),
+        throwsA(isA<ProjectFileFormatException>()),
+      );
+    });
+
+    test('a node with a non-boolean inputValue is rejected cleanly', () {
+      final Map<String, Object?> envelope = _envelope(_project());
+      final Map<String, Object?> project =
+          envelope['project']! as Map<String, Object?>;
+      final Map<String, Object?> circuit =
+          project['circuit']! as Map<String, Object?>;
+      final Map<String, Object?> node =
+          (circuit['nodes']! as List<Object?>).first! as Map<String, Object?>;
+      node['inputValue'] = 'true';
+      expect(
+        () => ProjectCodec.decode(jsonEncode(envelope)),
+        throwsA(isA<ProjectFileFormatException>()),
+      );
+    });
+
+    test('a wire with a negative port index is rejected cleanly', () {
+      final Map<String, Object?> envelope = _envelope(_project());
+      final Map<String, Object?> project =
+          envelope['project']! as Map<String, Object?>;
+      final Map<String, Object?> circuit =
+          project['circuit']! as Map<String, Object?>;
+      final Map<String, Object?> wire =
+          (circuit['wires']! as List<Object?>).first! as Map<String, Object?>;
+      wire['toInput'] = -1;
+      expect(
+        () => ProjectCodec.decode(jsonEncode(envelope)),
+        throwsA(isA<ProjectFileFormatException>()),
+      );
+    });
   });
 
   group('Backward compatibility', () {

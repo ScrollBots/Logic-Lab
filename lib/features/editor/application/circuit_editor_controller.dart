@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
-import '../../../../core/utils/id_generator.dart';
+import '../../../core/utils/id_generator.dart';
 import '../../../features/projects/domain/circuit_project.dart';
 import '../domain/circuit_geometry.dart';
 import '../domain/circuit_models.dart';
@@ -63,6 +63,8 @@ class CircuitEditorController extends ChangeNotifier {
   int _pendingSourcePort = 0;
   String? _draggingNodeId;
   bool _draggingMoved = false;
+  final Map<String, CanvasPoint> _dragStartPositions = <String, CanvasPoint>{};
+  CanvasPoint _dragOffset = const CanvasPoint(0, 0);
   bool _running = false;
   bool _gridSnapEnabled = true;
   Timer? _clockTimer;
@@ -103,7 +105,7 @@ class CircuitEditorController extends ChangeNotifier {
   /// True when the automatic clock is running.
   bool get isRunning => _running;
 
-  /// Grid snapping keeps components on a tidy 8 px lattice.
+  /// Grid snapping keeps components aligned with the visible canvas grid.
   bool get gridSnapEnabled => _gridSnapEnabled;
 
   void setGridSnapEnabled(bool enabled) {
@@ -212,13 +214,18 @@ class CircuitEditorController extends ChangeNotifier {
     _notify();
   }
 
-  void cancelPendingConnection() {
+  void cancelPendingConnection({bool preserveFeedback = false}) {
     if (_pendingSourceId == null) {
       return;
     }
     _pendingSourceId = null;
     _pendingSourcePort = 0;
-    _feedback = const EditorFeedback('اتصال لغو شد.', EditorFeedbackTone.info);
+    if (!preserveFeedback) {
+      _feedback = const EditorFeedback(
+        'اتصال لغو شد.',
+        EditorFeedbackTone.info,
+      );
+    }
     _notify();
   }
 
@@ -278,35 +285,50 @@ class CircuitEditorController extends ChangeNotifier {
     _pendingSourcePort = 0;
     _draggingNodeId = nodeId;
     _draggingMoved = false;
-    _pushHistory();
+    _dragOffset = const CanvasPoint(0, 0);
+    _dragStartPositions.clear();
+    final Set<String> moving = <String>{
+      nodeId,
+      ..._multiSelectedNodeIds.where((String other) => other != nodeId),
+    };
+    for (final String movingId in moving) {
+      final CircuitNode? movingNode = _graph.nodeById(movingId);
+      if (movingNode != null) {
+        _dragStartPositions[movingId] = movingNode.position;
+      }
+    }
     _feedback = null;
     _notify();
   }
 
   void dragSelected(CanvasPoint delta) {
-    final String? id = _draggingNodeId;
-    if (id == null) {
+    if (_draggingNodeId == null) {
       return;
     }
-    final CircuitNode? node = _graph.nodeById(id);
-    if (node == null) {
-      return;
-    }
-    _draggingMoved = true;
-    final Set<String> moving = <String>{
-      id,
-      ..._multiSelectedNodeIds.where((String other) => other != id),
-    };
-    for (final String nodeId in moving) {
-      final CircuitNode? current = _graph.nodeById(nodeId);
+    _dragOffset = _dragOffset.translate(delta.x, delta.y);
+    bool changed = false;
+    for (final MapEntry<String, CanvasPoint> entry
+        in _dragStartPositions.entries) {
+      final CircuitNode? current = _graph.nodeById(entry.key);
       if (current == null) {
         continue;
       }
       final CanvasPoint next = _snapPosition(
-        current.position.translate(delta.x, delta.y),
+        entry.value.translate(_dragOffset.x, _dragOffset.y),
       );
+      if (next == current.position) {
+        continue;
+      }
+      if (!_draggingMoved && !changed) {
+        _pushHistory();
+      }
       _graph = _graph.updateNode(current.copyWith(position: next));
+      changed = true;
     }
+    if (!changed) {
+      return;
+    }
+    _draggingMoved = true;
     // Moving a component cannot change any signal, so the circuit is not
     // re-simulated while dragging. The result is refreshed once, when the
     // component is dropped. This keeps large circuits responsive.
@@ -321,11 +343,9 @@ class CircuitEditorController extends ChangeNotifier {
       return;
     }
     _draggingNodeId = null;
+    _dragStartPositions.clear();
+    _dragOffset = const CanvasPoint(0, 0);
     if (!_draggingMoved) {
-      // The history entry was only speculative.
-      if (_undo.isNotEmpty) {
-        _undo.removeLast();
-      }
       _notify();
       return;
     }
@@ -379,7 +399,8 @@ class CircuitEditorController extends ChangeNotifier {
     if (node == null || !node.type.isBinaryGate) {
       return;
     }
-    final int normalized = count.clamp(2, 4);
+    final ComponentSpec spec = ComponentLibrary.specOf(node.type);
+    final int normalized = count.clamp(spec.minInputs, spec.maxInputs);
     if (normalized == node.inputCount) {
       return;
     }
@@ -412,9 +433,11 @@ class CircuitEditorController extends ChangeNotifier {
     }
     final String normalizedLabel =
         label.trim().isEmpty ? node.type.technicalName : label.trim();
+    final ComponentSpec spec = ComponentLibrary.specOf(node.type);
+    final int requestedCount = inputCount ?? node.inputCount;
     final int normalizedCount =
         node.type.isBinaryGate
-            ? (inputCount ?? node.inputCount).clamp(2, 4)
+            ? requestedCount.clamp(spec.minInputs, spec.maxInputs)
             : node.inputCount;
     final bool normalizedValue =
         node.type.isInput ? (inputValue ?? node.inputValue) : node.inputValue;
@@ -464,7 +487,6 @@ class CircuitEditorController extends ChangeNotifier {
     }
     if (_pendingSourceId == nodeId && _pendingSourcePort == port) {
       _pendingSourceId = null;
-      _pendingSourcePort = 0;
       _pendingSourcePort = 0;
       _feedback = const EditorFeedback(
         'انتخاب خروجی لغو شد.',
@@ -521,7 +543,6 @@ class CircuitEditorController extends ChangeNotifier {
     _selectedWireId = wire.id;
     _selectedNodeId = null;
     _pendingSourceId = null;
-    _pendingSourcePort = 0;
     _pendingSourcePort = 0;
     _feedback = const EditorFeedback(
       'اتصال با موفقیت ساخته شد.',
@@ -673,6 +694,9 @@ class CircuitEditorController extends ChangeNotifier {
     _pendingSourceId = null;
     _pendingSourcePort = 0;
     _draggingNodeId = null;
+    _draggingMoved = false;
+    _dragStartPositions.clear();
+    _dragOffset = const CanvasPoint(0, 0);
   }
 
   _EditorSnapshot _snapshot() {
@@ -822,8 +846,11 @@ class CircuitEditorController extends ChangeNotifier {
   }
 
   CanvasPoint _snapPosition(CanvasPoint point) {
-    final double x = _gridSnapEnabled ? (point.x / 8).round() * 8.0 : point.x;
-    final double y = _gridSnapEnabled ? (point.y / 8).round() * 8.0 : point.y;
+    const double grid = CircuitGeometry.gridSize;
+    final double x =
+        _gridSnapEnabled ? (point.x / grid).round() * grid : point.x;
+    final double y =
+        _gridSnapEnabled ? (point.y / grid).round() * grid : point.y;
     return CanvasPoint(
       x.clamp(48, CircuitGeometry.canvasWidth - 48),
       y.clamp(48, CircuitGeometry.canvasHeight - 48),
