@@ -28,7 +28,7 @@ void main() {
   });
 
   test('the displayed version keeps a dot separator', () {
-    expect(AppInfo.versionDisplay, '1.0.0');
+    expect(AppInfo.versionDisplay, '1.1.0');
     expect(AppInfo.versionDisplay.contains('/'), isFalse);
     expect(AppInfo.versionDisplay.contains('٫'), isFalse);
     expect(AppInfo.versionDisplay.contains('،'), isFalse);

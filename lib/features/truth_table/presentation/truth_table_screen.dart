@@ -353,6 +353,17 @@ class _TruthTableScreenState extends State<TruthTableScreen> {
                           'این مدار ورودی مستقل ندارد؛ تنها یک وضعیت برای محاسبه وجود دارد.',
                     ),
                   ),
+                if (table.hasSequentialParts)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: InfoBanner(
+                      icon: Icons.schedule_rounded,
+                      tone: InfoBannerTone.warning,
+                      message:
+                          'این مدار عنصر ترتیبی دارد. هر ردیف از وضعیت اولیهٔ فلیپ‌فلپ‌ها و رجیسترها محاسبه می‌شود؛ '
+                          'برای دیدن رفتار واقعی مدار، از کلید «یک پالس کلاک» در ویرایشگر استفاده کنید.',
+                    ),
+                  ),
                 Expanded(child: _tableCard(context, table)),
                 const SizedBox(height: 10),
                 Row(

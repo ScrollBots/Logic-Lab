@@ -1,6 +1,6 @@
 /// Single source of truth for the user-facing application identity.
 ///
-/// The values mirror `pubspec.yaml` (`version: 1.0.0+1`). A unit test reads
+/// The values mirror `pubspec.yaml` (`version: 1.1.0+2`). A unit test reads
 /// `pubspec.yaml` and fails if the two ever drift apart, so the About screen,
 /// the splash screen and the Android manifest can never disagree.
 class AppInfo {
@@ -14,10 +14,10 @@ class AppInfo {
   static const String appSubtitle = 'آزمایشگاه منطق';
 
   /// Dot separated semantic version, exactly as published.
-  static const String version = '1.0.0';
+  static const String version = '1.1.0';
 
   /// Build number, kept separate from the user-facing version.
-  static const String buildNumber = '1';
+  static const String buildNumber = '2';
 
   /// The version string shown to the user. Never localised: the dot separator
   /// must stay a real `.` and never become `٫` or `/`.

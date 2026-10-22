@@ -1,5 +1,6 @@
 import '../../editor/domain/circuit_models.dart';
 import '../../editor/domain/circuit_simulator.dart';
+import '../../editor/domain/component_spec.dart';
 
 class TruthTableLimits {
   const TruthTableLimits({this.maxInputs = 8, this.maxRows = 256});
@@ -78,6 +79,7 @@ class TruthTableResult {
     required this.problems,
     required this.allRowsValid,
     required this.currentInputRow,
+    required this.hasSequentialParts,
   });
 
   final List<TruthTableRow> rows;
@@ -89,6 +91,11 @@ class TruthTableResult {
   final TruthTableLimits limits;
   final List<CircuitProblem> problems;
   final bool allRowsValid;
+
+  /// True when the circuit contains a stateful component. Every row is then
+  /// computed from the *initial* state of those components, because a truth
+  /// table describes a combinational function.
+  final bool hasSequentialParts;
 
   /// Index of the binary combination matching the current input switches, or
   /// null when the table was limited and the combination is absent.
@@ -231,6 +238,15 @@ class TruthTableGenerator {
       problems: List<CircuitProblem>.unmodifiable(lastProblems),
       allRowsValid: allRowsValid && outputs.isNotEmpty,
       currentInputRow: currentRow,
+      hasSequentialParts: _hasSequentialParts(graph),
+    );
+  }
+
+  /// True when the circuit contains a flip-flop, a latch, a register or a
+  /// counter.
+  static bool _hasSequentialParts(CircuitGraph graph) {
+    return graph.nodes.any(
+      (CircuitNode node) => ComponentLibrary.specOf(node.type).isStateful,
     );
   }
 

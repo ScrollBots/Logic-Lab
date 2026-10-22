@@ -674,9 +674,12 @@ class BooleanSimplifier {
     bool verified = false;
     try {
       simplified = BooleanExpressionParser.parse(text);
-      final List<String> simplifiedVars =
-          simplified.collectVariables().toList()..sort();
-      if (simplifiedVars.join(',') == variables.join(',')) {
+      final Set<String> simplifiedVars = simplified.collectVariables();
+      // The simplified expression may use fewer variables than the original
+      // (that is what a minimisation is for), but it must not introduce a
+      // variable that the original does not contain.
+      final bool noNewVariables = simplifiedVars.every(variables.contains);
+      if (noNewVariables) {
         verified = true;
         for (int assignment = 0; assignment < count; assignment++) {
           final Map<String, bool> values = <String, bool>{};

@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:logic_lab/features/editor/application/circuit_editor_controller.dart';
 import 'package:logic_lab/features/editor/domain/circuit_models.dart';
+import 'package:logic_lab/features/editor/domain/circuit_simulator.dart';
 import 'package:logic_lab/features/projects/domain/circuit_project.dart';
 
 void main() {
@@ -203,5 +204,79 @@ void main() {
       isFalse,
       reason: 'reset clears the counter',
     );
+  });
+
+  test('dragging a component does not re-simulate the circuit', () {
+    final CircuitNode gate = controller.addNode(
+      ComponentType.andGate,
+      const CanvasPoint(300, 150),
+    );
+    controller.tapOutputPort('in-a');
+    controller.tapInputPort(gate.id, 0);
+    final SimulationResult before = controller.report;
+
+    controller.beginNodeDrag(gate.id);
+    controller.dragSelected(const CanvasPoint(40, 25));
+    expect(
+      identical(controller.report, before),
+      isTrue,
+      reason: 'moving a component cannot change a signal',
+    );
+    expect(
+      controller.graph.nodeById(gate.id)!.position.x,
+      isNot(300),
+      reason: 'the component follows the pointer',
+    );
+
+    controller.endNodeDrag();
+    expect(
+      identical(controller.report, before),
+      isFalse,
+      reason: 'dropping the component refreshes the simulation once',
+    );
+  });
+
+  test('feedback through a flip-flop is allowed in the editor', () {
+    final CircuitNode clock = controller.addNode(
+      ComponentType.clockSource,
+      const CanvasPoint(120, 320),
+    );
+    final CircuitNode flipFlop = controller.addNode(
+      ComponentType.dFlipFlop,
+      const CanvasPoint(340, 200),
+    );
+    final CircuitNode inverter = controller.addNode(
+      ComponentType.notGate,
+      const CanvasPoint(340, 380),
+    );
+    final CircuitNode probe = controller.addNode(
+      ComponentType.outputPin,
+      const CanvasPoint(560, 200),
+    );
+    controller.tapOutputPort(clock.id, 0);
+    controller.tapInputPort(flipFlop.id, 1);
+    controller.tapOutputPort(flipFlop.id, 0);
+    controller.tapInputPort(inverter.id, 0);
+    // Closing the loop through the flip-flop is valid sequential feedback.
+    controller.tapOutputPort(inverter.id, 0);
+    controller.tapInputPort(flipFlop.id, 0);
+    controller.tapOutputPort(flipFlop.id, 0);
+    controller.tapInputPort(probe.id, 0);
+    expect(controller.graph.wires.length, 4);
+    expect(
+      controller.feedback?.tone,
+      EditorFeedbackTone.success,
+      reason: controller.feedback?.message,
+    );
+    expect(
+      controller.report.hasErrors,
+      isFalse,
+      reason: controller.report.problems.toString(),
+    );
+
+    controller.stepClock();
+    expect(controller.report.signalOf(flipFlop.id, 0), LogicSignal.high);
+    controller.stepClock();
+    expect(controller.report.signalOf(flipFlop.id, 0), LogicSignal.low);
   });
 }

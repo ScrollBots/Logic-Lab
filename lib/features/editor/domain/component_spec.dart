@@ -25,35 +25,39 @@ enum ComponentKind {
 }
 
 /// Runtime state of a sequential component.
+///
+/// The stored values are three-valued: a flip-flop that captured an unknown
+/// data input must remember that the output is unknown as well, instead of
+/// silently turning it into a zero.
 class ComponentState {
   const ComponentState({
-    this.q = false,
-    this.qBar = true,
+    this.q = LogicSignal.low,
+    this.qBar = LogicSignal.high,
     this.prevClock = false,
-    this.bits = const <bool>[],
+    this.bits = const <LogicSignal>[],
     this.initialized = false,
   });
 
   /// Latch / flip-flop output.
-  final bool q;
+  final LogicSignal q;
 
   /// Complementary latch / flip-flop output.
-  final bool qBar;
+  final LogicSignal qBar;
 
   /// Clock level seen during the previous evaluation (for edge detection).
   final bool prevClock;
 
   /// Bit vector used by registers, shift registers and counters.
-  final List<bool> bits;
+  final List<LogicSignal> bits;
 
   /// True once the component has captured a value.
   final bool initialized;
 
   ComponentState copyWith({
-    bool? q,
-    bool? qBar,
+    LogicSignal? q,
+    LogicSignal? qBar,
     bool? prevClock,
-    List<bool>? bits,
+    List<LogicSignal>? bits,
     bool? initialized,
   }) {
     return ComponentState(
@@ -63,6 +67,22 @@ class ComponentState {
       bits: bits ?? this.bits,
       initialized: initialized ?? this.initialized,
     );
+  }
+
+  /// Value equality, used to detect that the state has settled.
+  bool sameAs(ComponentState other) {
+    if (q != other.q || qBar != other.qBar || prevClock != other.prevClock) {
+      return false;
+    }
+    if (bits.length != other.bits.length) {
+      return false;
+    }
+    for (int i = 0; i < bits.length; i++) {
+      if (bits[i] != other.bits[i]) {
+        return false;
+      }
+    }
+    return true;
   }
 }
 
@@ -209,9 +229,6 @@ List<LogicSignal> _subtractBits(List<LogicSignal> a, List<LogicSignal> b) {
   }
   return <LogicSignal>[...result, borrow];
 }
-
-List<LogicSignal> _bitsOf(Iterable<bool> bits) =>
-    bits.map(_bool).toList(growable: false);
 
 /// Selects one of two data inputs with a select line.
 LogicSignal _mux2(LogicSignal i0, LogicSignal i1, LogicSignal select) {
@@ -991,14 +1008,10 @@ class ComponentLibrary {
       notSignal(xorAll(<LogicSignal>[a[0], b[0]])),
       notSignal(xorAll(<LogicSignal>[a[1], b[1]])),
     ]);
-    final List<LogicSignal> difference = _subtractBits(a, b);
-    final LogicSignal less = difference[2];
-    final LogicSignal greater =
-        difference[2] == LogicSignal.high
-            ? LogicSignal.low
-            : less == LogicSignal.low
-            ? LogicSignal.high
-            : LogicSignal.unknown;
+    // "Less than" is the borrow of a - b, "greater than" the borrow of b - a.
+    // Deriving one from the other would report "greater" for equal numbers.
+    final LogicSignal less = _subtractBits(a, b)[2];
+    final LogicSignal greater = _subtractBits(b, a)[2];
     return <LogicSignal>[less, equal, greater];
   }
 
@@ -1235,29 +1248,51 @@ class ComponentLibrary {
   // Sequential evaluators
   // -----------------------------------------------------------------------
 
-  static ComponentState _initialLatchState() =>
-      const ComponentState(q: false, qBar: true, initialized: true);
+  static ComponentState _initialLatchState() => const ComponentState(
+    q: LogicSignal.low,
+    qBar: LogicSignal.high,
+    initialized: true,
+  );
 
   static ComponentState _initialFlipFlopState() => const ComponentState(
-    q: false,
-    qBar: true,
+    q: LogicSignal.low,
+    qBar: LogicSignal.high,
     prevClock: false,
     initialized: true,
   );
 
   static ComponentState _initialRegisterState() => const ComponentState(
-    bits: <bool>[false, false, false, false],
+    bits: <LogicSignal>[
+      LogicSignal.low,
+      LogicSignal.low,
+      LogicSignal.low,
+      LogicSignal.low,
+    ],
     initialized: true,
   );
+
+  /// Toggles a stored bit. An unknown value stays unknown.
+  static LogicSignal _toggle(LogicSignal value) {
+    return switch (value) {
+      LogicSignal.high => LogicSignal.low,
+      LogicSignal.low => LogicSignal.high,
+      _ => LogicSignal.unknown,
+    };
+  }
+
+  /// A data line that is not firmly driven carries no information; it is
+  /// treated as unknown (a high-impedance line is a floating line).
+  static LogicSignal _asData(LogicSignal value) {
+    return (value == LogicSignal.high || value == LogicSignal.low)
+        ? value
+        : LogicSignal.unknown;
+  }
 
   static List<LogicSignal> _srLatchEvaluator(
     List<LogicSignal> inputs,
     ComponentState state,
   ) {
-    if (inputs.length < 2) {
-      return <LogicSignal>[LogicSignal.unknown, LogicSignal.unknown];
-    }
-    return <LogicSignal>[_bool(state.q), _bool(state.qBar)];
+    return <LogicSignal>[state.q, state.qBar];
   }
 
   static ComponentState _srLatchUpdate(
@@ -1270,14 +1305,18 @@ class ComponentLibrary {
     final LogicSignal set = inputs[0];
     final LogicSignal reset = inputs[1];
     if (set == LogicSignal.high && reset == LogicSignal.high) {
-      // Illegal state for an active-high NOR latch.
-      return state.copyWith(q: true, qBar: true);
+      // Illegal state for an active-high NOR latch: both outputs are high.
+      return state.copyWith(q: LogicSignal.high, qBar: LogicSignal.high);
     }
     if (set == LogicSignal.high) {
-      return state.copyWith(q: true, qBar: false);
+      return state.copyWith(q: LogicSignal.high, qBar: LogicSignal.low);
     }
     if (reset == LogicSignal.high) {
-      return state.copyWith(q: false, qBar: true);
+      return state.copyWith(q: LogicSignal.low, qBar: LogicSignal.high);
+    }
+    if (set == LogicSignal.unknown || reset == LogicSignal.unknown) {
+      // An ambiguous request keeps the stored value but marks it uncertain.
+      return state.copyWith(q: LogicSignal.unknown, qBar: LogicSignal.unknown);
     }
     return state;
   }
@@ -1286,7 +1325,7 @@ class ComponentLibrary {
     List<LogicSignal> inputs,
     ComponentState state,
   ) {
-    return <LogicSignal>[_bool(state.q), _bool(state.qBar)];
+    return <LogicSignal>[state.q, state.qBar];
   }
 
   static ComponentState _gatedSrLatchUpdate(
@@ -1297,6 +1336,7 @@ class ComponentLibrary {
       return state;
     }
     if (inputs[2] != LogicSignal.high) {
+      // The latch is closed and keeps its value.
       return state;
     }
     return _srLatchUpdate(<LogicSignal>[inputs[0], inputs[1]], state);
@@ -1306,7 +1346,7 @@ class ComponentLibrary {
     List<LogicSignal> inputs,
     ComponentState state,
   ) {
-    return <LogicSignal>[_bool(state.q), _bool(state.qBar)];
+    return <LogicSignal>[state.q, state.qBar];
   }
 
   static ComponentState _dLatchUpdate(
@@ -1317,20 +1357,21 @@ class ComponentLibrary {
       return state;
     }
     if (inputs[1] != LogicSignal.high) {
+      // The latch is closed and holds the stored value.
       return state;
     }
-    if (inputs[0] != LogicSignal.high && inputs[0] != LogicSignal.low) {
-      return state;
+    final LogicSignal data = _asData(inputs[0]);
+    if (data == LogicSignal.unknown) {
+      return state.copyWith(q: LogicSignal.unknown, qBar: LogicSignal.unknown);
     }
-    final bool value = inputs[0] == LogicSignal.high;
-    return state.copyWith(q: value, qBar: !value);
+    return state.copyWith(q: data, qBar: notSignal(data));
   }
 
   static List<LogicSignal> _flipFlopEvaluator(
     List<LogicSignal> inputs,
     ComponentState state,
   ) {
-    return <LogicSignal>[_bool(state.q), _bool(state.qBar)];
+    return <LogicSignal>[state.q, state.qBar];
   }
 
   static ComponentState _dFlipFlopEdge(
@@ -1340,11 +1381,16 @@ class ComponentLibrary {
     if (inputs.length < 2) {
       return state;
     }
-    if (inputs[0] != LogicSignal.high && inputs[0] != LogicSignal.low) {
-      return state;
+    final LogicSignal data = _asData(inputs[0]);
+    if (data == LogicSignal.unknown) {
+      // Capturing a floating or unknown line makes the stored value unknown.
+      return state.copyWith(
+        q: LogicSignal.unknown,
+        qBar: LogicSignal.unknown,
+        initialized: true,
+      );
     }
-    final bool value = inputs[0] == LogicSignal.high;
-    return state.copyWith(q: value, qBar: !value, initialized: true);
+    return state.copyWith(q: data, qBar: notSignal(data), initialized: true);
   }
 
   static ComponentState _tFlipFlopEdge(
@@ -1354,13 +1400,21 @@ class ComponentLibrary {
     if (inputs.length < 2) {
       return state;
     }
-    if (inputs[0] != LogicSignal.high && inputs[0] != LogicSignal.low) {
+    final LogicSignal toggle = inputs[0];
+    if (toggle == LogicSignal.low) {
       return state;
     }
-    if (inputs[0] == LogicSignal.low) {
-      return state;
+    if (toggle != LogicSignal.high) {
+      // It is unclear whether the flip-flop toggles, so the state becomes
+      // unknown instead of guessing.
+      return state.copyWith(
+        q: LogicSignal.unknown,
+        qBar: LogicSignal.unknown,
+        initialized: true,
+      );
     }
-    return state.copyWith(q: !state.q, qBar: state.q, initialized: true);
+    final LogicSignal next = _toggle(state.q);
+    return state.copyWith(q: next, qBar: notSignal(next), initialized: true);
   }
 
   static ComponentState _jkFlipFlopEdge(
@@ -1374,18 +1428,31 @@ class ComponentLibrary {
     final LogicSignal k = inputs[1];
     if ((j != LogicSignal.high && j != LogicSignal.low) ||
         (k != LogicSignal.high && k != LogicSignal.low)) {
-      return state;
+      return state.copyWith(
+        q: LogicSignal.unknown,
+        qBar: LogicSignal.unknown,
+        initialized: true,
+      );
     }
     final bool jHigh = j == LogicSignal.high;
     final bool kHigh = k == LogicSignal.high;
     if (jHigh && !kHigh) {
-      return state.copyWith(q: true, qBar: false, initialized: true);
+      return state.copyWith(
+        q: LogicSignal.high,
+        qBar: LogicSignal.low,
+        initialized: true,
+      );
     }
     if (!jHigh && kHigh) {
-      return state.copyWith(q: false, qBar: true, initialized: true);
+      return state.copyWith(
+        q: LogicSignal.low,
+        qBar: LogicSignal.high,
+        initialized: true,
+      );
     }
     if (jHigh && kHigh) {
-      return state.copyWith(q: !state.q, qBar: state.q, initialized: true);
+      final LogicSignal next = _toggle(state.q);
+      return state.copyWith(q: next, qBar: notSignal(next), initialized: true);
     }
     return state;
   }
@@ -1394,9 +1461,15 @@ class ComponentLibrary {
     List<LogicSignal> inputs,
     ComponentState state,
   ) {
-    final List<bool> bits =
-        state.bits.isEmpty ? <bool>[false, false, false, false] : state.bits;
-    return _bitsOf(bits);
+    if (state.bits.length == 4) {
+      return List<LogicSignal>.unmodifiable(state.bits);
+    }
+    return const <LogicSignal>[
+      LogicSignal.low,
+      LogicSignal.low,
+      LogicSignal.low,
+      LogicSignal.low,
+    ];
   }
 
   static ComponentState _registerEdge(
@@ -1406,8 +1479,8 @@ class ComponentLibrary {
     if (inputs.length < 5) {
       return state;
     }
-    final List<bool> bits = <bool>[
-      for (int i = 0; i < 4; i++) inputs[i] == LogicSignal.high,
+    final List<LogicSignal> bits = <LogicSignal>[
+      for (int i = 0; i < 4; i++) _asData(inputs[i]),
     ];
     return state.copyWith(bits: bits, initialized: true);
   }
@@ -1419,14 +1492,21 @@ class ComponentLibrary {
     if (inputs.length < 3) {
       return state;
     }
-    final List<bool> current =
-        state.bits.isEmpty ? <bool>[false, false, false, false] : state.bits;
-    final bool data = inputs[0] == LogicSignal.high;
+    final List<LogicSignal> current =
+        state.bits.length == 4
+            ? state.bits
+            : const <LogicSignal>[
+              LogicSignal.low,
+              LogicSignal.low,
+              LogicSignal.low,
+              LogicSignal.low,
+            ];
+    final LogicSignal data = _asData(inputs[0]);
     final bool shiftRight = inputs[1] == LogicSignal.low;
-    final List<bool> next =
+    final List<LogicSignal> next =
         shiftRight
-            ? <bool>[data, current[0], current[1], current[2]]
-            : <bool>[current[1], current[2], current[3], data];
+            ? <LogicSignal>[data, current[0], current[1], current[2]]
+            : <LogicSignal>[current[1], current[2], current[3], data];
     return state.copyWith(bits: next, initialized: true);
   }
 
@@ -1439,26 +1519,26 @@ class ComponentLibrary {
     }
     if (inputs[1] == LogicSignal.high) {
       return state.copyWith(
-        bits: <bool>[false, false, false, false],
+        bits: const <LogicSignal>[
+          LogicSignal.low,
+          LogicSignal.low,
+          LogicSignal.low,
+          LogicSignal.low,
+        ],
         initialized: true,
       );
     }
-    final List<bool> current =
-        state.bits.isEmpty ? <bool>[false, false, false, false] : state.bits;
-    int value = 0;
-    for (int i = 3; i >= 0; i--) {
-      value = (value << 1) | (current[i] ? 1 : 0);
-    }
-    value = (value + 1) & 0xF;
-    return state.copyWith(
-      bits: <bool>[
-        value & 0x1 != 0,
-        value & 0x2 != 0,
-        value & 0x4 != 0,
-        value & 0x8 != 0,
-      ],
-      initialized: true,
-    );
+    final List<LogicSignal> current =
+        state.bits.length == 4
+            ? state.bits
+            : const <LogicSignal>[
+              LogicSignal.low,
+              LogicSignal.low,
+              LogicSignal.low,
+              LogicSignal.low,
+            ];
+    final int value = _bitsToInt(current) + 1 & 0xF;
+    return state.copyWith(bits: _intToBits(value), initialized: true);
   }
 
   static ComponentState _upDownCounterEdge(
@@ -1470,27 +1550,49 @@ class ComponentLibrary {
     }
     if (inputs[1] == LogicSignal.high) {
       return state.copyWith(
-        bits: <bool>[false, false, false, false],
+        bits: const <LogicSignal>[
+          LogicSignal.low,
+          LogicSignal.low,
+          LogicSignal.low,
+          LogicSignal.low,
+        ],
         initialized: true,
       );
     }
-    final List<bool> current =
-        state.bits.isEmpty ? <bool>[false, false, false, false] : state.bits;
+    final List<LogicSignal> current =
+        state.bits.length == 4
+            ? state.bits
+            : const <LogicSignal>[
+              LogicSignal.low,
+              LogicSignal.low,
+              LogicSignal.low,
+              LogicSignal.low,
+            ];
+    final int value =
+        inputs[2] == LogicSignal.high
+            ? _bitsToInt(current) + 1 & 0xF
+            : _bitsToInt(current) - 1 & 0xF;
+    return state.copyWith(bits: _intToBits(value), initialized: true);
+  }
+
+  /// Reads a little endian bit vector (index 0 is the least significant bit).
+  static int _bitsToInt(List<LogicSignal> bits) {
     int value = 0;
     for (int i = 3; i >= 0; i--) {
-      value = (value << 1) | (current[i] ? 1 : 0);
+      value =
+          (value << 1) |
+          (i < bits.length && bits[i] == LogicSignal.high ? 1 : 0);
     }
-    value =
-        inputs[2] == LogicSignal.high ? (value + 1) & 0xF : (value - 1) & 0xF;
-    return state.copyWith(
-      bits: <bool>[
-        value & 0x1 != 0,
-        value & 0x2 != 0,
-        value & 0x4 != 0,
-        value & 0x8 != 0,
-      ],
-      initialized: true,
-    );
+    return value;
+  }
+
+  static List<LogicSignal> _intToBits(int value) {
+    return <LogicSignal>[
+      value & 0x1 != 0 ? LogicSignal.high : LogicSignal.low,
+      value & 0x2 != 0 ? LogicSignal.high : LogicSignal.low,
+      value & 0x4 != 0 ? LogicSignal.high : LogicSignal.low,
+      value & 0x8 != 0 ? LogicSignal.high : LogicSignal.low,
+    ];
   }
 
   /// All component types that the library can place on the canvas.

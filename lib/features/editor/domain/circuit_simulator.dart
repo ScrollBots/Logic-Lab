@@ -1,7 +1,7 @@
 import 'component_spec.dart';
 import 'circuit_models.dart';
 
-/// Result of one simulation pass.
+/// Result of one simulation step.
 class SimulationResult {
   const SimulationResult({
     required this.outputSignals,
@@ -58,7 +58,8 @@ class SimulationResult {
 
   /// The value shown by an output probe (the signal that reaches it).
   bool? probeValue(String outputNodeId) {
-    return inputOf(outputNodeId, 0).booleanValue;
+    final LogicSignal signal = inputOf(outputNodeId, 0);
+    return signal.booleanValue;
   }
 
   /// Compact result used by truth tables: unknown values are encoded as null.
@@ -69,23 +70,38 @@ class SimulationResult {
   }
 }
 
-/// Stateful simulation engine.
+/// Stateful simulation engine for combinational and sequential circuits.
 ///
-/// The engine evaluates a combinational network with a three-valued (plus
-/// high-impedance) signal model and keeps the state of sequential elements so
-/// that latches, flip-flops, registers and counters behave like real digital
-/// hardware:
+/// ## Simulation step model
 ///
-/// * Level-sensitive elements (latches) update their state while they are
-///   enabled. This can create a feedback loop, so the engine iterates the
-///   evaluation until it converges or reports an unstable circuit.
-/// * Edge-triggered elements (flip-flops, registers, counters) only capture
-///   their input on a rising clock edge, which the user controls manually
-///   with [stepClock] or with the automatic clock in the editor.
+/// One evaluation of the engine is one *simulation step* and always runs the
+/// same four phases:
+///
+/// 1. **Validation** – the graph is checked (missing nodes, invalid ports,
+///    duplicated connections, unconnected inputs, combinational cycles).
+/// 2. **Signal phase** – every combinational node is evaluated from the
+///    sequential state that was current at the *start* of the step. The
+///    evaluation order is a topological order of the combinational subgraph;
+///    stateful nodes are *sources* in that subgraph because their output comes
+///    from their stored state, not from their inputs.
+/// 3. **State phase** – the inputs of every stateful node are read from the
+///    settled signals of phase 2 and the stored state is updated: edge
+///    triggered elements capture on a rising clock edge, level sensitive
+///    elements (latches) update while they are enabled.
+/// 4. **Settling** – phases 2 and 3 are repeated while the state keeps
+///    changing (a latch that feeds logic back into itself settles in a few
+///    rounds). The iteration count is bounded, an unstable feedback loop is
+///    reported instead of hanging the app. The reported signals always belong
+///    to the *final* state of the step.
+///
+/// Because the data inputs of a flip-flop are read in phase 3, they are always
+/// the settled values of phase 2 – a flip-flop can never capture a value that
+/// was simply not computed yet.
 class CircuitSimulator {
   CircuitSimulator(CircuitGraph graph) : _graph = graph {
     _states = <String, ComponentState>{};
-    for (final CircuitNode node in _graph.nodes) {
+    _nodeIndex = _buildNodeIndex(graph);
+    for (final CircuitNode node in graph.nodes) {
       final ComponentState? initial =
           ComponentLibrary.specOf(node.type).initialState?.call();
       if (initial != null) {
@@ -94,13 +110,23 @@ class CircuitSimulator {
     }
   }
 
-  /// Upper bound for the fix-point iterations of feedback loops.
+  /// Upper bound for the settling rounds of a feedback loop.
   static const int maxIterations = 24;
 
   CircuitGraph _graph;
-  late final Map<String, ComponentState> _states;
+  late Map<String, ComponentState> _states;
+
+  /// Cached node lookup. The graph only changes through [updateGraph], so the
+  /// index is rebuilt there instead of on every evaluation.
+  late Map<String, CircuitNode> _nodeIndex;
   bool _clockLevel = false;
   SimulationResult? _lastResult;
+
+  static Map<String, CircuitNode> _buildNodeIndex(CircuitGraph graph) {
+    return <String, CircuitNode>{
+      for (final CircuitNode node in graph.nodes) node.id: node,
+    };
+  }
 
   CircuitGraph get currentGraph => _graph;
   bool get clockLevel => _clockLevel;
@@ -110,8 +136,8 @@ class CircuitSimulator {
   SimulationResult get result => _lastResult ?? evaluate();
 
   /// Replaces the graph while keeping the state of components that still
-  /// exist. This lets the editor keep the counter or flip-flop state alive
-  /// while the user is still wiring the circuit.
+  /// exist. This lets the editor keep the counter/flip-flop state alive while
+  /// the user is still wiring the circuit.
   void updateGraph(CircuitGraph newGraph) {
     _states.removeWhere(
       (String key, ComponentState value) => newGraph.nodeById(key) == null,
@@ -127,11 +153,13 @@ class CircuitSimulator {
       }
     }
     _graph = newGraph;
+    _nodeIndex = _buildNodeIndex(newGraph);
     _lastResult = null;
   }
 
   /// Clears every sequential state and returns the clock to its low level.
   void reset() {
+    _states = <String, ComponentState>{};
     for (final CircuitNode node in _graph.nodes) {
       final ComponentState? initial =
           ComponentLibrary.specOf(node.type).initialState?.call();
@@ -172,39 +200,24 @@ class CircuitSimulator {
       }
     }
 
-    final Map<String, LogicSignal> inputNodeValues = <String, LogicSignal>{
-      for (final CircuitNode node in _graph.nodes)
-        if (node.type.isInput)
-          node.id: node.inputValue ? LogicSignal.high : LogicSignal.low,
-    };
-
-    if (!_graph.hasOutput) {
-      addProblem(
-        const CircuitProblem(
-          code: CircuitProblemCode.noOutput,
-          message:
-              'مدار پایه خروجی ندارد؛ برای محاسبه نتیجه یک خروجی اضافه کنید.',
-        ),
-      );
-    }
-    if (_graph.inputs.isEmpty) {
-      addProblem(
-        const CircuitProblem(
-          code: CircuitProblemCode.noInputs,
-          message: 'این مدار ورودی مستقل ندارد.',
-          severity: CircuitProblemSeverity.warning,
-        ),
-      );
-    }
+    // ------------------------------------------------------------------
+    // Phase 1 – validation of the graph structure.
+    // ------------------------------------------------------------------
+    final Map<String, CircuitNode> nodesById = _nodeIndex;
 
     final Set<String> malformedPorts = <String>{};
     final Set<String> duplicatePorts = <String>{};
     final Map<String, CircuitWire> validWireByPort = <String, CircuitWire>{};
+    final _WireIndex wires = _WireIndex(
+      byPort: validWireByPort,
+      malformedPorts: malformedPorts,
+      duplicatePorts: duplicatePorts,
+    );
     final List<CircuitWire> structuralWires = <CircuitWire>[];
 
     for (final CircuitWire wire in _graph.wires) {
-      final CircuitNode? source = _graph.nodeById(wire.fromNodeId);
-      final CircuitNode? target = _graph.nodeById(wire.toNodeId);
+      final CircuitNode? source = nodesById[wire.fromNodeId];
+      final CircuitNode? target = nodesById[wire.toNodeId];
       if (source == null || target == null) {
         addProblem(
           CircuitProblem(
@@ -299,41 +312,69 @@ class CircuitSimulator {
       }
     }
 
-    // Dependency order over the combinational part of the circuit. Sources
-    // that only depend on their stored state (flip-flops, registers) do not
-    // create ordering constraints, so they are evaluated first.
-    final Map<String, int> indegree = <String, int>{
-      for (final CircuitNode node in _graph.nodes) node.id: 0,
-    };
-    final Map<String, List<String>> adjacency = <String, List<String>>{
-      for (final CircuitNode node in _graph.nodes) node.id: <String>[],
-    };
-    for (final CircuitWire wire in structuralWires) {
-      adjacency[wire.fromNodeId]!.add(wire.toNodeId);
-      indegree[wire.toNodeId] = indegree[wire.toNodeId]! + 1;
+    if (!_graph.hasOutput) {
+      addProblem(
+        const CircuitProblem(
+          code: CircuitProblemCode.noOutput,
+          message:
+              'مدار پایه خروجی ندارد؛ برای محاسبه نتیجه یک خروجی اضافه کنید.',
+        ),
+      );
     }
+    if (_graph.inputs.isEmpty) {
+      addProblem(
+        const CircuitProblem(
+          code: CircuitProblemCode.noInputs,
+          message: 'این مدار ورودی مستقل ندارد.',
+          severity: CircuitProblemSeverity.warning,
+        ),
+      );
+    }
+
+    // ------------------------------------------------------------------
+    // Phase 2 – classification and evaluation order.
+    // ------------------------------------------------------------------
+    final Set<String> statefulIds = <String>{};
     for (final CircuitNode node in _graph.nodes) {
-      if (ComponentLibrary.specOf(node.type).edgeUpdater == null) {
-        continue;
-      }
-      // Edge-triggered elements are cut points in the combinational graph:
-      // their output comes from their stored state, so a loop through a
-      // flip-flop (Q -> logic -> D) is not a combinational cycle. Their
-      // outgoing edges still constrain the nodes they feed, so a probe
-      // behind a flip-flop is always evaluated after it.
-      indegree[node.id] = 0;
-      for (final List<String> targets in adjacency.values) {
-        targets.remove(node.id);
+      final ComponentSpec spec = ComponentLibrary.specOf(node.type);
+      if (spec.edgeUpdater != null || spec.latchUpdater != null) {
+        statefulIds.add(node.id);
       }
     }
 
-    final List<String> ready = <String>[
+    // The combinational subgraph only contains combinational nodes. A stateful
+    // node is a *source* in that graph (its output is its stored state) and a
+    // *sink* (its inputs are read after the combinational part settled).
+    // A loop through a flip-flop or latch is therefore valid sequential
+    // feedback, while a loop of pure gates is a combinational cycle.
+    final Map<String, int> indegree = <String, int>{
       for (final CircuitNode node in _graph.nodes)
-        if (indegree[node.id] == 0) node.id,
+        if (!statefulIds.contains(node.id)) node.id: 0,
+    };
+    final Map<String, List<String>> adjacency = <String, List<String>>{
+      for (final CircuitNode node in _graph.nodes)
+        if (!statefulIds.contains(node.id)) node.id: <String>[],
+    };
+    for (final CircuitWire wire in structuralWires) {
+      if (!indegree.containsKey(wire.fromNodeId) ||
+          !indegree.containsKey(wire.toNodeId)) {
+        continue;
+      }
+      adjacency[wire.fromNodeId]!.add(wire.toNodeId);
+      indegree[wire.toNodeId] = indegree[wire.toNodeId]! + 1;
+    }
+
+    final List<String> ready = <String>[
+      for (final String id in indegree.keys)
+        if (indegree[id] == 0) id,
     ];
     final List<String> ordered = <String>[];
-    while (ready.isNotEmpty) {
-      final String current = ready.removeAt(0);
+    // A cursor instead of `removeAt(0)`: removing the first element of a
+    // list shifts every remaining element, which made the topological sort
+    // quadratic for larger circuits.
+    int cursor = 0;
+    while (cursor < ready.length) {
+      final String current = ready[cursor++];
       ordered.add(current);
       for (final String next in adjacency[current]!) {
         indegree[next] = indegree[next]! - 1;
@@ -343,228 +384,201 @@ class CircuitSimulator {
       }
     }
 
-    final Set<String> unordered =
-        _graph.nodes.map((CircuitNode node) => node.id).toSet()
-          ..removeAll(ordered);
-    if (unordered.isNotEmpty) {
+    final Set<String> cycleNodes = indegree.keys.toSet()..removeAll(ordered);
+    if (cycleNodes.isNotEmpty) {
       addProblem(
         CircuitProblem(
           code: CircuitProblemCode.cycle,
           message:
               'چرخه ترکیبی در مدار شناسایی شد. سیگنال‌های این مسیر نامشخص‌اند؛ برای محاسبه نتیجه، چرخه را برطرف کنید.',
-          nodeId: unordered.first,
+          nodeId: cycleNodes.first,
         ),
       );
     }
 
-    final Map<String, List<LogicSignal>> outputSignals =
-        <String, List<LogicSignal>>{};
-    final Map<String, List<LogicSignal>> inputSignals =
+    // ------------------------------------------------------------------
+    // Phase 3 and 4 – signals, state update and settling.
+    // ------------------------------------------------------------------
+    Map<String, List<LogicSignal>> inputSignals = <String, List<LogicSignal>>{};
+    Map<String, ComponentState> state = Map<String, ComponentState>.of(_states);
+    Map<String, List<LogicSignal>> outputSignals =
         <String, List<LogicSignal>>{};
 
-    // Output probes mirror the signal that reaches them so that the canvas
-    // and the truth table can read a single value per node.
-    void evaluateNode(
-      CircuitNode node,
-      Map<String, List<LogicSignal>> outputs,
+    Map<String, List<LogicSignal>> evaluateSignals(
+      Map<String, ComponentState> currentState,
     ) {
-      final ComponentSpec spec = ComponentLibrary.specOf(node.type);
-      if (node.type.isInput) {
-        outputs[node.id] = <LogicSignal>[
-          inputNodeValues[node.id] ?? LogicSignal.low,
-        ];
-        return;
-      }
-      if (node.type.isClock) {
-        outputs[node.id] = <LogicSignal>[
-          _clockLevel ? LogicSignal.high : LogicSignal.low,
-        ];
-        return;
-      }
-      if (node.type == ComponentType.unknown) {
-        outputs[node.id] = List<LogicSignal>.filled(
-          node.outputCount,
-          LogicSignal.unknown,
-        );
-        return;
+      final Map<String, List<LogicSignal>> outputs =
+          <String, List<LogicSignal>>{};
+
+      // Stateful nodes are evaluated first: their output is their state and
+      // does not depend on the combinational part.
+      for (final String id in statefulIds) {
+        final CircuitNode node = nodesById[id]!;
+        final ComponentSpec spec = ComponentLibrary.specOf(node.type);
+        final List<LogicSignal> result =
+            spec.evaluator?.call(
+              const <LogicSignal>[],
+              currentState[id] ?? const ComponentState(),
+            ) ??
+            List<LogicSignal>.filled(node.outputCount, LogicSignal.unknown);
+        outputs[id] = _fit(result, node.outputCount);
       }
 
-      final List<LogicSignal> inputs = <LogicSignal>[];
-      for (int port = 0; port < node.inputCount; port++) {
-        final String key = '${node.id}:$port';
-        LogicSignal value = LogicSignal.unknown;
-        if (!duplicatePorts.contains(key) && !malformedPorts.contains(key)) {
-          final CircuitWire? wire = validWireByPort[key];
-          if (wire != null) {
-            final List<LogicSignal>? sourceSignals = outputs[wire.fromNodeId];
-            if (sourceSignals != null &&
-                wire.fromPortIndex < sourceSignals.length) {
-              value = sourceSignals[wire.fromPortIndex];
-            }
-          }
+      // Then the combinational nodes in topological order.
+      for (final String id in ordered) {
+        final CircuitNode node = nodesById[id]!;
+        if (node.type.isInput) {
+          outputs[id] = <LogicSignal>[
+            node.inputValue ? LogicSignal.high : LogicSignal.low,
+          ];
+          continue;
         }
-        inputs.add(value);
-      }
-      inputSignals[node.id] = List<LogicSignal>.unmodifiable(inputs);
-
-      if (node.type.isOutput) {
-        // An output probe only displays the signal it receives.
-        outputs[node.id] = <LogicSignal>[
-          inputs.isEmpty ? LogicSignal.unknown : inputs.first,
-        ];
-        return;
-      }
-
-      final ComponentState state = _states[node.id] ?? const ComponentState();
-      if (spec.evaluator == null) {
-        outputs[node.id] = List<LogicSignal>.filled(
-          node.outputCount,
-          LogicSignal.unknown,
-        );
-        return;
-      }
-      final List<LogicSignal> result = spec.evaluator!(inputs, state);
-      final List<LogicSignal> padded = List<LogicSignal>.filled(
-        node.outputCount,
-        LogicSignal.unknown,
-      );
-      for (int i = 0; i < result.length && i < padded.length; i++) {
-        padded[i] = result[i];
-      }
-      outputs[node.id] = padded;
-    }
-
-    // First pass: evaluate everything that has a known order.
-    for (final String nodeId in ordered) {
-      final CircuitNode node = _graph.nodeById(nodeId)!;
-      evaluateNode(node, outputSignals);
-    }
-
-    // Feedback loops (latches) are resolved with a bounded fix-point loop.
-    if (unordered.isNotEmpty) {
-      bool changed = true;
-      int iteration = 0;
-      while (changed && iteration < maxIterations) {
-        changed = false;
-        iteration++;
-        final Map<String, List<LogicSignal>> before =
-            <String, List<LogicSignal>>{
-              for (final MapEntry<String, List<LogicSignal>> entry
-                  in outputSignals.entries)
-                entry.key: List<LogicSignal>.from(entry.value),
-            };
-        for (final String nodeId in unordered) {
-          final CircuitNode? node = _graph.nodeById(nodeId);
-          if (node == null) {
-            continue;
-          }
-          evaluateNode(node, outputSignals);
+        if (node.type.isClock) {
+          outputs[id] = <LogicSignal>[
+            _clockLevel ? LogicSignal.high : LogicSignal.low,
+          ];
+          continue;
         }
-        for (final MapEntry<String, List<LogicSignal>> entry
-            in outputSignals.entries) {
-          final List<LogicSignal>? previous = before[entry.key];
-          if (previous == null || previous.length != entry.value.length) {
-            changed = true;
-            break;
-          }
-          for (int i = 0; i < previous.length; i++) {
-            if (previous[i] != entry.value[i]) {
-              changed = true;
-              break;
-            }
-          }
-          if (changed) {
-            break;
-          }
-        }
-      }
-      if (iteration >= maxIterations) {
-        for (final String nodeId in unordered) {
-          outputSignals[nodeId] = List<LogicSignal>.filled(
-            _graph.nodeById(nodeId)?.outputCount ?? 1,
+        if (node.type == ComponentType.unknown) {
+          outputs[id] = List<LogicSignal>.filled(
+            node.outputCount,
             LogicSignal.unknown,
           );
+          continue;
         }
-        addProblem(
-          const CircuitProblem(
-            code: CircuitProblemCode.cycle,
-            message:
-                'این بخش از مدار پس از چند تکرار به مقدار پایدار نرسید؛ احتمالاً یک حلقه بازخورد ناپایدار وجود دارد.',
-          ),
-        );
+        final ComponentSpec spec = ComponentLibrary.specOf(node.type);
+        final List<LogicSignal> inputs = _readInputs(node, outputs, wires);
+        if (node.type.isOutput) {
+          // An output probe only displays the signal it receives.
+          outputs[id] = <LogicSignal>[
+            inputs.isEmpty ? LogicSignal.unknown : inputs.first,
+          ];
+          continue;
+        }
+        final List<LogicSignal> result =
+            spec.evaluator?.call(
+              inputs,
+              currentState[id] ?? const ComponentState(),
+            ) ??
+            List<LogicSignal>.filled(node.outputCount, LogicSignal.unknown);
+        outputs[id] = _fit(result, node.outputCount);
       }
-    }
 
-    // Latches commit their new state after the combinational part settled.
-    for (final CircuitNode node in _graph.nodes) {
-      final ComponentSpec spec = ComponentLibrary.specOf(node.type);
-      if (spec.latchUpdater == null) {
-        continue;
-      }
-      final List<LogicSignal> inputs =
-          inputSignals[node.id] ?? const <LogicSignal>[];
-      final ComponentState updated = spec.latchUpdater!(
-        inputs,
-        _states[node.id] ?? const ComponentState(),
-      );
-      _states[node.id] = updated;
-      if (node.type == ComponentType.srLatch &&
-          inputs.length >= 2 &&
-          inputs[0] == LogicSignal.high &&
-          inputs[1] == LogicSignal.high) {
-        addProblem(
-          CircuitProblem(
-            code: CircuitProblemCode.illegalLatchState,
-            message:
-                'ورودی S و R هم‌زمان فعال‌اند؛ این حالت برای قفل SR غیرمجاز است.',
-            nodeId: node.id,
-          ),
-        );
-      }
-    }
-
-    // Clock edges: only edge-triggered elements capture their input.
-    for (final CircuitNode node in _graph.nodes) {
-      final ComponentSpec spec = ComponentLibrary.specOf(node.type);
-      if (spec.edgeUpdater == null) {
-        continue;
-      }
-      final List<LogicSignal> inputs =
-          inputSignals[node.id] ?? const <LogicSignal>[];
-      final int clockIndex = _clockPortIndex(spec);
-      if (clockIndex < 0 || clockIndex >= inputs.length) {
-        continue;
-      }
-      final ComponentState state = _states[node.id] ?? const ComponentState();
-      final bool clockHigh = inputs[clockIndex] == LogicSignal.high;
-      if (clockHigh && !state.prevClock) {
-        _states[node.id] = spec.edgeUpdater!(inputs, state);
-      }
-      _states[node.id] = (_states[node.id] ?? state).copyWith(
-        prevClock: clockHigh,
-      );
-    }
-
-    // Re-evaluate so the reported values reflect the captured state.
-    final Map<String, List<LogicSignal>> finalSignals =
-        <String, List<LogicSignal>>{};
-    for (final String nodeId in ordered) {
-      final CircuitNode node = _graph.nodeById(nodeId)!;
-      evaluateNode(node, finalSignals);
-    }
-    if (unordered.isNotEmpty) {
-      for (final String nodeId in unordered) {
-        final CircuitNode? node = _graph.nodeById(nodeId);
+      // Nodes inside a combinational cycle can never be resolved.
+      for (final String id in cycleNodes) {
+        final CircuitNode? node = nodesById[id];
         if (node == null) {
           continue;
         }
-        evaluateNode(node, finalSignals);
+        outputs[id] = List<LogicSignal>.filled(
+          node.outputCount,
+          LogicSignal.unknown,
+        );
       }
+      return outputs;
     }
+
+    Map<String, ComponentState> updateState(
+      Map<String, ComponentState> currentState,
+      Map<String, List<LogicSignal>> outputs,
+    ) {
+      final Map<String, ComponentState> next = Map<String, ComponentState>.of(
+        currentState,
+      );
+      for (final String id in statefulIds) {
+        final CircuitNode node = nodesById[id]!;
+        final ComponentSpec spec = ComponentLibrary.specOf(node.type);
+        final List<LogicSignal> inputs = _readInputs(node, outputs, wires);
+        final ComponentState previous =
+            currentState[id] ?? const ComponentState();
+        ComponentState updated = previous;
+
+        if (spec.edgeUpdater != null) {
+          final int clockIndex = _clockPortIndex(spec);
+          if (clockIndex >= 0 && clockIndex < inputs.length) {
+            final LogicSignal clock = inputs[clockIndex];
+            final bool clockHigh = clock == LogicSignal.high;
+            if (clockHigh && !previous.prevClock) {
+              updated = spec.edgeUpdater!(inputs, previous);
+            }
+            updated = updated.copyWith(prevClock: clockHigh);
+            if (clock != LogicSignal.high && clock != LogicSignal.low) {
+              addProblem(
+                CircuitProblem(
+                  code: CircuitProblemCode.unknownClock,
+                  message:
+                      'پایه کلاک «${node.label}» نامشخص است؛ در این مرحله لبه‌ای رخ نمی‌دهد.',
+                  nodeId: node.id,
+                  severity: CircuitProblemSeverity.warning,
+                ),
+              );
+            }
+          }
+        } else if (spec.latchUpdater != null) {
+          updated = spec.latchUpdater!(inputs, previous);
+          if (node.type == ComponentType.srLatch &&
+              inputs.length >= 2 &&
+              inputs[0] == LogicSignal.high &&
+              inputs[1] == LogicSignal.high) {
+            addProblem(
+              CircuitProblem(
+                code: CircuitProblemCode.illegalLatchState,
+                message:
+                    'ورودی S و R هم‌زمان فعال‌اند؛ این حالت برای قفل SR غیرمجاز است.',
+                nodeId: node.id,
+              ),
+            );
+          }
+        }
+        next[id] = updated;
+      }
+      return next;
+    }
+
+    bool settled = false;
+    int iteration = 0;
+    while (!settled && iteration < maxIterations) {
+      iteration++;
+      outputSignals = evaluateSignals(state);
+      final Map<String, ComponentState> next = updateState(
+        state,
+        outputSignals,
+      );
+      final bool changed = !_statesEqual(next, state);
+      state = next;
+      settled = !changed;
+    }
+    if (!settled) {
+      addProblem(
+        const CircuitProblem(
+          code: CircuitProblemCode.unstableFeedback,
+          message:
+              'بازخورد این بخش از مدار پس از چند تکرار به مقدار پایدار نرسید؛ نتیجهٔ آن نامشخص در نظر گرفته شد.',
+        ),
+      );
+      for (final String id in statefulIds) {
+        state[id] = state[id]!.copyWith(
+          q: LogicSignal.unknown,
+          qBar: LogicSignal.unknown,
+        );
+      }
+      outputSignals = evaluateSignals(state);
+    }
+
+    // The reported signals belong to the final state of this step.
+    inputSignals = <String, List<LogicSignal>>{};
+    for (final CircuitNode node in _graph.nodes) {
+      if (node.type.isInput || node.type.isClock) {
+        continue;
+      }
+      inputSignals[node.id] = _readInputs(node, outputSignals, wires);
+    }
+
+    _states = state;
 
     final SimulationResult result = SimulationResult(
       outputSignals: Map<String, List<LogicSignal>>.unmodifiable(
-        finalSignals.map(
+        outputSignals.map(
           (String key, List<LogicSignal> value) =>
               MapEntry<String, List<LogicSignal>>(
                 key,
@@ -572,17 +586,97 @@ class CircuitSimulator {
               ),
         ),
       ),
-      inputSignals: Map<String, List<LogicSignal>>.unmodifiable(inputSignals),
+      inputSignals: Map<String, List<LogicSignal>>.unmodifiable(
+        inputSignals.map(
+          (String key, List<LogicSignal> value) =>
+              MapEntry<String, List<LogicSignal>>(
+                key,
+                List<LogicSignal>.unmodifiable(value),
+              ),
+        ),
+      ),
       problems: List<CircuitProblem>.unmodifiable(problems),
-      evaluatedNodeIds: Set<String>.unmodifiable(ordered.toSet()),
+      evaluatedNodeIds: Set<String>.unmodifiable(<String>{
+        ...ordered,
+        ...statefulIds,
+      }),
       clockLevel: _clockLevel,
     );
     _lastResult = result;
     return result;
   }
 
-  int _clockPortIndex(ComponentSpec spec) {
-    final int index = spec.inputLabels.indexOf('CLK');
-    return index;
+  /// Reads the input signals of a node from the already evaluated outputs.
+  List<LogicSignal> _readInputs(
+    CircuitNode node,
+    Map<String, List<LogicSignal>> outputs,
+    _WireIndex wires,
+  ) {
+    final List<LogicSignal> inputs = <LogicSignal>[];
+    for (int port = 0; port < node.inputCount; port++) {
+      final String key = '${node.id}:$port';
+      LogicSignal value = LogicSignal.unknown;
+      if (!wires.duplicatePorts.contains(key) &&
+          !wires.malformedPorts.contains(key)) {
+        final CircuitWire? wire = wires.byPort[key];
+        if (wire != null) {
+          final List<LogicSignal>? sourceSignals = outputs[wire.fromNodeId];
+          if (sourceSignals != null &&
+              wire.fromPortIndex < sourceSignals.length) {
+            value = sourceSignals[wire.fromPortIndex];
+          }
+        }
+      }
+      inputs.add(value);
+    }
+    return inputs;
   }
+
+  List<LogicSignal> _fit(List<LogicSignal> values, int count) {
+    if (values.length == count) {
+      return values;
+    }
+    final List<LogicSignal> padded = List<LogicSignal>.filled(
+      count,
+      LogicSignal.unknown,
+    );
+    for (int i = 0; i < values.length && i < padded.length; i++) {
+      padded[i] = values[i];
+    }
+    return padded;
+  }
+
+  bool _statesEqual(
+    Map<String, ComponentState> a,
+    Map<String, ComponentState> b,
+  ) {
+    if (a.length != b.length) {
+      return false;
+    }
+    for (final MapEntry<String, ComponentState> entry in a.entries) {
+      final ComponentState? other = b[entry.key];
+      if (other == null || !entry.value.sameAs(other)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  int _clockPortIndex(ComponentSpec spec) {
+    return spec.inputLabels.indexOf('CLK');
+  }
+}
+
+/// Index of the valid wire connections of a graph, used while reading the
+/// input signals of a node.
+class _WireIndex {
+  const _WireIndex({
+    required this.byPort,
+    required this.malformedPorts,
+    required this.duplicatePorts,
+  });
+
+  final Map<String, CircuitWire> byPort;
+  final Set<String> malformedPorts;
+  final Set<String> duplicatePorts;
 }

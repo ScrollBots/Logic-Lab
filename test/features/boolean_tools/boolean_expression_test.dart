@@ -152,6 +152,20 @@ void main() {
       }
     });
 
+    test('simplifies an expression that does not depend on a variable', () {
+      // Regression test: the result of a minimisation may use fewer variables
+      // than the original expression. Such a result used to be rejected.
+      final BoolExpr expression = BooleanExpressionParser.parse(
+        'A & B | A & !B',
+      );
+      final SimplificationResult result = BooleanSimplifier.simplify(
+        expression,
+      );
+      expect(result.exact, isTrue);
+      expect(result.verified, isTrue);
+      expect(result.simplifiedText, 'A');
+    });
+
     test('refuses to claim a minimum for more than six variables', () {
       final BoolExpr expression = BooleanExpressionParser.parse(
         'A & B & C & D & E & F & G',

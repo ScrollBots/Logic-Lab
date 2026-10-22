@@ -178,5 +178,56 @@ void main() {
       expect(lines[1], '0,0,0');
       expect(lines[4], '1,1,1');
     });
+
+    test('a combinational circuit is not marked as sequential', () {
+      final TruthTableResult table = const TruthTableGenerator().generate(
+        _andGraph(),
+      );
+      expect(table.hasSequentialParts, isFalse);
+    });
+
+    test('a circuit with a flip-flop is marked as sequential', () {
+      final CircuitGraph graph = CircuitGraph(
+        nodes: <CircuitNode>[
+          CircuitNode(
+            id: 'a',
+            type: ComponentType.inputPin,
+            position: const CanvasPoint(0, 0),
+            label: 'A',
+          ),
+          CircuitNode(
+            id: 'ff',
+            type: ComponentType.dFlipFlop,
+            position: const CanvasPoint(220, 0),
+            label: 'DFF',
+          ),
+          CircuitNode(
+            id: 'y',
+            type: ComponentType.outputPin,
+            position: const CanvasPoint(440, 0),
+            label: 'Y',
+          ),
+        ],
+        wires: <CircuitWire>[
+          CircuitWire(
+            id: 'w1',
+            fromNodeId: 'a',
+            toNodeId: 'ff',
+            toInputIndex: 0,
+          ),
+          CircuitWire(
+            id: 'w2',
+            fromNodeId: 'ff',
+            toNodeId: 'y',
+            toInputIndex: 0,
+            fromPortIndex: 0,
+          ),
+        ],
+      );
+      final TruthTableResult table = const TruthTableGenerator().generate(
+        graph,
+      );
+      expect(table.hasSequentialParts, isTrue);
+    });
   });
 }

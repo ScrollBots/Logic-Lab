@@ -125,13 +125,22 @@ The simulator is four-valued and never guesses.
   port accepts at most one wire. Connecting an output to an output, an input to an input, or
   connecting a port twice is rejected with a Persian explanation, and the editor refuses to create
   such a wire.
-* **Combinational cycles.** A cycle makes the circuit invalid. Every node in (or downstream of) the
-  cycle reports UNKNOWN; the app never presents a "valid" result for a cyclic circuit. The editor
-  also blocks user gestures that would create a cycle.
-* **Sequential elements.** Level-sensitive latches update their state while they are enabled (a
-  bounded fix-point loop resolves the resulting feedback). Edge-triggered elements (flip-flops,
-  registers, counters) capture their input **only on a rising clock edge**. The clock is controlled
-  by the user: step, run/pause, reset, and the clock generator component.
+* **Combinational cycles.** A cycle made only of gates and modules makes the circuit invalid. Every
+  node in the cycle reports UNKNOWN; the app never presents a "valid" result for a cyclic circuit.
+  The editor also blocks user gestures that would create such a cycle.
+* **Valid sequential feedback.** A loop that runs *through* a stateful element (flip-flop, latch,
+  register, counter) is not a combinational cycle: the state element breaks the loop. Such a
+  connection is allowed by the editor and simulated correctly, so a toggle flip-flop
+  (`Q → NOT → D`) can be built.
+* **Sequential elements.** Level-sensitive latches update their state while they are enabled.
+  Edge-triggered elements (flip-flops, registers, counters) capture their input **only on a rising
+  clock edge**. The clock is controlled by the user: step, run/pause, reset, and the clock generator
+  component.
+* **Sequential state is three-valued too.** A flip-flop that captures an unknown or floating data
+  line stores UNKNOWN instead of silently pretending it captured a zero. An unknown `T`/`J`/`K`
+  control likewise yields an unknown output rather than a guess.
+* **Unknown clock.** A clock input that is UNKNOWN or floating produces no edge and is reported with
+  a dedicated warning.
 * **Incomplete circuits.** A gate or output pin with an unconnected required input is reported as
   an error. A circuit without an output pin is reported as well.
 * **Fan-out.** One output may feed several inputs; a junction dot marks the branch on the canvas.
@@ -139,9 +148,32 @@ The simulator is four-valued and never guesses.
 * **Determinism.** The same graph and the same input values always produce the same result; the
   engine has no randomness and no hidden state except the documented sequential state.
 
+### The simulation step
+
+One evaluation of the engine is one *simulation step* and always runs the same four phases:
+
+1. **Validation** – the graph is checked (missing nodes, invalid ports, duplicated connections,
+   unconnected inputs, combinational cycles).
+2. **Signal phase** – every combinational node is evaluated from the sequential state that was
+   current at the *start* of the step. The evaluation order is a topological order of the
+   combinational subgraph; a stateful node is a *source* in that subgraph, because its output comes
+   from its stored state and not from its inputs.
+3. **State phase** – the inputs of every stateful node are read from the settled signals of phase 2
+   and the stored state is updated: edge-triggered elements capture on a rising clock edge,
+   level-sensitive elements update while they are enabled.
+4. **Settling** – phases 2 and 3 repeat while the state keeps changing (a latch that feeds logic
+   back into itself settles within a few rounds). The number of rounds is bounded; an unstable
+   feedback loop is reported instead of freezing the app, and the reported signals always belong to
+   the *final* state of the step.
+
+Because the data inputs of a flip-flop are read in phase 3, they are always the settled values of
+phase 2 — a flip-flop can never capture a value that was simply not computed yet.
+
 Truth tables are produced by *running the simulator* for every input combination, never by
 re-implementing the logic in the table code. Circuits that exceed the configurable computation limit
-(64 / 256 / 1024 rows) are refused with an explanatory message instead of hanging.
+(64 / 256 / 1024 rows) are refused with an explanatory message instead of hanging. A circuit with
+sequential elements states clearly that every row is computed from the *initial* state of those
+elements.
 
 ## 6. Boolean expression tools
 
@@ -151,8 +183,13 @@ re-implementing the logic in the table code. Circuits that exceed the configurab
 * Evaluation and automatic truth-table generation for up to 8 variables.
 * Simplification: Quine–McCluskey prime implicants plus an exhaustive branch-and-bound cover
   search. **A result is only labelled exact after the simplified expression has been re-parsed and
-  compared with the original for every assignment.** For more than six variables the tool refuses
-  to claim a minimum and says so explicitly.
+  compared with the original for every assignment.** A minimisation may also *remove* a variable
+  that turns out to be irrelevant; the result is accepted as long as it introduces no new variable
+  and stays equivalent for every assignment. For more than six variables the tool refuses to claim
+  a minimum and says so explicitly.
+* The minimiser is cross-checked against an independent brute-force implementation: for **every**
+  three-variable function the number of terms and literals must match the reference search, and
+  randomised expressions are verified for equivalence with a fixed seed.
 * Comparison of two expressions by comparing their truth tables over the union of their variables.
 * Equivalence between an expression and a stored circuit.
 * Conversion of an expression into a real circuit graph (AND/OR/NOT/XOR gates plus wires) that
@@ -192,6 +229,10 @@ with the back gesture.
 * Project export produces a portable, versioned JSON envelope
   (`format: logic-lab-project`, `version: 1`) with no absolute paths. Import validates the format,
   the version and the circuit payload, and refuses malformed or newer files.
+* **Import is validated completely before anything is replaced.** A file is only accepted after the
+  whole circuit has been checked: every wire must point at an existing component and at a port that
+  really exists, duplicate identifiers are rejected, and files above 4 MB are refused before they
+  are parsed. A failed import never touches the project that is currently open.
 * A full backup (`format: logic-lab-backup`) contains projects, learning progress and settings.
 * Corrupted database rows are skipped instead of crashing the app; malformed import files produce
   a readable error.
@@ -202,9 +243,9 @@ with the back gesture.
 
 ## 9. Version and identity
 
-* The version lives in `pubspec.yaml` (`version: 1.0.0+1`) and is mirrored in
+* The version lives in `pubspec.yaml` (`version: 1.1.0+2`) and is mirrored in
   `lib/core/app_info.dart`. A unit test reads `pubspec.yaml` and fails if the two ever drift apart.
-* The About screen shows the user-facing version as the dot separated `1.0.0` and keeps the build
+* The About screen shows the user-facing version as the dot separated `1.1.0` and keeps the build
   number separate. The version is never localised into `1/0/0` or `1٫0٫0`.
 * The Android launcher label is **Logic Lab**; the Persian subtitle **آزمایشگاه منطق** appears on
   the branded splash screen and in the About screen, because launchers only show a single label.
@@ -239,22 +280,34 @@ enabled, with the extra rules in `android/app/proguard-rules.pro`.
 
 ## 12. Tests
 
-`flutter test` runs 149 automated tests:
+`flutter test` runs 233 automated tests:
 
 | Area | File |
 |------|------|
 | Basic gates, multi-stage composition, invalid connections, cycles, connection rules | `test/features/editor/circuit_validator_test.dart` |
 | Advanced components: multi-input gates, tri-state, compound gates, arithmetic, mux/demux/decoder/encoder, sequential elements and clock edges | `test/features/editor/advanced_components_test.dart` |
+| **Exhaustive truth tables of every gate against independent reference tables** | `test/features/editor/gate_truth_tables_test.dart` |
+| **Exhaustive arithmetic and selection modules (adders, subtractors, comparator, mux, demux, decoder, encoder)** | `test/features/editor/arithmetic_and_selection_test.dart` |
+| **Sequential components over several clock edges: latches, flip-flops, registers, shift registers, counters, valid feedback vs. invalid loops, UNKNOWN/Z at clock and data** | `test/features/editor/sequential_components_test.dart` |
+| **Consistency of a simulation step: outputs, inputs, evaluated nodes, problems and clock level describe the same state** | `test/features/editor/simulation_result_consistency_test.dart` |
+| **Simulation benchmark with a growth guard (catches a return to quadratic lookups)** | `test/features/editor/simulation_benchmark_test.dart` |
+| **Editor layout: the component drawer lists every category once, the Boolean tool header stays readable on small screens** | `test/features/editor/editor_ui_layout_test.dart` |
 | Editor controller: add, connect, refuse invalid connections, toggle inputs, undo/redo, duplicate, delete, autosave | `test/features/editor/circuit_editor_controller_test.dart` |
 | Truth-table generation, limit handling, unknown values, CSV export | `test/features/truth_table/truth_table_test.dart` |
 | Expression parsing, evaluation, precedence, simplification, comparison, circuit conversion | `test/features/boolean_tools/boolean_expression_test.dart` |
+| **Minimisation cross-checked against an independent brute force for every three-variable function, plus randomised equivalence checks** | `test/features/boolean_tools/boolean_minimization_verification_test.dart` |
 | Expression ↔ circuit equivalence and project format compatibility (legacy + unknown types) | `test/features/boolean_tools/expression_equivalence_test.dart` |
 | Circuit statistics, depth and equivalence comparison | `test/features/analysis/circuit_analyzer_test.dart` |
 | Project/circuit serialisation, versioning, malformed and incompatible files | `test/features/projects/project_serialization_test.dart` |
+| **Import hardening: oversized, malformed, foreign, newer-version, dangling-wire, invalid-port and duplicate-identifier files are rejected** | `test/features/projects/import_export_test.dart` |
 | Challenge validation against real circuit behaviour, template validity | `test/features/learn/challenge_validator_test.dart` |
 | Theme, palette, custom accent and signal colour persistence, corrupt preference recovery | `test/features/settings/settings_persistence_test.dart` |
 | Version metadata, application id and version formatting | `test/core/app_info_test.dart` |
 | RTL shell, five destinations, empty state, navigation, project list, editor launch | `test/widget_test.dart` |
+
+The shared reference implementations (gate tables, arithmetic, selection/coding) live in
+`test/support/circuit_test_support.dart`. They are written independently from the component
+specification, so the tests really cross-check the simulator instead of comparing it with itself.
 
 ## 13. Continuous integration and releases
 
@@ -274,7 +327,50 @@ are documented in **`.github/CI.md`** (Persian).
 Helper scripts: `tool/validate_ci.dart` (validates the workflows themselves) and
 `tool/set_version.dart` (writes the version from the release tag into `pubspec.yaml`).
 
-## 14. Roadmap
+## 14. Release notes
+
+### v1.1.0
+
+**Fixed**
+
+* **Sequential circuits captured the wrong value.** A flip-flop, register or counter whose data or
+  clock came through a gate evaluated that gate *after* itself, so the input was read as UNKNOWN
+  and the element stored a meaningless value. The engine now runs an explicit four-phase simulation
+  step (validation → signals → state → settling) and always captures the settled value.
+* **The 2-bit comparator reported "greater than" for equal numbers.** "Greater" is now derived from
+  the borrow of `b − a` instead of from "not less than".
+* **The Boolean simplifier discarded valid results.** A minimisation that removed an irrelevant
+  variable (for example `A & B | A & !B` → `A`) was rejected and the tool showed no result at all.
+* **The editor refused valid sequential feedback.** A connection that closes a loop through a
+  flip-flop (`Q → NOT → D`) was blocked as if it were a combinational cycle.
+* **Latches were evaluated one step behind** and a combinational loop around a latch was reported as
+  an invalid circuit.
+* **Sequential state could not represent "unknown".** Capturing a floating data line now yields an
+  unknown output instead of a silent zero.
+* **Import accepted broken files.** A project file with a dangling wire, an impossible port index
+  or a duplicate identifier is now rejected with a readable message, and files above 4 MB are
+  refused before they are parsed.
+* **Layout problems on small screens.** The heading of the Boolean tool and the category titles of
+  the component drawer were squeezed or repeated; both are fixed and covered by widget tests.
+
+**Improved**
+
+* The circuit is no longer re-simulated while a component is being dragged — the result is
+  refreshed once when the component is dropped, which keeps large circuits responsive.
+* Node lookup is now O(1) and the topological sort no longer shifts its queue, so large circuits
+  are evaluated measurably faster (about 20 % less time for a 200-gate chain in a debug VM).
+* High-impedance (`Z`) has its own symbol next to the output value, and the truth table explains
+  that a circuit with sequential elements is computed from the initial state.
+* Two new diagnostics: an unknown clock and an unstable feedback loop are reported instead of
+  failing silently.
+
+**Verified**
+
+* The test suite grew from 149 to 233 tests, including exhaustive truth tables against
+  independent reference implementations, sequential tests over several clock edges, an independent
+  cross-check of the Boolean minimiser and a benchmark that guards against quadratic lookups.
+
+## 15. Roadmap
 
 The learning content, the component registry and the exercise system are all data-driven, so the
 following can be added without touching the engine: an ALU, a ripple-carry adder, a seven-segment

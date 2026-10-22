@@ -937,6 +937,8 @@ class CircuitPainter extends CustomPainter {
           ? '1'
           : input == LogicSignal.low
           ? '0'
+          : input == LogicSignal.highImpedance
+          ? 'Z'
           : '؟',
       badgeCenter,
       color: nodeSignalColor,

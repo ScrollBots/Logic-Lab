@@ -107,22 +107,32 @@ class CircuitValidator {
         code: CircuitProblemCode.duplicateInputConnection,
       );
     }
-    if (_wouldCreateCycle(graph, fromNodeId, toNodeId)) {
+    if (_wouldCreateCombinationalCycle(graph, fromNodeId, toNodeId)) {
       return const ConnectionCheck(
         allowed: false,
-        message: 'این اتصال یک چرخه ترکیبی می‌سازد و مجاز نیست.',
+        message:
+            'این اتصال یک چرخهٔ ترکیبی می‌سازد و مجاز نیست. '
+            'بازخورد از راه یک فلیپ‌فلپ یا قفل مجاز است.',
         code: CircuitProblemCode.cycle,
       );
     }
     return ConnectionCheck.ok;
   }
 
-  static bool _wouldCreateCycle(
+  /// Detects a *combinational* cycle for the connection that is about to be
+  /// created.
+  ///
+  /// A loop that runs through a stateful component (a flip-flop, a latch, a
+  /// register) is valid sequential feedback and must stay possible: the state
+  /// element breaks the combinational loop. The check therefore ignores every
+  /// path that leaves a stateful component.
+  static bool _wouldCreateCombinationalCycle(
     CircuitGraph graph,
     String fromNodeId,
     String toNodeId,
   ) {
-    // Adding source -> target creates a cycle if target already reaches source.
+    // Adding source -> target creates a cycle if target already reaches source
+    // without passing through a stateful component.
     final Map<String, List<String>> adjacency = <String, List<String>>{};
     for (final CircuitWire wire in graph.wires) {
       adjacency
@@ -137,6 +147,12 @@ class CircuitValidator {
         return true;
       }
       if (!seen.add(current)) {
+        continue;
+      }
+      final CircuitNode? node = graph.nodeById(current);
+      if (node != null && ComponentLibrary.specOf(node.type).isStateful) {
+        // The loop is broken by a stateful element: this is sequential
+        // feedback, not a combinational cycle.
         continue;
       }
       stack.addAll(adjacency[current] ?? const <String>[]);

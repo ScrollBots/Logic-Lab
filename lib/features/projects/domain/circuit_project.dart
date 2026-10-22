@@ -120,6 +120,11 @@ class ProjectCodec {
   }
 
   static CircuitProject decode(String source, {bool asCopy = false}) {
+    if (source.length > maxFileLength) {
+      throw ProjectFileFormatException(
+        'حجم فایل بیش از حد مجاز است (حداکثر ${maxFileLength ~/ (1024 * 1024)} مگابایت).',
+      );
+    }
     final Object? raw;
     try {
       raw = jsonDecode(source);
@@ -151,6 +156,9 @@ class ProjectCodec {
     }
     try {
       final CircuitProject project = CircuitProject.fromJson(raw['project']);
+      // The whole circuit is validated before the project is accepted, so a
+      // broken file can never replace the work that is already open.
+      validateCircuit(project.graph);
       if (!asCopy) {
         return project;
       }
@@ -165,6 +173,33 @@ class ProjectCodec {
       throw ProjectFileFormatException(
         'محتوای پروژه معتبر نیست: ${error.message}',
       );
+    }
+  }
+
+  /// Maximum size of a project file that is accepted.
+  static const int maxFileLength = 4 * 1024 * 1024;
+
+  /// Verifies that every wire of the circuit points at existing components and
+  /// at ports that really exist.
+  static void validateCircuit(CircuitGraph graph) {
+    for (final CircuitWire wire in graph.wires) {
+      final CircuitNode? from = graph.nodeById(wire.fromNodeId);
+      final CircuitNode? to = graph.nodeById(wire.toNodeId);
+      if (from == null || to == null) {
+        throw const ProjectFileFormatException(
+          'یکی از سیم‌های مدار به قطعه‌ای ناموجود اشاره می‌کند.',
+        );
+      }
+      if (wire.toInputIndex < 0 || wire.toInputIndex >= to.inputCount) {
+        throw ProjectFileFormatException(
+          'اتصال به پایهٔ ورودی نامعتبر «${to.label}» در فایل وجود دارد.',
+        );
+      }
+      if (wire.fromPortIndex < 0 || wire.fromPortIndex >= from.outputCount) {
+        throw ProjectFileFormatException(
+          'اتصال به پایهٔ خروجی نامعتبر «${from.label}» در فایل وجود دارد.',
+        );
+      }
     }
   }
 

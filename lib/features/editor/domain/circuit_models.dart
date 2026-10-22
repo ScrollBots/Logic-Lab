@@ -206,6 +206,8 @@ enum CircuitProblemCode {
   cycle,
   unsupportedComponent,
   illegalLatchState,
+  unknownClock,
+  unstableFeedback,
 }
 
 class CircuitProblem {
@@ -239,13 +241,35 @@ class CircuitGraph {
     Iterable<CircuitWire> wires = const <CircuitWire>[],
   }) : nodes = List<CircuitNode>.unmodifiable(nodes),
        wires = List<CircuitWire>.unmodifiable(wires) {
-    _checkUniqueIds();
+    _index = _buildIndex();
   }
 
   factory CircuitGraph.empty() => CircuitGraph();
 
   final List<CircuitNode> nodes;
   final List<CircuitWire> wires;
+
+  /// Lookup table for [nodeById]. The graph is immutable, so the index is
+  /// built once instead of scanning the node list on every lookup: the canvas
+  /// painter and the simulator look up nodes for every wire on every frame.
+  late final Map<String, CircuitNode> _index;
+
+  Map<String, CircuitNode> _buildIndex() {
+    final Map<String, CircuitNode> index = <String, CircuitNode>{};
+    for (final CircuitNode node in nodes) {
+      if (index.containsKey(node.id)) {
+        throw FormatException('شناسه تکراری قطعه: ${node.id}');
+      }
+      index[node.id] = node;
+    }
+    final Set<String> wireIds = <String>{};
+    for (final CircuitWire wire in wires) {
+      if (!wireIds.add(wire.id)) {
+        throw FormatException('شناسه تکراری سیم: ${wire.id}');
+      }
+    }
+    return index;
+  }
 
   bool get isEmpty => nodes.isEmpty && wires.isEmpty;
   bool get hasOutput => nodes.any((CircuitNode n) => n.type.isOutput);
@@ -266,14 +290,7 @@ class CircuitGraph {
     (CircuitNode node) => ComponentLibrary.specOf(node.type).isStateful,
   );
 
-  CircuitNode? nodeById(String id) {
-    for (final CircuitNode node in nodes) {
-      if (node.id == id) {
-        return node;
-      }
-    }
-    return null;
-  }
+  CircuitNode? nodeById(String id) => _index[id];
 
   CircuitNode? get firstOutput {
     for (final CircuitNode node in nodes) {
@@ -294,21 +311,6 @@ class CircuitGraph {
     return wires
         .where((CircuitWire wire) => wire.fromNodeId == nodeId)
         .toList(growable: false);
-  }
-
-  void _checkUniqueIds() {
-    final Set<String> nodeIds = <String>{};
-    for (final CircuitNode node in nodes) {
-      if (!nodeIds.add(node.id)) {
-        throw FormatException('شناسه تکراری قطعه: ${node.id}');
-      }
-    }
-    final Set<String> wireIds = <String>{};
-    for (final CircuitWire wire in wires) {
-      if (!wireIds.add(wire.id)) {
-        throw FormatException('شناسه تکراری سیم: ${wire.id}');
-      }
-    }
   }
 
   CircuitGraph copyWith({

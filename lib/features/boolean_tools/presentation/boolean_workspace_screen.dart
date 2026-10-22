@@ -309,73 +309,160 @@ class _BooleanWorkspaceScreenState extends State<BooleanWorkspaceScreen> {
         child: ResponsiveCenter(
           maxWidth: 1100,
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[
-              _editorCard(context),
-              const SizedBox(height: 12),
-              _tabs(context),
-              const SizedBox(height: 12),
-              Expanded(
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 220),
-                  child:
-                      _tab == 0 ? _analysisTab(context) : _compareTab(context),
-                ),
-              ),
-            ],
+          child: LayoutBuilder(
+            builder: (BuildContext context, BoxConstraints constraints) {
+              // While the analysis tab only shows its empty state there is no
+              // inner scroll view, so the page itself scrolls. Otherwise the
+              // result area keeps its own scrolling and the page stays fixed.
+              final bool pageScrolls = _tab == 0 && _expression == null;
+              if (pageScrolls) {
+                return SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: <Widget>[
+                      _editorCard(context),
+                      const SizedBox(height: 12),
+                      _tabs(context),
+                      const SizedBox(height: 12),
+                      _analysisTab(context),
+                    ],
+                  ),
+                );
+              }
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  _editorCard(context),
+                  const SizedBox(height: 12),
+                  _tabs(context),
+                  const SizedBox(height: 12),
+                  Expanded(
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 220),
+                      child:
+                          _tab == 0
+                              ? _analysisTab(context)
+                              : _compareTab(context),
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
         ),
       ),
     );
   }
 
+  /// Compact style for the icon buttons of the header, so they stay on one
+  /// line next to the title on narrow screens.
+  static final ButtonStyle _compactIconStyle = IconButton.styleFrom(
+    minimumSize: const Size(40, 40),
+    padding: EdgeInsets.zero,
+    visualDensity: VisualDensity.compact,
+    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+  );
+
+  /// The sample below the title. The label stays right-to-left while the
+  /// expression itself is written left-to-right, so neither one is garbled.
+  Widget _sampleLine(ThemeData theme) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        Text('نمونه:', style: theme.textTheme.bodySmall),
+        const SizedBox(width: 6),
+        Flexible(
+          child: Text(
+            '(A & B) | !C',
+            style: theme.textTheme.bodySmall?.copyWith(
+              fontFamily: 'JetBrainsMono',
+            ),
+            textDirection: TextDirection.ltr,
+            textAlign: TextAlign.left,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            softWrap: false,
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _editorCard(BuildContext context) {
     final ThemeData theme = Theme.of(context);
+    // On narrow screens the heading and the actions get their own rows, so
+    // the title and the sample are never squeezed by the buttons.
+    final bool compact = MediaQuery.sizeOf(context).width < 620;
+
+    final Widget heading = Row(
+      children: <Widget>[
+        IconTile(icon: Icons.functions_rounded, size: 38),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Text(
+                'عبارت بولی',
+                style: theme.textTheme.titleMedium,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 2),
+              _sampleLine(theme),
+            ],
+          ),
+        ),
+      ],
+    );
+
+    final Widget actions = Wrap(
+      spacing: 4,
+      runSpacing: 4,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: <Widget>[
+        FilledButton.icon(
+          onPressed: _parse,
+          icon: const Icon(Icons.play_arrow_rounded),
+          label: const Text('محاسبه'),
+        ),
+        IconButton(
+          tooltip: 'کپی عبارت',
+          onPressed: _copyExpression,
+          style: _compactIconStyle,
+          icon: const Icon(Icons.copy_rounded),
+        ),
+        IconButton(
+          tooltip: 'خروجی گرفتن از عبارت',
+          onPressed: _shareExpression,
+          style: _compactIconStyle,
+          icon: const Icon(Icons.ios_share_rounded),
+        ),
+        IconButton(
+          tooltip: 'بررسی هم‌ارزی با یک مدار',
+          onPressed: _expression == null ? null : _compareWithCircuit,
+          style: _compactIconStyle,
+          icon: const Icon(Icons.compare_arrows_rounded),
+        ),
+      ],
+    );
+
     return SurfaceCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Row(
-            children: <Widget>[
-              IconTile(icon: Icons.functions_rounded, size: 38),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text('عبارت بولی', style: theme.textTheme.titleMedium),
-                    Text(
-                      'نمونه: (A & B) | !C',
-                      style: theme.textTheme.bodySmall,
-                      textDirection: TextDirection.ltr,
-                    ),
-                  ],
-                ),
-              ),
-              FilledButton.icon(
-                onPressed: _parse,
-                icon: const Icon(Icons.play_arrow_rounded),
-                label: const Text('محاسبه'),
-              ),
-              const SizedBox(width: 4),
-              IconButton(
-                tooltip: 'کپی عبارت',
-                onPressed: _copyExpression,
-                icon: const Icon(Icons.copy_rounded),
-              ),
-              IconButton(
-                tooltip: 'خروجی گرفتن از عبارت',
-                onPressed: _shareExpression,
-                icon: const Icon(Icons.ios_share_rounded),
-              ),
-              IconButton(
-                tooltip: 'بررسی هم‌ارزی با یک مدار',
-                onPressed: _expression == null ? null : _compareWithCircuit,
-                icon: const Icon(Icons.compare_arrows_rounded),
-              ),
-            ],
-          ),
+          if (compact) ...<Widget>[
+            heading,
+            const SizedBox(height: 10),
+            Align(alignment: AlignmentDirectional.centerStart, child: actions),
+          ] else
+            Row(
+              children: <Widget>[
+                Expanded(child: heading),
+                const SizedBox(width: 8),
+                actions,
+              ],
+            ),
           const SizedBox(height: 12),
           TextField(
             controller: _controller,
@@ -444,17 +531,20 @@ class _BooleanWorkspaceScreenState extends State<BooleanWorkspaceScreen> {
   }
 
   Widget _tabs(BuildContext context) {
+    // On narrow screens the long labels wrap onto a second line and the tab
+    // bar becomes unnecessarily tall, so short labels are used instead.
+    final bool compact = MediaQuery.sizeOf(context).width < 620;
     return SegmentedButton<int>(
-      segments: const <ButtonSegment<int>>[
+      segments: <ButtonSegment<int>>[
         ButtonSegment<int>(
           value: 0,
-          label: Text('تحلیل و جدول حقیقت'),
-          icon: Icon(Icons.insights_rounded),
+          label: Text(compact ? 'تحلیل' : 'تحلیل و جدول حقیقت'),
+          icon: const Icon(Icons.insights_rounded),
         ),
         ButtonSegment<int>(
           value: 1,
-          label: Text('مقایسه دو عبارت'),
-          icon: Icon(Icons.compare_arrows_rounded),
+          label: Text(compact ? 'مقایسه' : 'مقایسه دو عبارت'),
+          icon: const Icon(Icons.compare_arrows_rounded),
         ),
       ],
       selected: <int>{_tab},
@@ -832,14 +922,19 @@ class _TokenButton extends StatelessWidget {
       child: OutlinedButton(
         onPressed: onTap,
         style: OutlinedButton.styleFrom(
-          minimumSize: const Size(48, 42),
-          padding: const EdgeInsets.symmetric(horizontal: 12),
+          minimumSize: const Size(40, 36),
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
         ),
         child: TechnicalText(
           label,
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w700,
-          ),
+          style:
+              theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+              ) ??
+              theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
         ),
       ),
     );

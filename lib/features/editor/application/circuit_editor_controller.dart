@@ -307,7 +307,9 @@ class CircuitEditorController extends ChangeNotifier {
       );
       _graph = _graph.updateNode(current.copyWith(position: next));
     }
-    _recomputeReport();
+    // Moving a component cannot change any signal, so the circuit is not
+    // re-simulated while dragging. The result is refreshed once, when the
+    // component is dropped. This keeps large circuits responsive.
     _dirty = true;
     _revision++;
     _saveStatus = SaveStatus.unsaved;
@@ -327,6 +329,8 @@ class CircuitEditorController extends ChangeNotifier {
       _notify();
       return;
     }
+    // The component was dropped: refresh the simulation once.
+    _recomputeReport();
     _scheduleAutosave();
     _notify();
   }

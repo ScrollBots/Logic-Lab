@@ -1444,14 +1444,8 @@ class _TrayCatalogueState extends State<_TrayCatalogue> {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  Text(
-                    entry.key,
-                    style: theme.textTheme.labelMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
+                  // The group renders its own heading, so no second title is
+                  // added here.
                   _TrayGroup(
                     title: entry.key,
                     children: matches

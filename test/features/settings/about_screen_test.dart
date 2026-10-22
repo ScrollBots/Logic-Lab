@@ -36,7 +36,7 @@ Future<void> _scrollToAbout(WidgetTester tester) async {
 }
 
 void main() {
-  testWidgets('the About screen shows the semantic version 1.0.0', (
+  testWidgets('the About screen shows the semantic version 1.1.0', (
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(await _buildSettings());
@@ -44,7 +44,7 @@ void main() {
     await _scrollToAbout(tester);
 
     expect(find.byKey(const Key('about-version')), findsOneWidget);
-    expect(find.text('1.0.0'), findsOneWidget);
+    expect(find.text('1.1.0'), findsOneWidget);
     expect(find.text('نسخه'), findsOneWidget);
   });
 
