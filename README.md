@@ -1,382 +1,369 @@
 # Logic Lab — آزمایشگاه منطق
 
-A **fully offline**, Persian-first digital logic learning and simulation laboratory for Android.
+یک آزمایشگاه **کاملاً آفلاین** و **فارسی‌محور** برای یادگیری و شبیه‌سازی مدارهای منطقی دیجیتال روی اندروید.
 
-Logic Lab lets you build real combinational and sequential circuits on an interactive canvas, watch the
-simulator recompute outputs live, step a clock through flip-flops, counters and registers, generate
-truth tables from the actual circuit, analyse and compare circuits, and practise with challenges that
-are graded by real circuit behaviour. Everything is stored locally; the app never needs an account, a
-network connection, or a cloud service, and it works in airplane mode.
+Logic Lab امکان می‌دهد مدارهای ترکیبی و ترتیبی واقعی را روی یک بوم تعاملی بسازید، خروجی‌ها را به‌صورت زنده توسط شبیه‌ساز
+بازمحاسبه کنید، کلاک را در فلیپ‌فلپ‌ها، شمارنده‌ها و رجیسترها جلو ببرید، از روی *همان مدار* جدول حقیقت بسازید، مدارها را
+تحلیل و مقایسه کنید و با تمرین‌هایی کار کنید که با رفتار واقعی مدار نمره‌گذاری می‌شوند. همه‌چیز به‌صورت محلی نگهداری
+می‌شود؛ برنامه هرگز به حساب کاربری، اتصال اینترنت یا سرویس ابری نیاز ندارد و در حالت هواپیما هم کار می‌کند.
 
 ---
 
-## 1. Environment
+## ۱. محیط کار
 
-| Item | Version / note |
+| مورد | نسخه / توضیح |
 |------|----------------|
-| Flutter | 3.29.3 (stable) |
+| Flutter | 3.29.3 (پایدار) |
 | Dart | 3.7.2 |
-| Android SDK | 36.1.0, NDK 27.0.12077973, AGP 8.7.0, Kotlin 1.8.22 |
-| Target device | Android 5.0 (API 21) and above, `minSdk` from Flutter |
-| Application id | `ir.logiclab.logic_lab` (unchanged, so upgrades keep user data) |
-| Build output | `build/app/outputs/flutter-apk/app-release.apk` (R8 minified) |
+| Android SDK | ‏36.1.0، NDK ‏27.0.12077973، AGP ‏8.7.0، Kotlin ‏1.8.22 |
+| دستگاه هدف | اندروید ۵٫۰ (API 21) به بالا، `minSdk` پیش‌فرض Flutter |
+| شناسهٔ برنامه | `ir.logiclab.logic_lab` (بدون تغییر، تا داده‌های کاربر با به‌روزرسانی حفظ شود) |
+| خروجی ساخت | `build/app/outputs/flutter-apk/app-release.apk` (کوچک‌سازی‌شده با R8) |
 
-## 2. Package choices
+## ۲. بسته‌های مورد استفاده
 
-| Package | Version | Why |
+| بسته | نسخه | چرا انتخاب شد |
 |---------|---------|-----|
-| `provider` | 6.1.5 | Small, explicit state management. The simulator itself is pure Dart and has no Flutter dependency, so state management never leaks into the domain layer. |
-| `sqflite` | 2.4.2 | Native SQLite for projects and learning progress. Chosen over a document store because projects are relational, need sorting/search, and must be queryable offline. |
-| `shared_preferences` | 2.5.3 | Theme mode, palette, custom accent, haptics/animations toggles and circuit signal colours — small key/value settings only. |
-| `path_provider` / `path` | 2.1.5 / 1.9.1 | Platform path handling for user-initiated file export. |
-| `file_picker` | 11.0.3 | User-initiated JSON import (project files and full backups). |
-| `share_plus` | 10.1.4 | Android share sheet for CSV and JSON export. 10.x is pinned because it builds with the Kotlin 1.8 toolchain shipped with Flutter 3.29. |
-| `flutter_localizations` | SDK | Persian (`fa_IR`) Material/Cupertino strings and correct RTL behaviour. |
-| `flutter_lints` | 5.0.0 | Lint baseline for `flutter analyze`. |
+| `provider` | 6.1.5 | مدیریت وضعیت کوچک و صریح. خودِ شبیه‌ساز یک کد خالص Dart است و هیچ وابستگی به Flutter ندارد، بنابراین مدیریت وضعیت هرگز به لایهٔ دامنه نشت نمی‌کند. |
+| `sqflite` | 2.4.2 | SQLite بومی برای پروژه‌ها و پیشرفت یادگیری. به‌جای انبار سندی انتخاب شد، چون پروژه‌ها رابطه‌ای‌اند، به مرتب‌سازی/جست‌وجو نیاز دارند و باید آفلاین پرس‌وجوپذیر باشند. |
+| `shared_preferences` | 2.5.3 | حالت پوسته، پالت، رنگ تأکیدی دلخواه، کلیدهای لمس و انیمیشن و رنگ سیگنال‌های مدار — تنظیمات کوچک کلید/مقدار. |
+| `path_provider` / `path` | 2.1.5 / 1.9.1 | مدیریت مسیرهای سیستم‌عامل برای خروجی گرفتن فایل به درخواست کاربر. |
+| `file_picker` | 11.0.3 | واردسازی JSON به درخواست کاربر (فایل پروژه و پشتیبان کامل). |
+| `share_plus` | 10.1.4 | برگهٔ اشتراک‌گذاری اندروید برای خروجی CSV و JSON. نسخهٔ ۱۰ ثابت نگه داشته شده چون با زنجیرهٔ ابزار Kotlin ‏1.8 همراه Flutter ‏3.29 ساخته می‌شود. |
+| `flutter_localizations` | SDK | رشته‌های متریال/کاپچینوی فارسی (`fa_IR`) و رفتار درست راست‌به‌چپ. |
+| `flutter_lints` | 5.0.0 | خط پایهٔ lint برای `flutter analyze`. |
 
-Fonts are **bundled locally** (no remote fonts, works offline):
+قلم‌ها **به‌صورت محلی** همراه برنامه بسته‌بندی شده‌اند (بدون قلم راه دور، کاملاً آفلاین):
 
-* [Vazirmatn](https://github.com/rastikerdar/vazirmatn) — Persian UI font, SIL Open Font License 1.1
+* [Vazirmatn](https://github.com/rastikerdar/vazirmatn) — قلم رابط فارسی، SIL Open Font License 1.1
   (`assets/fonts/OFL.txt`).
-* JetBrains Mono — technical values, identifiers and binary strings, SIL Open Font License 1.1
+* JetBrains Mono — مقادیر فنی، شناسه‌ها و رشته‌های دودویی، SIL Open Font License 1.1
   (`assets/fonts/JetBrainsMono-OFL.txt`).
 
-## 3. Architecture
+## ۳. معماری
 
-Feature-first with a strict separation between the four layers. Nothing in the *domain* layer
-imports Flutter widgets, so the whole simulator is testable without a widget tree.
+معماری feature-first با جداسازی سخت‌گیرانهٔ چهار لایه. هیچ چیزی در لایهٔ *domain* ویجت Flutter را import نمی‌کند، بنابراین
+کل شبیه‌ساز بدون درخت ویجت قابل آزمون است.
 
 ```
 lib/
-├─ app/                     # Application root, bootstrap splash, navigation shell
-│  ├─ app.dart              # MaterialApp, RTL locale, theme wiring, providers
-│  ├─ bootstrap.dart        # Opens the local database and shows the branded splash
-│  └─ shell/app_shell.dart  # Morphing navigation (5 destinations)
-├─ core/                    # Cross-cutting infrastructure
-│  ├─ data/                 # SQLite bootstrap (conditional IO/web import)
-│  ├─ localization/         # Persian digits, Jalali dates, relative dates
-│  ├─ services/             # File import/export + Android share
-│  ├─ theme/                # Design system: palettes, Material 3 theme, extensions
-│  ├─ utils/                # Identifier generation
-│  ├─ widgets/              # Shared UI: cards, brand mark, signal pills, gate symbols
-│  └─ app_info.dart         # Single source of truth for the version and identity
+├─ app/                     # ریشهٔ برنامه، صفحهٔ آغازین، پوستهٔ ناوبری
+│  ├─ app.dart              # MaterialApp، محلیِ RTL، اتصال پوسته، providerها
+│  ├─ bootstrap.dart        # باز کردن پایگاه‌دادهٔ محلی و نمایش صفحهٔ آغازین برنددار
+│  └─ shell/app_shell.dart  # ناوبری تغییرشکل (۵ مقصد)
+├─ core/                    # زیرساخت‌های مشترک
+│  ├─ data/                 # راه‌اندازی SQLite (ورود مشروط IO/web)
+│  ├─ localization/         # ارقام فارسی، تاریخ جلالی، تاریخ نسبی
+│  ├─ services/             # واردسازی/صادرات فایل + اشتراک‌گذاری اندروید
+│  ├─ theme/                # نظام طراحی: پالت‌ها، پوستهٔ متریال ۳، افزونه‌ها
+│  ├─ utils/                # تولید شناسه
+│  ├─ widgets/              # رابط مشترک: کارت‌ها، نشان برند، قرص سیگنال، نماد گیت‌ها
+│  └─ app_info.dart         # منبع حقیقتِ واحد برای نسخه و هویت برنامه
 └─ features/
-   ├─ editor/               # Circuit domain, simulation, canvas, editor screen
-   │  ├─ domain/            # Graph model, component specs, geometry, simulator, templates
-   │  ├─ application/       # Editor state: undo/redo, autosave, selection, clock control
-   │  └─ presentation/      # CustomPainter canvas, preview painter, editor screen
-   ├─ projects/             # Project model, JSON codec, repository, list screen
-   ├─ truth_table/          # Truth table generator + screen (multi-output, filterable)
-   ├─ analysis/             # Circuit statistics, equivalence, comparison screen
-   ├─ boolean_tools/        # Parser, evaluator, simplifier, converter, equivalence, workspace
-   ├─ learn/                # Gate reference, lessons, challenges, progress
-   ├─ lab/                  # Interactive gate bench + ready-made circuits
-   ├─ home/                 # Dashboard
-   ├─ settings/             # Appearance, behaviour, data management
-   └─ splash/               # Branded splash (Logic Lab / آزمایشگاه منطق)
+   ├─ editor/               # دامنهٔ مدار، شبیه‌سازی، بوم، صفحهٔ ویرایشگر
+   │  ├─ domain/            # مدل گراف، مشخصات قطعات، هندسه، شبیه‌ساز، الگوها
+   │  ├─ application/       # وضعیت ویرایشگر: بازگشت/انجام، ذخیرهٔ خودکار، انتخاب، کنترل کلاک
+   │  └─ presentation/      # بوم با CustomPainter، نقاش پیش‌نمایش، صفحهٔ ویرایشگر
+   ├─ projects/             # مدل پروژه، کدک JSON، مخزن، صفحهٔ فهرست
+   ├─ truth_table/          # تولیدکنندهٔ جدول حقیقت + صفحه (چندخروجی، قابل پالایش)
+   ├─ analysis/             # آمار مدار، هم‌ارزی، صفحهٔ مقایسه
+   ├─ boolean_tools/        # تجزیه‌گر، ارزیاب، ساده‌ساز، مبدل، هم‌ارزی، میزکار
+   ├─ learn/                # مرجع گیت‌ها، درس‌ها، چالش‌ها، پیشرفت
+   ├─ lab/                  # میز گیت تعاملی + مدارهای آماده
+   ├─ home/                 # داشبورد
+   ├─ settings/             # ظاهر، رفتار، مدیریت داده
+   └─ splash/               # صفحهٔ آغازین برنددار (Logic Lab / آزمایشگاه منطق)
 ```
 
-Data flow:
+جریان داده:
 
 ```
-UI (presentation)  →  Controller (application)  →  Domain (pure Dart)
-                                             ↘  Repository (persistence)
+رابط کاربری (presentation)  →  کنترلر (application)  →  دامنه (Dart خالص)
+                                              ↘  مخزن (ماندگاری)
 ```
 
-* `CircuitGraph`, `CircuitSimulator`, `ComponentLibrary`, `TruthTableGenerator`,
-  `BooleanExpressionParser` and `BooleanSimplifier` contain **no Flutter imports**.
-* Persistence is reached only through the `ProjectRepository` and `LearningProgressRepository`
-  interfaces; SQLite and in-memory implementations are interchangeable, which is what makes the
-  widget tests fast and deterministic.
+* `CircuitGraph`، `CircuitSimulator`، `ComponentLibrary`، `TruthTableGenerator`،
+  `BooleanExpressionParser` و `BooleanSimplifier` هیچ import از Flutter ندارند.
+* دسترسی به ماندگاری فقط از راه رابط‌های `ProjectRepository` و `LearningProgressRepository` انجام
+  می‌شود؛ پیاده‌سازی‌های SQLite و درون‌حافظه‌ای جایگزین یکدیگرند و همین باعث می‌شود آزمون‌های
+  ویجت سریع و قطعی باشند.
 
-## 4. Component library
+## ۴. کتابخانهٔ قطعات
 
-All components are described by a single `ComponentSpec` registry
-(`lib/features/editor/domain/component_spec.dart`) that defines the ports, the drawing kind and the
-behaviour. The simulator, the canvas, the component drawer and the truth table all read from it, so a
-new component only has to be described once.
+همهٔ قطعات در یک رجیستری واحد به نام `ComponentSpec`
+(`lib/features/editor/domain/component_spec.dart`) توصیف شده‌اند که پورت‌ها، شکل ترسیم و رفتار هر قطعه را
+تعیین می‌کند. شبیه‌ساز، بوم، سینی قطعات و جدول حقیقت همگی از همین رجیستری می‌خوانند، بنابراین افزودن یک
+قطعهٔ تازه فقط یک بار تعریف می‌شود.
 
-| Group | Components |
+| گروه | قطعات |
 |-------|------------|
-| Base | Input pin, output probe, clock source |
-| Basic gates | AND, OR, NOT, NAND, NOR, XOR, XNOR, Buffer, Tri-state buffer (Z) |
-| Multi-input | AND / OR / NAND / NOR / XOR / XNOR with 2–8 inputs (XOR/XNOR use parity) |
-| Compound | AOI21, AOI22, OAI21, OAI22 |
-| Arithmetic | Half adder, full adder, half subtractor, full subtractor, 2-bit comparator |
-| Selection / coding | MUX 2:1, MUX 4:1, DEMUX 1:2, DEMUX 1:4, decoder 2→4, decoder 3→8, encoder 4→2, encoder 8→3, priority encoder |
-| Sequential | SR latch, gated SR latch, D latch, D / T / JK flip-flop, 4-bit register, 4-bit shift register, 4-bit counter, up/down counter |
+| پایه | ورودی، خروجی، منبع کلاک |
+| گیت‌های پایه | AND، OR، NOT، NAND، NOR، XOR، XNOR، بافر، بافر سه‌حالته (Z) |
+| چندورودی | AND / OR / NAND / NOR / XOR / XNOR با ۲ تا ۸ ورودی (XOR/XNOR بر پایهٔ زوجیت) |
+| مرکب | AOI21، AOI22، OAI21، OAI22 |
+| حسابی | نیم‌جمع‌کننده، جمع‌کنندهٔ کامل، نیم‌تفریق‌کننده، تفریق‌کنندهٔ کامل، مقایسه‌گر ۲ بیتی |
+| انتخابگر و کدگذار | MUX ‏2:1، MUX ‏4:1، DEMUX ‏1:2، DEMUX ‏1:4، دیکودر ‏2→4، دیکودر ‏3→8، انکودر ‏4→2، انکودر ‏8→3، انکودر اولویت‌دار |
+| ترتیبی | قفل SR، قفل SR دروازه‌دار، قفل D، فلیپ‌فلپ D / T / JK، رجیستر ۴ بیتی، رجیستر انتقال ۴ بیتی، شمارندهٔ ۴ بیتی، شمارندهٔ بالا/پایین |
 
-Compound and sequential components expose several ports, so a node can have more than one output.
-The wire format already carried a source port index, which made this possible without breaking
-existing files.
+قطعات مرکب و ترتیبی چند پورت دارند، پس یک گره می‌تواند بیش از یک خروجی داشته باشد. قالب سیم از پیش شمارهٔ پورت
+مبدأ را حمل می‌کرد و همین بدون شکستن فایل‌های موجود این امکان را فراهم کرد.
 
-## 5. Simulation model (documented behaviour)
+## ۵. مدل شبیه‌سازی (رفتار مستندشده)
 
-The simulator is four-valued and never guesses.
+شبیه‌ساز چهارمقداری است و هرگز حدس نمی‌زند.
 
-* **HIGH / LOW / UNKNOWN / HIGH-IMPEDANCE.** Inputs are always definitive HIGH or LOW from their
-  switches. `UNKNOWN` means the value cannot be proven; `Z` is the explicit high-impedance state of a
-  disabled tri-state driver and is drawn and reported differently.
-* **Three-valued logic.** `AND` with a LOW input is LOW even if another input is unknown, and `OR`
-  with a HIGH input is HIGH. This follows the usual IEEE 1164 style interpretation.
-* **Propagation.** A gate output is UNKNOWN if any of its required inputs is missing, duplicated or
-  UNKNOWN. UNKNOWN never degrades into LOW.
-* **Connectivity rules.** A signal may only flow from an output pin to an input pin. Each input
-  port accepts at most one wire. Connecting an output to an output, an input to an input, or
-  connecting a port twice is rejected with a Persian explanation, and the editor refuses to create
-  such a wire.
-* **Combinational cycles.** A cycle made only of gates and modules makes the circuit invalid. Every
-  node in the cycle reports UNKNOWN; the app never presents a "valid" result for a cyclic circuit.
-  The editor also blocks user gestures that would create such a cycle.
-* **Valid sequential feedback.** A loop that runs *through* a stateful element (flip-flop, latch,
-  register, counter) is not a combinational cycle: the state element breaks the loop. Such a
-  connection is allowed by the editor and simulated correctly, so a toggle flip-flop
-  (`Q → NOT → D`) can be built.
-* **Sequential elements.** Level-sensitive latches update their state while they are enabled.
-  Edge-triggered elements (flip-flops, registers, counters) capture their input **only on a rising
-  clock edge**. The clock is controlled by the user: step, run/pause, reset, and the clock generator
-  component.
-* **Sequential state is three-valued too.** A flip-flop that captures an unknown or floating data
-  line stores UNKNOWN instead of silently pretending it captured a zero. An unknown `T`/`J`/`K`
-  control likewise yields an unknown output rather than a guess.
-* **Unknown clock.** A clock input that is UNKNOWN or floating produces no edge and is reported with
-  a dedicated warning.
-* **Incomplete circuits.** A gate or output pin with an unconnected required input is reported as
-  an error. A circuit without an output pin is reported as well.
-* **Fan-out.** One output may feed several inputs; a junction dot marks the branch on the canvas.
-* **Multi-stage circuits.** Evaluation uses a topological order, so chained gates resolve in one pass.
-* **Determinism.** The same graph and the same input values always produce the same result; the
-  engine has no randomness and no hidden state except the documented sequential state.
+* **HIGH / LOW / UNKNOWN / امپدانس بالا.** ورودی‌ها همیشه از کلیدهای خود HIGH یا LOW قطعی هستند. `UNKNOWN`
+  یعنی مقدار قابل اثبات نیست؛ `Z` حالت صریح امپدانس بالای یک رانندهٔ سه‌حالتهٔ غیرفعال است و متفاوت رسم و
+  گزارش می‌شود.
+* **منطق سه‌مقداری.** `AND` با یک ورودی LOW، حتی اگر ورودی دیگری نامشخص باشد، LOW است و `OR` با یک ورودی
+  HIGH، HIGH است. این همان تفسیر رایج سبک IEEE 1164 است.
+* **انتشار.** خروجی یک گیت وقتی UNKNOWN است که هر ورودی لازم آن گم، تکراری یا UNKNOWN باشد. UNKNOWN هرگز
+  به LOW تبدیل نمی‌شود.
+* **قواعد اتصال.** سیگنال فقط از پایهٔ خروجی به پایهٔ ورودی جریان دارد. هر پایهٔ ورودی حداکثر یک سیم
+  می‌پذیرد. اتصال خروجی به خروجی، ورودی به ورودی یا اتصال دوباره به یک پایه، با یک توضیح فارسی رد می‌شود و
+  ویرایشگر اصلاً چنین سیمی نمی‌سازد.
+* **چرخهٔ ترکیبی.** چرخه‌ای که فقط از گیت‌ها و ماژول‌ها ساخته شده باشد مدار را نامعتبر می‌کند. هر گرهِ درون
+  چرخه UNKNOWN گزارش می‌شود؛ برنامه هرگز برای مدار چرخه‌ای نتیجهٔ «معتبر» نشان نمی‌دهد. ویرایشگر هم
+  حرکت‌هایی را که چنین چرخه‌ای می‌سازند مسدود می‌کند.
+* **بازخورد ترتیبی معتبر.** حلقه‌ای که *از راه* یک عنصر حالت‌دار (فلیپ‌فلپ، قفل، رجیستر، شمارنده) می‌گذرد
+  چرخهٔ ترکیبی نیست: عنصر حالت‌دار حلقه را می‌شکند. چنین اتصالی در ویرایشگر مجاز است و درست شبیه‌سازی
+  می‌شود، بنابراین می‌توان فلیپ‌فلپِ toggle (`Q → NOT → D`) ساخت.
+* **عناصر ترتیبی.** قفل‌های حساس به سطح، تا وقتی فعال‌اند حالتشان را به‌روز می‌کنند. عناصر لبه‌دار
+  (فلیپ‌فلپ‌ها، رجیسترها، شمارنده‌ها) ورودی خود را **فقط در لبهٔ بالاروندهٔ کلاک** ثبت می‌کنند. کلاک در
+  اختیار کاربر است: یک پالس، اجرا/توقف، بازنشانی و قطعهٔ مولد کلاک.
+* **حالت ترتیبی هم سه‌مقداری است.** فلیپ‌فلپی که یک خط دادهٔ نامشخص یا معلق را ثبت کند، UNKNOWN نگه می‌دارد
+  و وانمود نمی‌کند که صفر گرفته است. کنترل نامشخص `T`/`J`/`K` هم به‌جای حدس، خروجی نامشخص می‌دهد.
+* **کلاک نامشخص.** کلاکی که UNKNOWN یا معلق باشد هیچ لبه‌ای تولید نمی‌کند و با یک هشدار اختصاصی گزارش
+  می‌شود.
+* **مدارهای ناقص.** گیتی یا خروجی‌ای که ورودی لازمش متصل نیست خطا گزارش می‌شود. مداری بدون پایهٔ خروجی هم
+  گزارش می‌شود.
+* **انشعاب.** یک خروجی می‌تواند چند ورودی را تغذیه کند؛ نقطهٔ اتصال روی بوم شاخه را نشان می‌دهد.
+* **مدارهای چندمرحله‌ای.** ارزیابی با ترتیب توپولوژیک انجام می‌شود، پس زنجیرهٔ گیت‌ها در یک pass حل می‌شود.
+* **قطعی‌بودن.** همان گراف و همان مقادیر ورودی همیشه همان نتیجه را می‌دهند؛ موتور نه تصادفی است و نه
+  پنهان‌حالتی دارد، مگر حالت ترتیبیِ مستندشده.
 
-### The simulation step
+### گام شبیه‌سازی
 
-One evaluation of the engine is one *simulation step* and always runs the same four phases:
+هر ارزیابی موتور یک *گام شبیه‌سازی* است و همیشه چهار مرحلهٔ یکسان را طی می‌کند:
 
-1. **Validation** – the graph is checked (missing nodes, invalid ports, duplicated connections,
-   unconnected inputs, combinational cycles).
-2. **Signal phase** – every combinational node is evaluated from the sequential state that was
-   current at the *start* of the step. The evaluation order is a topological order of the
-   combinational subgraph; a stateful node is a *source* in that subgraph, because its output comes
-   from its stored state and not from its inputs.
-3. **State phase** – the inputs of every stateful node are read from the settled signals of phase 2
-   and the stored state is updated: edge-triggered elements capture on a rising clock edge,
-   level-sensitive elements update while they are enabled.
-4. **Settling** – phases 2 and 3 repeat while the state keeps changing (a latch that feeds logic
-   back into itself settles within a few rounds). The number of rounds is bounded; an unstable
-   feedback loop is reported instead of freezing the app, and the reported signals always belong to
-   the *final* state of the step.
+1. **اعتبارسنجی** – گراف بررسی می‌شود (گره‌های گم‌شده، پورت‌های نامعتبر، اتصال‌های تکراری، ورودی‌های
+   متصل‌نشده، چرخه‌های ترکیبی).
+2. **فاز سیگنال** – هر گره ترکیبی از وضعیت ترتیبیِ *ابتدای* گام ارزیابی می‌شود. ترتیب ارزیابی یک ترتیب
+   توپولوژیک از زیرگراف ترکیبی است؛ یک گره حالت‌دار در این زیرگراف یک *منبع* است، چون خروجی‌اش از حالت
+   ذخیره‌شده می‌آید نه از ورودی‌هایش.
+3. **فاز حالت** – ورودی هر گره حالت‌دار از سیگنال‌های نشستهٔ فاز ۲ خوانده و حالت ذخیره‌شده به‌روزرسانی
+   می‌شود: عناصر لبه‌دار در لبهٔ بالاروندهٔ کلاک ثبت می‌کنند و عناصر حساس به سطح تا وقتی فعال‌اند به‌روز
+   می‌شوند.
+4. **نشست** – فازهای ۲ و ۳ تا وقتی حالت تغییر می‌کند تکرار می‌شوند (قفلی که منطق را به خودش برمی‌گرداند
+   در چند دور آرام می‌شود). تعداد دورها کران‌دار است؛ بازخورد ناپایدار به‌جای قفل‌کردن برنامه گزارش
+   می‌شود و سیگنال‌های گزارش‌شده همیشه متعلق به *حالت نهایی* همان گام هستند.
 
-Because the data inputs of a flip-flop are read in phase 3, they are always the settled values of
-phase 2 — a flip-flop can never capture a value that was simply not computed yet.
+چون ورودی‌های دادهٔ فلیپ‌فلپ در فاز ۳ خوانده می‌شوند، همیشه مقدار *نشسته* فاز ۲ را می‌گیرند — یعنی یک
+فلیپ‌فلپ هرگز نمی‌تواند مقداری را ثبت کند که صرفاً هنوز محاسبه نشده بود.
 
-Truth tables are produced by *running the simulator* for every input combination, never by
-re-implementing the logic in the table code. Circuits that exceed the configurable computation limit
-(64 / 256 / 1024 rows) are refused with an explanatory message instead of hanging. A circuit with
-sequential elements states clearly that every row is computed from the *initial* state of those
-elements.
+جدول حقیقت با *اجرای شبیه‌ساز* برای هر ترکیب ورودی ساخته می‌شود، نه با بازنویسی منطق در کد جدول. مدارهایی
+که از سقف محاسبهٔ قابل تنظیم (۶۴ / ۲۵۶ / ۱۰۲۴ ردیف) عبور کنند، به‌جای هنگ‌کردن با یک پیام توضیحی رد
+می‌شوند. مداری که عنصر ترتیبی دارد، به‌روشنی اعلام می‌کند که هر ردیف از *وضعیت اولیه* آن عناصر محاسبه
+می‌شود.
 
-## 6. Boolean expression tools
+## ۶. ابزارهای عبارت بولی
 
-* Parser: recursive descent with `&` (AND), `|` (OR), `!` (NOT), `^` (XOR), parentheses, the
-  constants `0`/`1`, and the English keywords `AND`, `OR`, `NOT`, `XOR`.
-* Errors are reported with a message and the offending position.
-* Evaluation and automatic truth-table generation for up to 8 variables.
-* Simplification: Quine–McCluskey prime implicants plus an exhaustive branch-and-bound cover
-  search. **A result is only labelled exact after the simplified expression has been re-parsed and
-  compared with the original for every assignment.** A minimisation may also *remove* a variable
-  that turns out to be irrelevant; the result is accepted as long as it introduces no new variable
-  and stays equivalent for every assignment. For more than six variables the tool refuses to claim
-  a minimum and says so explicitly.
-* The minimiser is cross-checked against an independent brute-force implementation: for **every**
-  three-variable function the number of terms and literals must match the reference search, and
-  randomised expressions are verified for equivalence with a fixed seed.
-* Comparison of two expressions by comparing their truth tables over the union of their variables.
-* Equivalence between an expression and a stored circuit.
-* Conversion of an expression into a real circuit graph (AND/OR/NOT/XOR gates plus wires) that
-  can be opened in the editor and simulated.
+* تجزیه‌گر: بازگشتی نزولی با `&` (AND)، `|` (OR)، `!` (NOT)، `^` (XOR)، پرانتز، ثابت‌های `0`/`1` و
+  کلمات کلیدی انگلیسی `AND`، `OR`، `NOT`، `XOR`.
+* خطاها با یک پیام و موقعیت خطا گزارش می‌شوند.
+* ارزیابی و تولید خودکار جدول حقیقت برای حداکثر ۸ متغیر.
+* ساده‌سازی: ایمپلیکانت‌های اولیهٔ کوئین–مک‌کلاسکی به‌همراه جست‌وجوی جامع پوشش با شاخه‌وکرا. **نتیجه
+  تنها زمانی «دقیق» برچسب می‌خورد که عبارت ساده‌شده دوباره تجزیه و برای *همهٔ* حالت‌ها با اصل مقایسه شده
+  باشد.** کمینه‌سازی ممکن است متغیری را که بی‌ربط است *حذف* کند؛ چنین نتیجه‌ای پذیرفته می‌شود، به شرط آنکه
+  متغیر تازه‌ای وارد نکند و برای همهٔ حالت‌ها هم‌ارز بماند. برای بیش از شش متغیر، ابزار صریحاً از ادعای
+  «حداقل قطعی» خودداری می‌کند.
+* کمینه‌ساز در برابر یک پیاده‌سازی brute-force مستقل راستی‌آزمایی می‌شود: برای *هر* تابع سه‌متغیره، تعداد
+  جمله‌ها و لیترال‌ها باید با جست‌وجوی مرجع یکی باشد و عبارت‌های تصادفی با seed ثابت برای هم‌ارزی بررسی
+  می‌شوند.
+* مقایسهٔ دو عبارت با مقایسهٔ جدول حقیقت آن‌ها روی اجتماع متغیرهایشان.
+* بررسی هم‌ارزی یک عبارت با یک مدار ذخیره‌شده.
+* تبدیل یک عبارت به گراف مدار واقعی (گیت‌های AND/OR/NOT/XOR به‌همراه سیم‌ها) که می‌توان آن را در ویرایشگر
+  باز کرد و شبیه‌سازی کرد.
 
-## 7. Editor and navigation
+## ۷. ویرایشگر و ناوبری
 
-* **Searchable component drawer** with categories, gate symbols and a description for every part.
-* **Interactive canvas** with real schematic symbols, module blocks with named ports, junction dots,
-  signal colours, a legend (۱ / ۰ / ؟ / Z) that never relies on colour alone, grid, grid snapping,
-  zoom, pan, fit-to-screen and reset view.
-* **Editing**: add, drag, connect (tap output then input), select, multi-select (long press),
-  duplicate, delete, undo and redo, plus a property sheet for labels, input counts and initial
-  values.
-* **Simulation toolbar**: run, pause, step the clock and reset the sequential state.
-* **Automatic saving** with a visible save state, undo/redo history and a status dock that reports
-  invalid circuits instead of showing a misleading result.
-* **Analysis screen**: gate counts, circuit depth, sequential element count, the simulation status
-  and a comparison with another circuit that reports the first differing input combination.
+* **سینی قطعات با جست‌وجو**، دسته‌بندی‌شده، با نماد گیت‌ها و توضیح برای هر قطعه.
+* **بوم تعاملی** با نمادهای واقعی شماتیک، بلوک ماژول‌ها با پورت‌های نام‌گذاری‌شده، نقطه‌های اتصال، رنگ
+  سیگنال‌ها، راهنمای (۱ / ۰ / ؟ / Z) که هرگز فقط به رنگ تکیه نمی‌کند، شبکه، هم‌ترازی با شبکه، بزرگ‌نمایی،
+  جابه‌جایی، fit-to-screen و بازنشانی نما.
+* **ویرایش**: افزودن، کشیدن، اتصال (زدن خروجی و سپس ورودی)، انتخاب، انتخاب چندتایی (لمس طولانی)، تکثیر،
+  حذف، بازگشت و انجام، به‌همراه پنجرهٔ ویژگی‌ها برای برچسب، تعداد ورودی و مقدار اولیه.
+* **نوار شبیه‌سازی**: اجرا، توقف، یک پالس کلاک و بازنشانی حالت ترتیبی.
+* **ذخیرهٔ خودکار** با نمایش وضعیت ذخیره، تاریخچهٔ بازگشت/انجام و یک داک وضعیت که مدار نامعتبر را گزارش
+  می‌کند به‌جای نمایش نتیجهٔ گمراه‌کننده.
+* **صفحهٔ تحلیل**: تعداد گیت‌ها، عمق مدار، تعداد عناصر ترتیبی، وضعیت شبیه‌سازی و مقایسه با مداری دیگر که
+  نخستین ترکیب ورودی متفاوت را گزارش می‌کند.
 
-### Morphing navigation
+### ناوبری تغییرشکل
 
-The five destinations are hosted by an `IndexedStack`, so scroll positions and the circuit canvas
-are never rebuilt or lost. Switching a section runs one coordinated 320 ms transition:
+پنج مقصد در یک `IndexedStack` میزبانی می‌شوند، بنابراین موقعیت اسکرول و بوم مدار هرگز بازسازی یا از دست
+رفته نمی‌شوند. جابه‌جایی میان بخش‌ها یک گذار هماهنگ ۳۲۰ میلی‌ثانیه‌ای اجرا می‌کند:
 
-* the page settles with a small scale (98.5 % → 100 %) and a 14 px rise,
-* an accent rail slides along the top edge to the selected section,
-* the capsule highlight glides to the new item and the icon cross-fades with a subtle scale.
+* صفحه با کوچک‌نمایی اندک (۹۸٫۵٪ → ۱۰۰٪) و ۱۴ پیکسل بالا آمدن جا می‌افتد،
+* ریل رنگ تأکیدی در لبهٔ بالا به سمت بخش انتخاب‌شده می‌لغزد،
+* هایلایت کپسولی به آیتم جدید می‌رود و آیکن با تغییر مقیاس ظریفی محو می‌شود.
 
-The motion is disabled when the user turns off animations in the settings, and it never interferes
-with the back gesture.
+این حرکت وقتی کاربر در تنظیمات انیمیشن‌ها را خاموش کند غیرفعال می‌شود و هرگز با سیستم بازگشت تداخل
+نمی‌کند.
 
-## 8. Data, import/export and backup
+## ۸. داده، واردسازی/صادرات و پشتیبان‌گیری
 
-* Projects are stored in SQLite with creation/modification timestamps, names and the full circuit
-  JSON. The list supports search and sorting by modification date, creation date or name.
-* Project export produces a portable, versioned JSON envelope
-  (`format: logic-lab-project`, `version: 1`) with no absolute paths. Import validates the format,
-  the version and the circuit payload, and refuses malformed or newer files.
-* **Import is validated completely before anything is replaced.** A file is only accepted after the
-  whole circuit has been checked: every wire must point at an existing component and at a port that
-  really exists, duplicate identifiers are rejected, and files above 4 MB are refused before they
-  are parsed. A failed import never touches the project that is currently open.
-* A full backup (`format: logic-lab-backup`) contains projects, learning progress and settings.
-* Corrupted database rows are skipped instead of crashing the app; malformed import files produce
-  a readable error.
-* **Backward compatibility**: circuits saved by older builds still load (the new `outputCount` field
-  is optional), and a component type that this build does not know is loaded as an "unsupported"
-  component and reported instead of breaking the whole project.
-* "Delete all data" is available behind an explicit destructive confirmation.
+* پروژه‌ها در SQLite با زمان ایجاد/ویرایش، نام و JSON کامل مدار ذخیره می‌شوند. فهرست از جست‌وجو و مرتب‌سازی
+  بر اساس تاریخ ویرایش، تاریخ ایجاد یا نام پشتیبانی می‌کند.
+* خروجی پروژه یک پاکت JSON قابل‌حمل و نسخه‌دار می‌سازد (`format: logic-lab-project`، `version: 1`) که هیچ
+  مسیر مطلقی ندارد. واردسازی قالب، نسخه و محتوای مدار را اعتبارسنجی می‌کند و فایل‌های خراب یا جدیدتر را
+  رد می‌کند.
+* **واردسازی پیش از هر جایگزینی به‌طور کامل اعتبارسنجی می‌شود.** یک فایل تنها پس از بررسی کل مدار پذیرفته
+  می‌شود: هر سیم باید به قطعه‌ای موجود و پایه‌ای واقعی اشاره کند، شناسه‌های تکراری رد می‌شوند و فایل‌های
+  بزرگ‌تر از ۴ مگابایت پیش از تجزیه کنار گذاشته می‌شوند. یک واردسازی ناموفق هرگز پروژهٔ در حال کار را
+  دست نمی‌زند.
+* یک پشتیبان کامل (`format: logic-lab-backup`) شامل پروژه‌ها، پیشرفت یادگیری و تنظیمات است.
+* ردیف‌های خراب پایگاه‌داده به‌جای کرش‌کردن برنامه نادیده گرفته می‌شوند؛ فایل‌های واردسازی خراب پیام
+  خطایی خوانا می‌دهند.
+* **سازگاری با نسخه‌های قبلی**: مدارهایی که نسخه‌های قدیمی‌تر ذخیره کرده‌اند همچنان باز می‌شوند (فیلد
+  جدید `outputCount` اختیاری است) و نوع قطعه‌ای که این نسخه نمی‌شناسد به‌صورت قطعهٔ «پشتیبانی‌نشده» بارگذاری
+  و گزارش می‌شود، به‌جای آنکه کل پروژه را خراب کند.
+* «حذف همهٔ داده‌ها» پشت یک تأیید صریح و ویرانگر در دسترس است.
 
-## 9. Version and identity
+## ۹. نسخه و هویت
 
-* The version lives in `pubspec.yaml` (`version: 1.1.0+2`) and is mirrored in
-  `lib/core/app_info.dart`. A unit test reads `pubspec.yaml` and fails if the two ever drift apart.
-* The About screen shows the user-facing version as the dot separated `1.1.0` and keeps the build
-  number separate. The version is never localised into `1/0/0` or `1٫0٫0`.
-* The Android launcher label is **Logic Lab**; the Persian subtitle **آزمایشگاه منطق** appears on
-  the branded splash screen and in the About screen, because launchers only show a single label.
-* The launcher uses an adaptive icon (vector background, foreground and a monochrome layer for
-  Android 13 themed icons) built from the same gate glyph as the app.
+* نسخه در `pubspec.yaml` (`version: 1.1.0+2`) نگهداری و در `lib/core/app_info.dart` آینه می‌شود. یک تست
+  واحد `pubspec.yaml` را می‌خواند و اگر این دو از هم جدا شوند شکست می‌خورد.
+* صفحهٔ «درباره» نسخهٔ کاربرپسند را به‌صورت `1.1.0` با جداکنندهٔ نقطه نشان می‌دهد و شمارهٔ build را جدا
+  نگه می‌دارد. نسخه هرگز به `1/0/0` یا `1٫0٫0` بومی‌سازی نمی‌شود.
+* برچسب لانچر اندروید **Logic Lab** است؛ زیرعنوان فارسی **آزمایشگاه منطق** روی صفحهٔ آغازین برنددار و در
+  صفحهٔ «درباره» دیده می‌شود، چون لانچرها فقط یک برچسب نشان می‌دهند.
+* لانچر از آیکون تطبیق‌پذیر استفاده می‌کند (پس‌زمینهٔ برداری، پیش‌زمینه و یک لایهٔ تک‌رنگ برای آیکن‌های
+  تم‌دار اندروید ۱۳) که از همان نماد گیت برنامه ساخته شده است.
 
-## 10. Accessibility and localisation
+## ۱۰. دسترس‌پذیری و بومی‌سازی
 
-* Persian is the default locale (`fa_IR`) with `GlobalMaterialLocalizations`, so system dialogs,
-  text fields, selection controls and directionality behave correctly.
-* Persian digits are used in Persian-facing UI; technical values (binary bits, identifiers,
-  expressions, code) keep ASCII digits and are rendered LTR inside a `Directionality.ltr` island.
-* Circuit symbols, wire direction and Boolean expressions always keep their conventional
-  left-to-right meaning; only the surrounding chrome is mirrored.
-* Dates are shown with an accurate Jalali conversion plus relative Persian labels.
-* Semantic labels on navigation items, canvas pins, table rows, signal pills and icon buttons,
-  tooltips on every icon action, 44–48 dp touch targets and text scaling up to 1.4×.
+* فارسی محلی پیش‌فرض (`fa_IR`) با `GlobalMaterialLocalizations` است، بنابراین دیالوگ‌های سیستم، فیلدهای
+  متنی، کنترل‌های انتخاب و جهت‌گیری درست رفتار می‌کنند.
+* در رابط فارسی از ارقام فارسی استفاده می‌شود؛ مقادیر فنی (بیت‌های دودویی، شناسه‌ها، عبارت‌ها، کد) ارقام
+  ASCII را نگه می‌دارند و درون یک جزیرهٔ `Directionality.ltr` رندر می‌شوند.
+* نمادهای مدار، جهت سیم و عبارت‌های بولی همیشه معنای قراردادی چپ‌به‌راست خود را حفظ می‌کنند؛ فقط
+  پوستهٔ پیرامون آینه می‌شود.
+* تاریخ‌ها با تبدیل دقیق جلالی به‌همراه برچسب‌های نسبی فارسی نمایش داده می‌شوند.
+* برچسب‌های معنایی روی آیتم‌های ناوبری، پین‌های بوم، ردیف‌های جدول، قرص‌های سیگنال و دکمه‌های آیکنی،
+  tooltip روی هر کنش آیکنی، هدف‌های لمسی ۴۴ تا ۴۸ dp و بزرگ‌نمایی متن تا ۱٫۴ برابر.
 
-## 11. Build and release
+## ۱۱. ساخت و انتشار
 
 ```bash
 flutter pub get
-flutter analyze          # static analysis
-flutter test             # unit + widget tests
+flutter analyze          # تحلیل ایستا
+flutter test             # آزمون‌های واحد + ویجت
 flutter build apk --release
 ```
 
-Release signing: copy `android/key.properties.example` to `android/key.properties` and fill in
-your upload keystore. Without that file the release build falls back to the debug key (useful for
-CI), so `flutter build apk --release` always works. R8 minification and resource shrinking are
-enabled, with the extra rules in `android/app/proguard-rules.pro`.
+امضای نسخهٔ انتشار: فایل `android/key.properties.example` را به `android/key.properties` کپی کنید و
+keystore بارگذاری خود را در آن وارد کنید. بدون این فایل، ساخت نسخهٔ release به کلید debug برمی‌گردد (برای CI
+مفید است)؛ بنابراین `flutter build apk --release` همیشه کار می‌کند. کوچک‌سازی کد و منابع با R8 فعال است و
+قواعد تکمیلی در `android/app/proguard-rules.pro` آمده است.
 
-## 12. Tests
+## ۱۲. آزمون‌ها
 
-`flutter test` runs 233 automated tests:
+`flutter test` تعداد ۲۳۳ آزمون خودکار را اجرا می‌کند:
 
-| Area | File |
+| حوزه | فایل |
 |------|------|
-| Basic gates, multi-stage composition, invalid connections, cycles, connection rules | `test/features/editor/circuit_validator_test.dart` |
-| Advanced components: multi-input gates, tri-state, compound gates, arithmetic, mux/demux/decoder/encoder, sequential elements and clock edges | `test/features/editor/advanced_components_test.dart` |
-| **Exhaustive truth tables of every gate against independent reference tables** | `test/features/editor/gate_truth_tables_test.dart` |
-| **Exhaustive arithmetic and selection modules (adders, subtractors, comparator, mux, demux, decoder, encoder)** | `test/features/editor/arithmetic_and_selection_test.dart` |
-| **Sequential components over several clock edges: latches, flip-flops, registers, shift registers, counters, valid feedback vs. invalid loops, UNKNOWN/Z at clock and data** | `test/features/editor/sequential_components_test.dart` |
-| **Consistency of a simulation step: outputs, inputs, evaluated nodes, problems and clock level describe the same state** | `test/features/editor/simulation_result_consistency_test.dart` |
-| **Simulation benchmark with a growth guard (catches a return to quadratic lookups)** | `test/features/editor/simulation_benchmark_test.dart` |
-| **Editor layout: the component drawer lists every category once, the Boolean tool header stays readable on small screens** | `test/features/editor/editor_ui_layout_test.dart` |
-| Editor controller: add, connect, refuse invalid connections, toggle inputs, undo/redo, duplicate, delete, autosave | `test/features/editor/circuit_editor_controller_test.dart` |
-| Truth-table generation, limit handling, unknown values, CSV export | `test/features/truth_table/truth_table_test.dart` |
-| Expression parsing, evaluation, precedence, simplification, comparison, circuit conversion | `test/features/boolean_tools/boolean_expression_test.dart` |
-| **Minimisation cross-checked against an independent brute force for every three-variable function, plus randomised equivalence checks** | `test/features/boolean_tools/boolean_minimization_verification_test.dart` |
-| Expression ↔ circuit equivalence and project format compatibility (legacy + unknown types) | `test/features/boolean_tools/expression_equivalence_test.dart` |
-| Circuit statistics, depth and equivalence comparison | `test/features/analysis/circuit_analyzer_test.dart` |
-| Project/circuit serialisation, versioning, malformed and incompatible files | `test/features/projects/project_serialization_test.dart` |
-| **Import hardening: oversized, malformed, foreign, newer-version, dangling-wire, invalid-port and duplicate-identifier files are rejected** | `test/features/projects/import_export_test.dart` |
-| Challenge validation against real circuit behaviour, template validity | `test/features/learn/challenge_validator_test.dart` |
-| Theme, palette, custom accent and signal colour persistence, corrupt preference recovery | `test/features/settings/settings_persistence_test.dart` |
-| Version metadata, application id and version formatting | `test/core/app_info_test.dart` |
-| RTL shell, five destinations, empty state, navigation, project list, editor launch | `test/widget_test.dart` |
+| گیت‌های پایه، ترکیب چندمرحله‌ای، اتصال‌های نامعتبر، چرخه‌ها و قواعد اتصال | `test/features/editor/circuit_validator_test.dart` |
+| قطعات پیشرفته: گیت‌های چندورودی، سه‌حالته، گیت‌های مرکب، حسابی، mux/demux/decoder/encoder، عناصر ترتیبی و لبه‌های کلاک | `test/features/editor/advanced_components_test.dart` |
+| **جدول حقیقت کامل همهٔ گیت‌ها در برابر جدول‌های مرجع مستقل** | `test/features/editor/gate_truth_tables_test.dart` |
+| **ماژول‌های حسابی و انتخابگر به‌طور کامل (جمع‌کننده، تفریق‌کننده، مقایسه‌گر، mux، demux، دیکودر، انکودر)** | `test/features/editor/arithmetic_and_selection_test.dart` |
+| **عناصر ترتیبی در چند لبهٔ متوالی: قفل‌ها، فلیپ‌فلپ‌ها، رجیسترها، رجیستر انتقال، شمارنده‌ها، بازخورد معتبر در برابر حلقهٔ نامعتبر، UNKNOWN/Z در کلاک و داده** | `test/features/editor/sequential_components_test.dart` |
+| **سازگاری یک گام شبیه‌سازی: خروجی‌ها، ورودی‌ها، گره‌های ارزیابی‌شده، ایرادها و سطح کلاک یک وضعیت را توصیف می‌کنند** | `test/features/editor/simulation_result_consistency_test.dart` |
+| **بنچمارک شبیه‌سازی با محافظ رشد (بازگشت به جست‌وجوی درجه‌دو را می‌گیرد)** | `test/features/editor/simulation_benchmark_test.dart` |
+| **چیدمان ویرایشگر: سینی قطعات هر دسته را فقط یک‌بار فهرست می‌کند و سربرگ ابزار بولی روی صفحه‌های کوچک خوانا می‌ماند** | `test/features/editor/editor_ui_layout_test.dart` |
+| کنترلر ویرایشگر: افزودن، اتصال، رد اتصال نامعتبر، تغییر ورودی، بازگشت/انجام، تکثیر، حذف، ذخیرهٔ خودکار | `test/features/editor/circuit_editor_controller_test.dart` |
+| تولید جدول حقیقت، مدیریت سقف، مقادیر نامشخص، خروجی CSV | `test/features/truth_table/truth_table_test.dart` |
+| تجزیهٔ عبارت، ارزیابی، تقدم عملگر، ساده‌سازی، مقایسه، تبدیل به مدار | `test/features/boolean_tools/boolean_expression_test.dart` |
+| **کمینه‌سازی در برابر brute-force مستقل برای هر تابع سه‌متغیره، به‌همراه بررسی هم‌ارزی تصادفی** | `test/features/boolean_tools/boolean_minimization_verification_test.dart` |
+| هم‌ارزی عبارت ↔ مدار و سازگاری قالب پروژه (نسخهٔ قدیمی + نوع ناشناخته) | `test/features/boolean_tools/expression_equivalence_test.dart` |
+| آمار مدار، عمق و مقایسهٔ هم‌ارزی | `test/features/analysis/circuit_analyzer_test.dart` |
+| سریال‌سازی پروژه/مدار، نسخه‌بندی، فایل‌های خراب و ناسازگار | `test/features/projects/project_serialization_test.dart` |
+| **سخت‌سازی واردسازی: فایل‌های بیش‌ازحد بزرگ، خراب، بیگانه، با نسخهٔ جدیدتر، سیمِ آویزان، پایهٔ نامعتبر و شناسهٔ تکراری رد می‌شوند** | `test/features/projects/import_export_test.dart` |
+| اعتبارسنجی چالش‌ها بر پایهٔ رفتار واقعی مدار، اعتبار الگوها | `test/features/learn/challenge_validator_test.dart` |
+| پوسته، پالت، رنگ تأکیدی دلخواه و ماندگاری رنگ سیگنال، بازیابی از تنظیمات خراب | `test/features/settings/settings_persistence_test.dart` |
+| فرادادهٔ نسخه، شناسهٔ برنامه و قالب‌بندی نسخه | `test/core/app_info_test.dart` |
+| پوستهٔ راست‌به‌چپ، پنج مقصد، حالت خالی، ناوبری، فهرست پروژه‌ها، باز شدن ویرایشگر | `test/widget_test.dart` |
 
-The shared reference implementations (gate tables, arithmetic, selection/coding) live in
-`test/support/circuit_test_support.dart`. They are written independently from the component
-specification, so the tests really cross-check the simulator instead of comparing it with itself.
+پیاده‌سازی‌های مرجع مشترک (جدول گیت‌ها، حسابی، انتخابگر/کدگذار) در
+`test/support/circuit_test_support.dart` هستند. این‌ها مستقل از مشخصات قطعات نوشته شده‌اند، بنابراین
+آزمون‌ها واقعاً شبیه‌ساز را راستی‌آزمایی می‌کنند و آن را با خودش مقایسه نمی‌کنند.
 
-## 13. Continuous integration and releases
+## ۱۳. یکپارچه‌سازی مداوم و انتشارها
 
-The repository ships with a complete GitHub Actions pipeline, so nothing has to be built or
-tested on a local machine:
+مخزن با یک خط لولهٔ کامل GitHub Actions همراه است، بنابراین لازم نیست چیزی روی رایانهٔ محلی ساخته یا
+آزموده شود:
 
-| Workflow | Purpose |
+| گردش کار | کارکرد |
 |----------|---------|
-| `.github/workflows/ci.yml` | Format check, `flutter analyze`, the full test suite and a real Android build on every push and pull request. Artifacts (APK/AAB + coverage) can be downloaded from the run. |
-| `.github/workflows/release.yml` | A version tag (`git tag v1.1.0`) produces signed, per-ABI APKs and an App Bundle and publishes them as a GitHub release. |
-| `.github/workflows/web-preview.yml` | Deploys the web build to GitHub Pages for a quick look at the interface. |
+| `.github/workflows/ci.yml` | بررسی قالب، `flutter analyze`، کل مجموعهٔ آزمون‌ها و یک ساخت واقعی اندروید روی هر push و pull request. خروجی‌ها (APK/AAB + پوشش) از همان اجرا قابل دانلودند. |
+| `.github/workflows/release.yml` | یک تگ نسخه (`git tag v1.1.0`) خروجی‌های امضاشدهٔ جدا به‌ازای هر ABI و یک App Bundle می‌سازد و آن‌ها را به‌صورت یک ریلیز GitHub منتشر می‌کند. |
+| `.github/workflows/web-preview.yml` | ساخت وب را روی GitHub Pages منتشر می‌کند تا نگاهی سریع به رابط کاربری بیندازید. |
 
-The required repository secrets (`ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`,
-`ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`), the release flow and the troubleshooting notes
-are documented in **`.github/CI.md`** (Persian).
+اسرار لازم مخزن (`ANDROID_KEYSTORE_BASE64`، `ANDROID_KEYSTORE_PASSWORD`، `ANDROID_KEY_ALIAS`،
+`ANDROID_KEY_PASSWORD`)، روند انتشار و نکته‌های رفع اشکال در **`.github/CI.md`** (به فارسی) مستند شده است.
 
-Helper scripts: `tool/validate_ci.dart` (validates the workflows themselves) and
-`tool/set_version.dart` (writes the version from the release tag into `pubspec.yaml`).
+اسکریپت‌های کمکی: `tool/validate_ci.dart` (خودِ گردش‌کارها را اعتبارسنجی می‌کند) و
+`tool/set_version.dart` (نسخه را از تگ انتشار در `pubspec.yaml` می‌نویسد).
 
-## 14. Release notes
+## ۱۴. یادداشت‌های انتشار
 
-### v1.1.0
+### نسخهٔ ۱٫۱٫۰
 
-**Fixed**
+**اصلاح‌شده**
 
-* **Sequential circuits captured the wrong value.** A flip-flop, register or counter whose data or
-  clock came through a gate evaluated that gate *after* itself, so the input was read as UNKNOWN
-  and the element stored a meaningless value. The engine now runs an explicit four-phase simulation
-  step (validation → signals → state → settling) and always captures the settled value.
-* **The 2-bit comparator reported "greater than" for equal numbers.** "Greater" is now derived from
-  the borrow of `b − a` instead of from "not less than".
-* **The Boolean simplifier discarded valid results.** A minimisation that removed an irrelevant
-  variable (for example `A & B | A & !B` → `A`) was rejected and the tool showed no result at all.
-* **The editor refused valid sequential feedback.** A connection that closes a loop through a
-  flip-flop (`Q → NOT → D`) was blocked as if it were a combinational cycle.
-* **Latches were evaluated one step behind** and a combinational loop around a latch was reported as
-  an invalid circuit.
-* **Sequential state could not represent "unknown".** Capturing a floating data line now yields an
-  unknown output instead of a silent zero.
-* **Import accepted broken files.** A project file with a dangling wire, an impossible port index
-  or a duplicate identifier is now rejected with a readable message, and files above 4 MB are
-  refused before they are parsed.
-* **Layout problems on small screens.** The heading of the Boolean tool and the category titles of
-  the component drawer were squeezed or repeated; both are fixed and covered by widget tests.
+* **مدارهای ترتیبی مقدار اشتباه می‌گرفتند.** اگر داده یا کلاک یک فلیپ‌فلپ، رجیستر یا شمارنده از یک گیت
+  می‌آمد، آن گیت *بعد* از خودِ فلیپ‌فلپ ارزیابی می‌شد؛ در نتیجه ورودی UNKNOWN خوانده و مقدار بی‌معنایی
+  ذخیره می‌شد. موتور اکنون یک گام شبیه‌سازی چهارمرحله‌ای صریح (اعتبارسنجی ← سیگنال‌ها ← حالت ←
+  نشست) اجرا می‌کند و همیشه مقدار نشسته را ثبت می‌کند.
+* **مقایسه‌گر ۲ بیتی** برای اعداد برابر هم «بزرگ‌تر» گزارش می‌کرد. اکنون «بزرگ‌تر» از قرضِ `b − a` به
+  دست می‌آید، نه از «نه کمتر».
+* **ساده‌ساز بولی** نتیجه‌های معتبر را دور می‌ریخت. کمینه‌سازی‌ای که یک متغیر بی‌ربط را حذف می‌کرد (برای
+  نمونه `A & B | A & !B` → `A`) رد می‌شد و ابزار اصلاً نتیجه‌ای نشان نمی‌داد.
+* **ویرایشگر** بازخورد ترتیبی معتبر را رد می‌کرد. اتصالی که حلقه‌ای از راه فلیپ‌فلپ می‌بندد
+  (`Q → NOT → D`) مانند چرخهٔ ترکیبی مسدود می‌شد.
+* **قفل‌ها** یک گام عقب ارزیابی می‌شدند و بازخوردِ حول قفل به‌عنوان مدار نامعتبر گزارش می‌شد.
+* **حالت ترتیبی** توانایی نمایش «نامشخص» را نداشت. گرفتن یک خط دادهٔ معلق اکنون خروجی نامشخص می‌دهد،
+  نه صفری خاموش.
+* **واردسازی** فایل‌های خراب را قبول می‌کرد. فایل پروژه‌ای با سیمِ آویزان، ایندکس پایهٔ ناممکن یا
+  شناسهٔ تکراری اکنون با پیامی خوانا رد می‌شود و فایل‌های بزرگ‌تر از ۴ مگابایت پیش از تجزیه کنار
+  گذاشته می‌شوند.
+* **مشکلات چیدمان در صفحه‌های کوچک.** سربرگ ابزار عبارت بولی و عنوان دسته‌های سینی قطعات فشرده یا
+  تکراری نشان داده می‌شدند؛ هر دو اصلاح شدند و با آزمون‌های ویجت پوشش دارند.
 
-**Improved**
+**بهبود یافته**
 
-* The circuit is no longer re-simulated while a component is being dragged — the result is
-  refreshed once when the component is dropped, which keeps large circuits responsive.
-* Node lookup is now O(1) and the topological sort no longer shifts its queue, so large circuits
-  are evaluated measurably faster (about 20 % less time for a 200-gate chain in a debug VM).
-* High-impedance (`Z`) has its own symbol next to the output value, and the truth table explains
-  that a circuit with sequential elements is computed from the initial state.
-* Two new diagnostics: an unknown clock and an unstable feedback loop are reported instead of
-  failing silently.
+* هنگام کشیدن یک قطعه دیگر مدار شبیه‌سازی نمی‌شود — نتیجه یک‌بار هنگام رها کردن قطعه به‌روزرسانی
+  می‌شود و این واکنش‌گرایی مدارهای بزرگ را حفظ می‌کند.
+* جست‌وجوی گره اکنون O(1) است و مرتب‌سازی توپولوژیک دیگر صف خود را جابه‌جا نمی‌کند، بنابراین مدارهای
+  بزرگ به‌طور قابل اندازه‌گیری سریع‌تر ارزیابی می‌شوند (حدود ۲۰٪ زمان کمتر برای زنجیرهٔ ۲۰۰ گیت در
+  VM دیباگ).
+* حالت امپدانس بالا (`Z`) نماد مستقل خود را کنار مقدار خروجی دارد و جدول حقیقت توضیح می‌دهد که مدار
+  با عناصر ترتیبی از وضعیت اولیه محاسبه می‌شود.
+* دو تشخیص تازه: کلاک نامشخص و بازخورد ناپایدار، به‌جای سکوت، گزارش می‌شوند.
 
-**Verified**
+**راستی‌آزمایی‌شده**
 
-* The test suite grew from 149 to 233 tests, including exhaustive truth tables against
-  independent reference implementations, sequential tests over several clock edges, an independent
-  cross-check of the Boolean minimiser and a benchmark that guards against quadratic lookups.
+* مجموعهٔ آزمون‌ها از ۱۴۹ به ۲۳۳ آزمون رشد کرد: جدول حقیقت کامل در برابر پیاده‌سازی‌های مرجع مستقل،
+  آزمون عناصر ترتیبی در چند لبهٔ متوالی، بررسی مستقل کمینه‌ساز بولی و بنچمارکی که از بازگشت به
+  جست‌وجوی درجه‌دو جلوگیری می‌کند.
 
-## 15. Roadmap
+## ۱۵. نقشهٔ راه
 
-The learning content, the component registry and the exercise system are all data-driven, so the
-following can be added without touching the engine: an ALU, a ripple-carry adder, a seven-segment
-decoder, a small RAM teaching module, a simple CPU datapath and further learning paths.
+محتوای آموزشی، رجیستری قطعات و سامانهٔ تمرین همگی داده‌محور هستند، بنابراین موارد زیر بدون دست‌زدن به
+موتور اضافه می‌شوند: یک ALU، جمع‌کنندهٔ دوماننده، دیکودر هفت‌قطعه‌ای، یک ماژول آموزشی RAM کوچک، مسیر
+دادهٔ سادهٔ یک CPU و مسیرهای یادگیری بیشتر.
 
-## License
+## پروانه
 
-The application source is provided as-is for this project. Bundled fonts keep their own licenses:
-SIL Open Font License 1.1 (Vazirmatn, JetBrains Mono) — see `assets/fonts/`.
+کد برنامه برای این پروژه «همان‌طور که هست» ارائه می‌شود. قلم‌های همراه، پروانهٔ خودشان را حفظ می‌کنند:
+SIL Open Font License 1.1 (Vazirmatn، JetBrains Mono) — ببینید `assets/fonts/`.
