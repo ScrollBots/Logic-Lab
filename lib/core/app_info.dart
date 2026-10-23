@@ -14,10 +14,10 @@ class AppInfo {
   static const String appSubtitle = 'آزمایشگاه منطق';
 
   /// Dot separated semantic version, exactly as published.
-  static const String version = '1.2.0';
+  static const String version = '1.3.0';
 
   /// Build number, kept separate from the user-facing version.
-  static const String buildNumber = '3';
+  static const String buildNumber = '4';
 
   /// The version string shown to the user. Never localised: the dot separator
   /// must stay a real `.` and never become `٫` or `/`.
