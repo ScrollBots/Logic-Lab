@@ -70,8 +70,7 @@ void main() {
     await tester.tap(find.text('آموزش').last);
     await tester.pumpAndSettle();
 
-    expect(find.text('مرجع گیت‌ها'), findsOneWidget);
-    expect(find.text('مسیر یادگیری'), findsWidgets);
+    expect(find.text('ادامهٔ یادگیری'), findsOneWidget);
   });
 
   testWidgets('the projects screen lists the stored circuits', (

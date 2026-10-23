@@ -151,5 +151,77 @@ void main() {
       newer['version'] = 99;
       expect(BackupCodec.decode(jsonEncode(newer)), isNull);
     });
+
+    test('a full learning snapshot is restored with the backup', () {
+      final Map<String, Object?> envelope = _envelope();
+      envelope['learningState'] = <String, Object?>{
+        'version': 1,
+        'xp': 240,
+        'dailyGoalXp': 60,
+        'xpToday': 20,
+        'streakDays': 4,
+        'bestStreak': 7,
+        'lastActiveDay': '2026-01-03',
+        'concepts': <String, Object?>{
+          'and': <String, Object?>{
+            'attempts': 3,
+            'correct': 2,
+            'intervalDays': 6,
+            'lastPracticed': '2026-01-02T00:00:00.000Z',
+            'dueAt': '2026-01-08T00:00:00.000Z',
+          },
+        },
+        'completedLessons': <Object?>['lesson_signals'],
+        'completedChallenges': <Object?>['challenge_and'],
+        'stepProgress': <String, Object?>{
+          'lesson_signals': <Object?>[0, 1, 2, 3],
+        },
+        'lastLessonId': 'lesson_signals',
+        'onboardingSeen': true,
+      };
+
+      final BackupPayload payload = BackupCodec.decode(jsonEncode(envelope))!;
+
+      expect(payload.learningState, isNotNull);
+      expect(payload.learningState!.xp, 240);
+      expect(payload.learningState!.dailyGoalXp, 60);
+      expect(payload.learningState!.streakDays, 4);
+      expect(payload.learningState!.concepts['and']!.attempts, 3);
+      expect(payload.learningState!.completedLessons, <String>{
+        'lesson_signals',
+      });
+      expect(payload.learningState!.completedChallenges, <String>{
+        'challenge_and',
+      });
+      expect(payload.learningState!.stepsDone('lesson_signals'), <int>{
+        0,
+        1,
+        2,
+        3,
+      });
+      expect(payload.learningState!.lastLessonId, 'lesson_signals');
+      expect(payload.learningState!.onboardingSeen, isTrue);
+      expect(payload.progress, isEmpty);
+    });
+
+    test('a malformed snapshot is ignored, the backup still restores', () {
+      final Map<String, Object?> envelope = _envelope(
+        progress: <Object?>[
+          <String, Object?>{
+            'itemId': 'lesson-a',
+            'completed': true,
+            'bestScore': 90,
+            'attempts': 3,
+            'updatedAt': '2026-01-03T00:00:00.000Z',
+          },
+        ],
+      );
+      envelope['learningState'] = 'not a map';
+
+      final BackupPayload payload = BackupCodec.decode(jsonEncode(envelope))!;
+
+      expect(payload.learningState, isNull);
+      expect(payload.progress.single.itemId, 'lesson-a');
+    });
   });
 }

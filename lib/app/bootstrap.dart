@@ -49,6 +49,7 @@ class _LogicLabBootstrapState extends State<LogicLabBootstrap> {
       );
       final LearningController learning = LearningController(
         repositories.progress,
+        stateRepository: repositories.learningState,
       );
       await Future.wait<void>(<Future<void>>[projects.load(), learning.load()]);
       if (!mounted) {

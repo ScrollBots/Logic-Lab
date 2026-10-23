@@ -6,6 +6,7 @@ Future<AppRepositories> bootstrapRepositories() async {
   return AppRepositories(
     projects: SqliteProjectRepository(database),
     progress: SqliteLearningProgressRepository(database),
+    learningState: SqliteLearningStateRepository(database),
     close: database.close,
   );
 }

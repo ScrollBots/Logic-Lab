@@ -10,6 +10,7 @@ import '../../../core/theme/logic_lab_theme.dart';
 import '../../../core/widgets/common.dart';
 import '../../learn/application/learning_controller.dart';
 import '../../learn/data/learning_progress_repository.dart';
+import '../../learn/domain/learning_state.dart';
 import '../../projects/application/projects_controller.dart';
 import '../../projects/domain/circuit_project.dart';
 import '../application/settings_controller.dart';
@@ -682,6 +683,7 @@ class _DataToolsState extends State<_DataTools> {
               },
             )
             .toList(growable: false),
+        'learningState': learning.exportState().toJson(),
         'settings': settings.value.toJson(),
       };
       await FileExchange.shareTextFile(
@@ -745,6 +747,10 @@ class _DataToolsState extends State<_DataTools> {
           context.read<SettingsController>();
       await projectsController.replaceAll(backup.projects);
       await learningController.restoreAll(backup.progress);
+      final LearningState? learningState = backup.learningState;
+      if (learningState != null) {
+        await learningController.restoreState(learningState);
+      }
       final Map<String, Object?>? rawSettings = backup.settings;
       if (rawSettings != null) {
         try {

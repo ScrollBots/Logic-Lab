@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import '../../features/learn/data/learning_progress_repository.dart';
+import '../../features/learn/data/learning_state_repository.dart';
 import '../../features/projects/data/project_repository.dart';
 import 'app_repositories.dart';
 
@@ -11,5 +12,6 @@ Future<AppRepositories> bootstrapRepositories() async {
   return AppRepositories(
     projects: MemoryProjectRepository(),
     progress: MemoryLearningProgressRepository(),
+    learningState: MemoryLearningStateRepository(),
   );
 }

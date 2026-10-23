@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import '../../learn/data/learning_progress_repository.dart';
+import '../../learn/domain/learning_state.dart';
 import '../../projects/domain/circuit_project.dart';
 
 /// Versioned backup envelope. The payload is portable JSON with no absolute
@@ -10,11 +11,16 @@ class BackupPayload {
     required this.projects,
     required this.progress,
     this.settings,
+    this.learningState,
   });
 
   final List<CircuitProject> projects;
   final List<LearningProgress> progress;
   final Map<String, Object?>? settings;
+
+  /// Optional full learning snapshot (XP, mastery, review schedule). Older
+  /// backups only carry [progress], which is then re-seeded into a snapshot.
+  final LearningState? learningState;
 }
 
 class BackupCodec {
@@ -83,10 +89,20 @@ class BackupCodec {
     }
 
     final Object? rawSettings = raw['settings'];
+    final Object? rawLearningState = raw['learningState'];
+    LearningState? learningState;
+    if (rawLearningState is Map) {
+      try {
+        learningState = LearningState.fromJson(rawLearningState);
+      } catch (_) {
+        learningState = null;
+      }
+    }
     return BackupPayload(
       projects: projects,
       progress: progress,
       settings: rawSettings is Map<String, Object?> ? rawSettings : null,
+      learningState: learningState,
     );
   }
 

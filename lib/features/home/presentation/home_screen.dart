@@ -9,7 +9,9 @@ import '../../editor/domain/circuit_models.dart';
 import '../../editor/presentation/circuit_editor_screen.dart';
 import '../../editor/presentation/circuit_preview.dart';
 import '../../learn/application/learning_controller.dart';
-import '../../learn/domain/learning_content.dart';
+import '../../learn/domain/curriculum.dart';
+import '../../learn/domain/lesson_models.dart';
+import '../../learn/presentation/learning_session_screen.dart';
 import '../../projects/application/projects_controller.dart';
 import '../../projects/domain/circuit_project.dart';
 import '../../settings/application/settings_controller.dart';
@@ -165,7 +167,9 @@ class HomeScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 18),
-          Row(
+          Wrap(
+            spacing: 10,
+            runSpacing: 8,
             children: <Widget>[
               FilledButton.icon(
                 style: FilledButton.styleFrom(
@@ -176,7 +180,6 @@ class HomeScreen extends StatelessWidget {
                 icon: const Icon(Icons.add_rounded),
                 label: const Text('مدار جدید'),
               ),
-              const SizedBox(width: 10),
               TextButton.icon(
                 style: TextButton.styleFrom(
                   foregroundColor: theme.colorScheme.onPrimary,
@@ -354,16 +357,15 @@ class HomeScreen extends StatelessWidget {
 
   Widget _learningSection(BuildContext context, LearningController learning) {
     final ThemeData theme = Theme.of(context);
-    final int total = kLessons.length + kChallenges.length;
-    final int done = learning.completedCount;
-    final double ratio = total == 0 ? 0 : done / total;
-    final LearningChallenge? nextChallenge = kChallenges
-        .cast<LearningChallenge?>()
-        .firstWhere(
-          (LearningChallenge? item) =>
-              item != null && !learning.isCompleted(item.id),
-          orElse: () => null,
-        );
+    final int done =
+        kLessons
+            .where(
+              (LearningLesson lesson) => learning.isLessonCompleted(lesson.id),
+            )
+            .length;
+    final double ratio = kLessons.isEmpty ? 0 : done / kLessons.length;
+    final LearningLesson? next = learning.nextLesson;
+    final LearningUnit? unit = next == null ? null : unitOfLesson(next.id);
 
     return SurfaceCard(
       child: Column(
@@ -379,12 +381,30 @@ class HomeScreen extends StatelessWidget {
                   children: <Widget>[
                     Text('مسیر یادگیری', style: theme.textTheme.titleMedium),
                     Text(
-                      '${PersianFormat.digits(done)} از ${PersianFormat.digits(total)} مورد تکمیل شده',
+                      '${PersianFormat.digits(done)} از ${PersianFormat.digits(kLessons.length)} درس تکمیل شده',
                       style: theme.textTheme.bodySmall,
                     ),
                   ],
                 ),
               ),
+              if (learning.streak > 0)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.tertiary.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    '${PersianFormat.digits(learning.streak)} روز',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: theme.colorScheme.tertiary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
             ],
           ),
           const SizedBox(height: 12),
@@ -396,45 +416,64 @@ class HomeScreen extends StatelessWidget {
               backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
             ),
           ),
-          if (nextChallenge != null) ...<Widget>[
+          if (next != null) ...<Widget>[
             const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceContainerLow,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: theme.colorScheme.outlineVariant),
-              ),
-              child: Row(
-                children: <Widget>[
-                  Icon(
-                    Icons.flag_outlined,
-                    size: 18,
-                    color: theme.colorScheme.tertiary,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        Text(
-                          'چالش بعدی: ${nextChallenge.title}',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        Text(
-                          nextChallenge.brief,
-                          style: theme.textTheme.bodySmall,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
+            InkWell(
+              onTap:
+                  () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder:
+                          (BuildContext context) =>
+                              LearningSessionScreen(lesson: next),
                     ),
                   ),
-                  const Icon(Icons.chevron_left_rounded, size: 18),
-                ],
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceContainerLow,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: theme.colorScheme.outlineVariant),
+                ),
+                child: Row(
+                  children: <Widget>[
+                    Icon(
+                      Icons.play_circle_outline_rounded,
+                      size: 20,
+                      color: theme.colorScheme.primary,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          if (unit != null)
+                            Text(
+                              unit.title,
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          Text(
+                            next.title,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Icon(Icons.chevron_left_rounded, size: 18),
+                  ],
+                ),
               ),
+            ),
+          ] else ...<Widget>[
+            const SizedBox(height: 12),
+            TextButton.icon(
+              onPressed: onOpenLearn,
+              icon: const Icon(Icons.workspace_premium_outlined, size: 18),
+              label: const Text('همهٔ درس‌ها کامل شده‌اند؛ یک مرور کوتاه'),
             ),
           ],
         ],

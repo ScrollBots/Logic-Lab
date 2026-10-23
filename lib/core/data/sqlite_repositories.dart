@@ -6,6 +6,8 @@ import 'package:sqflite/sqflite.dart';
 
 import '../../features/editor/domain/circuit_models.dart';
 import '../../features/learn/data/learning_progress_repository.dart';
+import '../../features/learn/data/learning_state_repository.dart';
+import '../../features/learn/domain/learning_state.dart';
 import '../../features/projects/data/project_repository.dart';
 import '../../features/projects/domain/circuit_project.dart';
 
@@ -15,7 +17,15 @@ class LogicLabDatabase {
   final Database database;
 
   static const String fileName = 'logic_lab.db';
-  static const int version = 1;
+  static const int version = 2;
+
+  static const String _createLearningStateTable = '''
+    CREATE TABLE IF NOT EXISTS learning_state (
+      id TEXT PRIMARY KEY,
+      payload TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    )
+  ''';
 
   static Future<LogicLabDatabase> open() async {
     final String directory = await getDatabasesPath();
@@ -49,6 +59,12 @@ class LogicLabDatabase {
             updated_at TEXT NOT NULL
           )
         ''');
+        await db.execute(_createLearningStateTable);
+      },
+      onUpgrade: (Database db, int oldVersion, int newVersion) async {
+        if (oldVersion < 2) {
+          await db.execute(_createLearningStateTable);
+        }
       },
     );
     return LogicLabDatabase._(database);
@@ -137,6 +153,59 @@ class SqliteProjectRepository implements ProjectRepository {
     'circuit_json': jsonEncode(project.graph.toJson()),
     'schema_version': CircuitProject.schemaVersion,
   };
+}
+
+class SqliteLearningStateRepository implements LearningStateRepository {
+  SqliteLearningStateRepository(this._database);
+
+  static const String _rowId = 'state';
+
+  final LogicLabDatabase _database;
+
+  Database get _db => _database.database;
+
+  @override
+  Future<LearningState?> load() async {
+    final List<Map<String, Object?>> rows = await _db.query(
+      'learning_state',
+      where: 'id = ?',
+      whereArgs: <Object?>[_rowId],
+      limit: 1,
+    );
+    if (rows.isEmpty) {
+      return null;
+    }
+    final Object? payload = rows.first['payload'];
+    if (payload is! String) {
+      return null;
+    }
+    try {
+      return LearningState.fromJson(jsonDecode(payload));
+    } catch (error) {
+      // A corrupt snapshot must not stop the app from starting. The learner
+      // keeps their legacy completion data and starts a fresh XP history.
+      debugPrint('Skipping malformed learning state: $error');
+      return null;
+    }
+  }
+
+  @override
+  Future<void> save(LearningState state) async {
+    await _db.insert('learning_state', <String, Object?>{
+      'id': _rowId,
+      'payload': jsonEncode(state.toJson()),
+      'updated_at': DateTime.now().toUtc().toIso8601String(),
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  @override
+  Future<void> clear() async {
+    await _db.delete(
+      'learning_state',
+      where: 'id = ?',
+      whereArgs: <Object?>[_rowId],
+    );
+  }
 }
 
 class SqliteLearningProgressRepository implements LearningProgressRepository {

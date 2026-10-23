@@ -95,25 +95,6 @@ const List<GateDefinition> kGateDefinitions = <GateDefinition>[
 ];
 
 @immutable
-class LearningLesson {
-  const LearningLesson({
-    required this.id,
-    required this.title,
-    required this.summary,
-    required this.body,
-    required this.minutes,
-    this.gateType,
-  });
-
-  final String id;
-  final String title;
-  final String summary;
-  final List<String> body;
-  final int minutes;
-  final ComponentType? gateType;
-}
-
-@immutable
 class LearningChallenge {
   const LearningChallenge({
     required this.id,
@@ -123,6 +104,10 @@ class LearningChallenge {
     required this.expectedOutputs,
     this.allowedGates,
     this.requiredOutputCount = 1,
+    this.inputLabels = const <String>['A', 'B'],
+    this.outputLabels = const <String>['Y'],
+    this.expectedOutputsByLabel,
+    this.concepts = const <String>[],
   });
 
   final String id;
@@ -136,89 +121,21 @@ class LearningChallenge {
   /// null means any gate type is allowed.
   final List<ComponentType>? allowedGates;
   final int requiredOutputCount;
-}
 
-const List<LearningLesson> kLessons = <LearningLesson>[
-  LearningLesson(
-    id: 'lesson_signals',
-    title: 'سیگنال دیجیتال چیست؟',
-    summary: 'سطوح ۰ و ۱ و معنای آن‌ها در مدارهای منطقی',
-    minutes: 4,
-    body: <String>[
-      'در الکترونیک دیجیتال، اطلاعات با دو سطح ولتاژ نمایش داده می‌شود: پایین (۰) و بالا (۱). '
-          'هر سیگنال در هر لحظه دقیقاً یکی از این دو مقدار را دارد.',
-      'این دو مقدار با صفر و یک منطقی نیز نمایش داده می‌شوند. ۱ یعنی «درست/فعال» و ۰ یعنی «نادرست/غیرفعال».',
-      'در این برنامه، ورودی‌ها کلید دوحالته‌اند. با ضربه زدن روی آن‌ها مقدارشان بین ۰ و ۱ تغییر می‌کند '
-          'و خروجی مدار بلافاصله دوباره محاسبه می‌شود.',
-      'اگر ورودی‌ای به قطعه‌ای وصل نباشد، مقدار آن «نامشخص» در نظر گرفته می‌شود. '
-          'مدار نامعتبر هرگز نتیجه قطعی نمایش نمی‌دهد.',
-    ],
-  ),
-  LearningLesson(
-    id: 'lesson_wiring',
-    title: 'سیم‌کشی درست',
-    summary: 'پایه خروجی، پایه ورودی و قواعد اتصال',
-    minutes: 5,
-    body: <String>[
-      'هر قطعه یک یا چند پایه ورودی دارد و بیشتر آن‌ها یک پایه خروجی. سیگنال فقط از پایه خروجی '
-          'به پایه ورودی جریان پیدا می‌کند.',
-      'برای اتصال: ابتدا پایه خروجی را انتخاب کنید، سپس پایه ورودی مقصد را بزنید. '
-          'پایه‌های معتبر در همان لحظه برجسته می‌شوند.',
-      'اتصال‌های نامعتبر مانند اتصال خروجی به خروجی، اتصال دو سیم به یک پایه، یا ساختن چرخه '
-          'ترکیبی رد می‌شوند و پیام راهنما نمایش داده می‌شود.',
-      'اگر دروازه‌ای حتی یک ورودی متصل نداشته باشد، مدار نامعتبر است و مقدار آن نامشخص باقی می‌ماند.',
-    ],
-  ),
-  LearningLesson(
-    id: 'lesson_and',
-    title: 'دروازه AND',
-    summary: 'و منطقی و جدول حقیقت آن',
-    minutes: 4,
-    gateType: ComponentType.andGate,
-    body: <String>[
-      'دروازه AND وقتی خروجی ۱ می‌دهد که همه ورودی‌ها ۱ باشند. در بقیه حالت‌ها خروجی صفر است.',
-      'جدول حقیقت AND با دو ورودی فقط یک ردیف با خروجی ۱ دارد: حالتی که هر دو ورودی ۱ هستند.',
-      'اگر یک مدار AND را بسازید و جدول حقیقت آن را با دروازه AND مقایسه کنید، دقیقاً یکسان خواهد بود.',
-    ],
-  ),
-  LearningLesson(
-    id: 'lesson_or_not',
-    title: 'دروازه‌های OR و NOT',
-    summary: 'یا منطقی و معکوس‌کننده',
-    minutes: 4,
-    gateType: ComponentType.orGate,
-    body: <String>[
-      'دروازه OR زمانی خروجی ۱ می‌دهد که حداقل یک ورودی ۱ باشد.',
-      'دروازه NOT تنها یک ورودی دارد و خروجی را معکوس می‌کند. از NOT برای ساخت NAND و NOR استفاده می‌شود.',
-      'ترکیب NOT با AND یا OR یکی از پرکاربردترین الگوهای طراحی مدار است.',
-    ],
-  ),
-  LearningLesson(
-    id: 'lesson_composite',
-    title: 'دروازه‌های مرکب',
-    summary: 'NAND، NOR، XOR و XNOR',
-    minutes: 6,
-    gateType: ComponentType.xorGate,
-    body: <String>[
-      'NAND معکوس AND است و NOR معکوس OR. هر دو با یک ورودی فعال (مثلاً ۰) سیگنال فعال می‌دهند.',
-      'XOR تنها وقتی ۱ است که دو ورودی متفاوت باشند؛ یعنی تعداد ورودی‌های ۱ فرد باشد. '
-          'XNOR معکوس آن است.',
-      'اگر دروازه XOR را به‌صورت AND و NOT بسازید، جدول حقیقت نهایی باید دقیقاً با XOR یکسان شود.',
-    ],
-  ),
-  LearningLesson(
-    id: 'lesson_decomposition',
-    title: 'شکستن مدار به گیت',
-    summary: 'ساخت هر تابع منطقی از گیت‌های پایه',
-    minutes: 7,
-    body: <String>[
-      'هر تابع منطقی دودویی را می‌توان فقط با گیت‌های NAND ساخت. این اصل پایه صنعت سخت‌افزار دیجیتال است.',
-      'برای تمرین، ابتدا جدول حقیقت تابع را بنویسید، سپس برای هر ردیفی که خروجی ۱ دارد یک جمله '
-          'بسازید و آن‌ها را با OR ترکیب کنید.',
-      'اگر نمی‌توانید مستقیم گیت NAND بسازید، ابتدا AND و NOT را بسازید و سپس آن‌ها را به NAND تبدیل کنید.',
-    ],
-  ),
-];
+  /// Labels of the starter pins created by the learning screens.
+  final List<String> inputLabels;
+
+  /// Output pins the learner has to provide. A two-output challenge such as a
+  /// half adder requires both labels and [expectedOutputsByLabel].
+  final List<String> outputLabels;
+
+  /// Multi-output challenges are validated per label instead of relying on the
+  /// order in which outputs happen to be created.
+  final Map<String, List<bool>>? expectedOutputsByLabel;
+
+  /// Concepts that are credited when this challenge is completed.
+  final List<String> concepts;
+}
 
 const List<LearningChallenge> kChallenges = <LearningChallenge>[
   LearningChallenge(
@@ -229,14 +146,38 @@ const List<LearningChallenge> kChallenges = <LearningChallenge>[
     hint: 'یک دروازه AND کافی است؛ هر دو ورودی را به آن وصل کنید.',
     expectedOutputs: <bool>[false, false, false, true],
     allowedGates: <ComponentType>[ComponentType.andGate],
+    concepts: <String>['and'],
+  ),
+  LearningChallenge(
+    id: 'challenge_or',
+    title: 'گیت OR بسازید',
+    brief:
+        'مداری بسازید که وقتی حداقل یکی از ورودی‌ها ۱ است، خروجی ۱ داشته باشد.',
+    hint: 'یک دروازه OR کافی است؛ هر دو ورودی را به آن وصل کنید.',
+    expectedOutputs: <bool>[false, true, true, true],
+    allowedGates: <ComponentType>[ComponentType.orGate],
+    concepts: <String>['or'],
+  ),
+  LearningChallenge(
+    id: 'challenge_buffer',
+    title: 'سیگنال را منتقل کنید',
+    brief:
+        'ورودی A را بدون تغییر به خروجی Y برسانید. مقدار B در این مدار اهمیتی ندارد.',
+    hint:
+        'یک بافر (BUF) بردارید؛ ورودی A را به آن و خروجی بافر را به Y وصل کنید.',
+    expectedOutputs: <bool>[false, false, true, true],
+    allowedGates: <ComponentType>[ComponentType.bufferGate],
+    concepts: <String>['buffer', 'wiring'],
   ),
   LearningChallenge(
     id: 'challenge_xor',
     title: 'گیت XOR بسازید',
     brief:
         'مداری بسازید که خروجی آن فقط وقتی ۱ باشد که دو ورودی متفاوت باشند. استفاده از گیت XOR مجاز است.',
-    hint: 'می‌توانید از XOR مستقیم استفاده کنید یا آن را از AND و NOT بسازید.',
+    hint:
+        'می‌توانید از XOR مستقیم استفاده کنید یا آن را از AND و OR و NOT بسازید.',
     expectedOutputs: <bool>[false, true, true, false],
+    concepts: <String>['xor'],
   ),
   LearningChallenge(
     id: 'challenge_nor',
@@ -249,6 +190,7 @@ const List<LearningChallenge> kChallenges = <LearningChallenge>[
       ComponentType.orGate,
       ComponentType.notGate,
     ],
+    concepts: <String>['nor'],
   ),
   LearningChallenge(
     id: 'challenge_xnor',
@@ -262,6 +204,7 @@ const List<LearningChallenge> kChallenges = <LearningChallenge>[
       ComponentType.xorGate,
       ComponentType.notGate,
     ],
+    concepts: <String>['xnor'],
   ),
   LearningChallenge(
     id: 'challenge_mixed',
@@ -271,51 +214,41 @@ const List<LearningChallenge> kChallenges = <LearningChallenge>[
     hint:
         'برای حالت ۱۰ از AND با NOT روی B استفاده کنید و ورودی‌های دیگر را ببندید.',
     expectedOutputs: <bool>[false, false, true, false],
+    concepts: <String>['and', 'not', 'sop'],
   ),
-];
-
-@immutable
-class LearningPath {
-  const LearningPath({
-    required this.id,
-    required this.title,
-    required this.subtitle,
-    required this.level,
-    required this.lessonIds,
-    required this.challengeIds,
-  });
-
-  final String id;
-  final String title;
-  final String subtitle;
-  final int level;
-  final List<String> lessonIds;
-  final List<String> challengeIds;
-}
-
-const List<LearningPath> kLearningPaths = <LearningPath>[
-  LearningPath(
-    id: 'path_beginner',
-    title: 'شروع از صفر',
-    subtitle: 'سیگنال، سیم و سه گیت پایه',
-    level: 1,
-    lessonIds: <String>['lesson_signals', 'lesson_wiring', 'lesson_and'],
-    challengeIds: <String>['challenge_and'],
+  LearningChallenge(
+    id: 'challenge_implication',
+    title: 'استلزام منطقی',
+    brief:
+        'مداری بسازید که فقط در حالت A=1 و B=0 خروجی ۰ بدهد؛ در بقیهٔ حالت‌ها خروجی ۱ باشد.',
+    hint: 'خروجی برابر است با NOT روی A، یا B. از یک OR و یک NOT استفاده کنید.',
+    expectedOutputs: <bool>[true, true, false, true],
+    concepts: <String>['not', 'or', 'sop'],
   ),
-  LearningPath(
-    id: 'path_intermediate',
-    title: 'گیت‌های ترکیبی',
-    subtitle: 'NOT، OR و مدارهای مرکب',
-    level: 2,
-    lessonIds: <String>['lesson_or_not', 'lesson_composite'],
-    challengeIds: <String>['challenge_nor', 'challenge_xor'],
+  LearningChallenge(
+    id: 'challenge_equality',
+    title: 'مقایسه‌گر برابری',
+    brief: 'مداری بسازید که وقتی دو ورودی برابرند خروجی EQ برابر ۱ داشته باشد.',
+    hint: 'برای برابری می‌توانید از XNOR استفاده کنید.',
+    expectedOutputs: <bool>[true, false, false, true],
+    outputLabels: <String>['EQ'],
+    concepts: <String>['xnor', 'comparator'],
   ),
-  LearningPath(
-    id: 'path_advanced',
-    title: 'طراحی تابع',
-    subtitle: 'شکستن تابع منطقی به گیت‌های پایه',
-    level: 3,
-    lessonIds: <String>['lesson_decomposition'],
-    challengeIds: <String>['challenge_xnor', 'challenge_mixed'],
+  LearningChallenge(
+    id: 'challenge_half_adder',
+    title: 'نیم‌جمع‌کننده',
+    brief:
+        'دو خروجی S (مجموع) و C (بابت حمل) بسازید تا A و B را جمع کند. '
+        'خروجی‌ها از قبل با نام S و C ساخته شده‌اند.',
+    hint:
+        'مجموع دو بیت همان XOR است و بابت حمل همان AND. یک XOR و یک AND بردارید.',
+    expectedOutputs: <bool>[false, true, true, false],
+    requiredOutputCount: 2,
+    outputLabels: <String>['S', 'C'],
+    expectedOutputsByLabel: <String, List<bool>>{
+      'S': <bool>[false, true, true, false],
+      'C': <bool>[false, false, false, true],
+    },
+    concepts: <String>['xor', 'and', 'half-adder'],
   ),
 ];

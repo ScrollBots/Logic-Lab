@@ -16,7 +16,7 @@ const Map<AppDestination, String> _pageMarkers = <AppDestination, String>{
   AppDestination.home: 'از ایده تا مدار، همین‌جا',
   AppDestination.circuits: 'مدارهای من',
   AppDestination.laboratory: 'میز آزمایش گیت',
-  AppDestination.learning: 'مرجع گیت‌ها',
+  AppDestination.learning: 'ادامهٔ یادگیری',
   AppDestination.settings: 'پالت رنگ',
 };
 

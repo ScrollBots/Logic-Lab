@@ -230,6 +230,31 @@ void main() {
       );
       expect(result.passed, isTrue, reason: result.message);
     });
+
+    test('the half adder is checked per output label, not creation order', () {
+      final LearningChallenge challenge = kChallenges.firstWhere(
+        (LearningChallenge item) => item.id == 'challenge_half_adder',
+      );
+      // The carry output is declared before the sum output on purpose.
+      final CircuitGraph graph = _halfAdder();
+      final ChallengeResult result = ChallengeValidator.validate(
+        graph,
+        challenge,
+      );
+      expect(result.passed, isTrue, reason: result.message);
+    });
+
+    test('an output with an unexpected label is rejected', () {
+      final LearningChallenge challenge = kChallenges.firstWhere(
+        (LearningChallenge item) => item.id == 'challenge_half_adder',
+      );
+      final ChallengeResult result = ChallengeValidator.validate(
+        _halfAdder(sumLabel: 'Y'),
+        challenge,
+      );
+      expect(result.passed, isFalse);
+      expect(result.message, contains('نام خروجی'));
+    });
   });
 
   group('Templates', () {
@@ -275,4 +300,57 @@ void main() {
       expect(report.signalOf(carry.id), LogicSignal.high);
     });
   });
+}
+
+/// A half adder whose outputs are declared in the opposite order of the
+/// labels in the challenge: the validator has to match them by name.
+CircuitGraph _halfAdder({String sumLabel = 'S'}) {
+  return CircuitGraph(
+    nodes: <CircuitNode>[
+      CircuitNode(
+        id: 'a',
+        type: ComponentType.inputPin,
+        position: const CanvasPoint(0, 0),
+        label: 'A',
+      ),
+      CircuitNode(
+        id: 'b',
+        type: ComponentType.inputPin,
+        position: const CanvasPoint(0, 120),
+        label: 'B',
+      ),
+      CircuitNode(
+        id: 'c',
+        type: ComponentType.outputPin,
+        position: const CanvasPoint(420, 180),
+        label: 'C',
+      ),
+      CircuitNode(
+        id: 's',
+        type: ComponentType.outputPin,
+        position: const CanvasPoint(420, 60),
+        label: sumLabel,
+      ),
+      CircuitNode(
+        id: 'xor',
+        type: ComponentType.xorGate,
+        position: const CanvasPoint(200, 60),
+        label: 'XOR',
+      ),
+      CircuitNode(
+        id: 'and',
+        type: ComponentType.andGate,
+        position: const CanvasPoint(200, 180),
+        label: 'AND',
+      ),
+    ],
+    wires: <CircuitWire>[
+      CircuitWire(id: 'wa', fromNodeId: 'a', toNodeId: 'xor', toInputIndex: 0),
+      CircuitWire(id: 'wb', fromNodeId: 'b', toNodeId: 'xor', toInputIndex: 1),
+      CircuitWire(id: 'wc', fromNodeId: 'a', toNodeId: 'and', toInputIndex: 0),
+      CircuitWire(id: 'wd', fromNodeId: 'b', toNodeId: 'and', toInputIndex: 1),
+      CircuitWire(id: 'ws', fromNodeId: 'xor', toNodeId: 's', toInputIndex: 0),
+      CircuitWire(id: 'wq', fromNodeId: 'and', toNodeId: 'c', toInputIndex: 0),
+    ],
+  );
 }
