@@ -231,8 +231,11 @@ jobs:
           version, build = re.search(r'^version:\s*(\S+)\+(\d+)\s*$', Path('pubspec.yaml').read_text(), re.M).groups()
           aapt2 = next(Path(os.environ['ANDROID_HOME']).glob('build-tools/*/aapt2'))
           apksigner = aapt2.with_name('apksigner')
-          expected = ('ir.logiclab.logic_lab', build, version)
-          for abi in ('arm64-v8a', 'armeabi-v7a', 'x86_64'):
+          # `flutter build apk --split-per-abi` overrides each APK version code with
+          # ABI_VERSION * 1000 + build number (Flutter Gradle plugin).
+          abi_version_codes = {'armeabi-v7a': 1, 'arm64-v8a': 2, 'x86_64': 4}
+          for abi, abi_code in abi_version_codes.items():
+              expected = ('ir.logiclab.logic_lab', str(abi_code * 1000 + int(build)), version)
               apk = Path(f'build/app/outputs/flutter-apk/app-{abi}-release.apk')
               badging = subprocess.check_output([str(aapt2), 'dump', 'badging', str(apk)], text=True)
               package = re.search(r"^package: name='([^']+)' versionCode='([^']+)' versionName='([^']+)'", badging, re.M).groups()
