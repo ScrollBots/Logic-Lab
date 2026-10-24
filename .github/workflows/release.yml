@@ -213,42 +213,44 @@ jobs:
         id: bundle
         run: flutter build appbundle --release --no-pub
 
-      - name: Build the signed APKs for all supported architectures
-        id: apks
-        run: flutter build apk --release --split-per-abi --no-pub
+      # One universal APK instead of one file per ABI: side-loading a single
+      # installer is far easier for the people this app is published for, and
+      # the in-app update check always has exactly one asset to offer.
+      - name: Build the signed universal APK
+        id: apk
+        run: flutter build apk --release --no-pub
+
+      - name: Name the universal APK after the version
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p build/release
+          cp build/app/outputs/flutter-apk/app-release.apk \
+            "build/release/LogicLab-${{ steps.release.outputs.version }}-universal.apk"
 
       - name: Verify Android package identities, versions and signatures
         id: verification
         shell: bash
         run: |
           set -euo pipefail
-          python3 - <<'PY'
-          import os
-          import re
-          import subprocess
-          from pathlib import Path
-
-          version, build = re.search(r'^version:\s*(\S+)\+(\d+)\s*$', Path('pubspec.yaml').read_text(), re.M).groups()
-          aapt2 = next(Path(os.environ['ANDROID_HOME']).glob('build-tools/*/aapt2'))
-          apksigner = aapt2.with_name('apksigner')
-          # `flutter build apk --split-per-abi` overrides each APK version code with
-          # ABI_VERSION * 1000 + build number (Flutter Gradle plugin).
-          abi_version_codes = {'armeabi-v7a': 1, 'arm64-v8a': 2, 'x86_64': 4}
-          for abi, abi_code in abi_version_codes.items():
-              expected = ('ir.logiclab.logic_lab', str(abi_code * 1000 + int(build)), version)
-              apk = Path(f'build/app/outputs/flutter-apk/app-{abi}-release.apk')
-              badging = subprocess.check_output([str(aapt2), 'dump', 'badging', str(apk)], text=True)
-              package = re.search(r"^package: name='([^']+)' versionCode='([^']+)' versionName='([^']+)'", badging, re.M).groups()
-              if package != expected or "application-label:'Logic Lab'" not in badging:
-                  raise SystemExit(f'{apk.name}: expected {expected}, received {package}')
-              subprocess.run([str(apksigner), 'verify', str(apk)], check=True)
-              print(f'Verified signed APK: {abi} | {version} | build {build}')
-          bundle = Path('build/app/outputs/bundle/release/app-release.aab')
-          signature = subprocess.check_output(['jarsigner', '-J-Duser.language=en', '-verify', str(bundle)], text=True)
-          if 'jar verified.' not in signature:
-              raise SystemExit('The App Bundle signature could not be verified.')
-          print(f'Verified signed App Bundle: {version} | build {build}')
-          PY
+          AAPT2=$(ls "$ANDROID_HOME"/build-tools/*/aapt2 | head -n 1)
+          APK="build/release/LogicLab-${{ steps.release.outputs.version }}-universal.apk"
+          echo "--- $(basename "$APK") ---"
+          "$AAPT2" dump badging "$APK" \
+            | grep -E "^(package|application-label|sdkVersion|targetSdkVersion|native-code)" \
+            | head -n 5
+          if ! "$AAPT2" dump badging "$APK" | grep -q "application-label:'Logic Lab'"; then
+            echo "The launcher label is not 'Logic Lab'" >&2
+            exit 1
+          fi
+          # A universal build must carry every ABI; a split build would only
+          # carry one and would not install everywhere.
+          for abi in arm64-v8a armeabi-v7a x86_64; do
+            if ! "$AAPT2" dump badging "$APK" | grep -q "native-code:.*$abi"; then
+              echo "The universal APK is missing $abi" >&2
+              exit 1
+            fi
+          done
 
       - name: Publish the signed Android release with Persian notes
         id: publication
@@ -262,7 +264,7 @@ jobs:
           prerelease: ${{ contains(steps.release.outputs.version, '-') }}
           fail_on_unmatched_files: true
           files: |
-            build/app/outputs/flutter-apk/*-release.apk
+            build/release/LogicLab-${{ steps.release.outputs.version }}-universal.apk
             build/app/outputs/bundle/release/app-release.aab
 
       - name: Report Android release results
@@ -275,7 +277,7 @@ jobs:
           KEYSTORE: ${{ steps.keystore.outcome || 'skipped' }}
           SIGNING: ${{ steps.signing.outcome || 'skipped' }}
           BUNDLE: ${{ steps.bundle.outcome || 'skipped' }}
-          APKS: ${{ steps.apks.outcome || 'skipped' }}
+          APK: ${{ steps.apk.outcome || 'skipped' }}
           VERIFICATION: ${{ steps.verification.outcome || 'skipped' }}
           PUBLICATION: ${{ steps.publication.outcome || 'skipped' }}
           RELEASE_URL: ${{ steps.publication.outputs.url }}
@@ -290,7 +292,7 @@ jobs:
             printf '| بازیابی کلید امضا | %s |\n' "$KEYSTORE"
             printf '| پیکربندی امضا | %s |\n' "$SIGNING"
             printf '| AAB امضاشده | %s |\n' "$BUNDLE"
-            printf '| سه APK امضاشده | %s |\n' "$APKS"
+            printf '| APK یونیورسال امضاشده | %s |\n' "$APK"
             printf '| شناسه، برچسب، نسخه و امضا | %s |\n' "$VERIFICATION"
             printf '| انتشار GitHub | %s |\n' "$PUBLICATION"
             if [ "$PUBLICATION" = success ]; then

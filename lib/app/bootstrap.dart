@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/data/app_repositories.dart';
 import '../core/data/bootstrap_repositories.dart';
@@ -7,6 +8,9 @@ import '../features/learn/application/learning_controller.dart';
 import '../features/projects/application/projects_controller.dart';
 import '../features/settings/application/settings_controller.dart';
 import '../features/splash/presentation/splash_screen.dart';
+import '../features/updates/application/update_controller.dart';
+import '../features/updates/data/release_gateway.dart';
+import '../features/updates/data/update_store.dart';
 import 'app.dart';
 
 /// Application bootstrap.
@@ -25,6 +29,7 @@ class _LogicLabBootstrapState extends State<LogicLabBootstrap> {
   SettingsController? _settings;
   ProjectsController? _projects;
   LearningController? _learning;
+  UpdateController? _updates;
   String? _error;
   bool _loading = true;
 
@@ -40,8 +45,16 @@ class _LogicLabBootstrapState extends State<LogicLabBootstrap> {
       _error = null;
     });
     try {
+      final SharedPreferences preferences =
+          await SharedPreferences.getInstance();
       final SettingsController settings = await SettingsController.load(
-        await SharedPreferencesSettingsStore.create(),
+        SharedPreferencesSettingsStore(preferences),
+      );
+      // The update checker only reads a small preference entry here; it never
+      // touches the network during bootstrap.
+      final UpdateController updates = await UpdateController.load(
+        store: SharedPreferencesUpdateStore(preferences),
+        gateway: createReleaseGateway(),
       );
       final AppRepositories repositories = await createAppRepositories();
       final ProjectsController projects = ProjectsController(
@@ -59,6 +72,7 @@ class _LogicLabBootstrapState extends State<LogicLabBootstrap> {
         _settings = settings;
         _projects = projects;
         _learning = learning;
+        _updates = updates;
         _loading = false;
       });
     } catch (error) {
@@ -75,11 +89,15 @@ class _LogicLabBootstrapState extends State<LogicLabBootstrap> {
   @override
   Widget build(BuildContext context) {
     final SettingsController? settings = _settings;
-    if (settings != null && _projects != null && _learning != null) {
+    if (settings != null &&
+        _projects != null &&
+        _learning != null &&
+        _updates != null) {
       return LogicLabApp(
         settings: settings,
         projects: _projects!,
         learning: _learning!,
+        updates: _updates,
       );
     }
 

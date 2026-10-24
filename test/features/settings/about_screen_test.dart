@@ -4,15 +4,34 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:logic_lab/core/app_info.dart';
 import 'package:logic_lab/features/settings/application/settings_controller.dart';
 import 'package:logic_lab/features/settings/presentation/settings_screen.dart';
+import 'package:logic_lab/features/updates/application/update_controller.dart';
+import 'package:logic_lab/features/updates/data/no_release_gateway.dart';
+import 'package:logic_lab/features/updates/data/update_store.dart';
+import 'package:logic_lab/features/updates/domain/semantic_version.dart';
 import 'package:provider/provider.dart';
+import 'package:provider/single_child_widget.dart';
 
-Future<Widget> _buildSettings() async {
-  final SettingsController settings = SettingsController(
-    MemorySettingsStore(),
-    const AppSettings(),
-  );
-  return ChangeNotifierProvider<SettingsController>.value(
-    value: settings,
+Future<Widget> _buildSettings({
+  SettingsController? settings,
+  UpdateController? updates,
+}) async {
+  final SettingsController settingsController =
+      settings ??
+      SettingsController(MemorySettingsStore(), const AppSettings());
+  final UpdateController updateController =
+      updates ??
+      UpdateController(
+        store: MemoryUpdateStore(),
+        gateway: const NoReleaseGateway(),
+        currentVersion: SemanticVersion.tryParse(AppInfo.version),
+      );
+  return MultiProvider(
+    providers: <SingleChildWidget>[
+      ChangeNotifierProvider<SettingsController>.value(
+        value: settingsController,
+      ),
+      ChangeNotifierProvider<UpdateController>.value(value: updateController),
+    ],
     child: const MaterialApp(
       locale: Locale('fa', 'IR'),
       supportedLocales: <Locale>[Locale('fa', 'IR')],
@@ -35,6 +54,15 @@ Future<void> _scrollToAbout(WidgetTester tester) async {
   await tester.pumpAndSettle();
 }
 
+Future<void> _scrollToUpdates(WidgetTester tester) async {
+  await tester.scrollUntilVisible(
+    find.byKey(const Key('updates-section')),
+    300,
+    scrollable: find.byType(Scrollable).first,
+  );
+  await tester.pumpAndSettle();
+}
+
 void main() {
   testWidgets('the About screen shows the semantic version', (
     WidgetTester tester,
@@ -44,7 +72,13 @@ void main() {
     await _scrollToAbout(tester);
 
     expect(find.byKey(const Key('about-version')), findsOneWidget);
-    expect(find.text(AppInfo.versionDisplay), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('about-version')),
+        matching: find.text(AppInfo.versionDisplay),
+      ),
+      findsOneWidget,
+    );
     expect(find.text('نسخه'), findsOneWidget);
   });
 
@@ -102,5 +136,57 @@ void main() {
     expect(footerText, AppInfo.copyright);
     expect(footerText.startsWith('Logic Lab - '), isTrue);
     expect(footerText.contains(' | '), isTrue);
+  });
+
+  testWidgets('the About text admits the single update check', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(await _buildSettings());
+    await tester.pumpAndSettle();
+    await _scrollToAbout(tester);
+
+    expect(find.textContaining('تنها درخواست شبکه'), findsWidgets);
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('about-section')),
+        matching: find.textContaining('GitHub'),
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('the updates section owns the automatic check switch', (
+    WidgetTester tester,
+  ) async {
+    final SettingsController settings = SettingsController(
+      MemorySettingsStore(),
+      const AppSettings(),
+    );
+    await tester.pumpWidget(await _buildSettings(settings: settings));
+    await tester.pumpAndSettle();
+    await _scrollToUpdates(tester);
+
+    expect(find.text('بررسی خودکار به‌روزرسانی'), findsOneWidget);
+    expect(
+      find.textContaining('هیچ اطلاعاتی از شما ارسال نمی‌شود'),
+      findsOneWidget,
+    );
+    expect(find.text('نسخهٔ نصب‌شده'), findsOneWidget);
+    expect(find.byKey(const Key('update-check-now')), findsOneWidget);
+
+    final Switch toggle = tester.widget<Switch>(
+      find.byKey(const Key('update-auto-switch')),
+    );
+    expect(toggle.value, isTrue);
+    expect(settings.updatesEnabled, isTrue);
+
+    await tester.tap(find.byKey(const Key('update-auto-switch')));
+    await tester.pumpAndSettle();
+
+    expect(settings.updatesEnabled, isFalse);
+    final Switch updated = tester.widget<Switch>(
+      find.byKey(const Key('update-auto-switch')),
+    );
+    expect(updated.value, isFalse);
   });
 }

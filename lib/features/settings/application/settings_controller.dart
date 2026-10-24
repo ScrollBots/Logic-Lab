@@ -15,6 +15,7 @@ class AppSettings {
     this.customAccent,
     this.hapticsEnabled = true,
     this.animationsEnabled = true,
+    this.updatesEnabled = true,
     this.highSignalValue = 0xFF1D9B72,
     this.lowSignalValue = 0xFF6D7B8E,
     this.localeCode = 'fa',
@@ -25,6 +26,12 @@ class AppSettings {
   final Color? customAccent;
   final bool hapticsEnabled;
   final bool animationsEnabled;
+
+  /// Whether the app may ask GitHub (at most once a day) if a newer release
+  /// exists. Turning it off leaves every other feature untouched; the
+  /// explicit "check now" button still works.
+  final bool updatesEnabled;
+
   final int highSignalValue;
   final int lowSignalValue;
 
@@ -49,6 +56,7 @@ class AppSettings {
     bool clearCustomAccent = false,
     bool? hapticsEnabled,
     bool? animationsEnabled,
+    bool? updatesEnabled,
     int? highSignalValue,
     int? lowSignalValue,
     String? localeCode,
@@ -60,6 +68,7 @@ class AppSettings {
           clearCustomAccent ? null : (customAccent ?? this.customAccent),
       hapticsEnabled: hapticsEnabled ?? this.hapticsEnabled,
       animationsEnabled: animationsEnabled ?? this.animationsEnabled,
+      updatesEnabled: updatesEnabled ?? this.updatesEnabled,
       highSignalValue: highSignalValue ?? this.highSignalValue,
       lowSignalValue: lowSignalValue ?? this.lowSignalValue,
       localeCode: localeCode ?? this.localeCode,
@@ -73,6 +82,7 @@ class AppSettings {
       'customAccent': customAccent?.toARGB32(),
       'hapticsEnabled': hapticsEnabled,
       'animationsEnabled': animationsEnabled,
+      'updatesEnabled': updatesEnabled,
       'highSignalValue': highSignalValue,
       'lowSignalValue': lowSignalValue,
       'localeCode': localeCode,
@@ -97,6 +107,7 @@ class AppSettings {
       customAccent: accent == null ? null : Color(accent),
       hapticsEnabled: _readBool(json['hapticsEnabled'], true),
       animationsEnabled: _readBool(json['animationsEnabled'], true),
+      updatesEnabled: _readBool(json['updatesEnabled'], true),
       highSignalValue:
           _readColor(json['highSignalValue']) ?? defaults.highSignalValue,
       lowSignalValue:
@@ -191,6 +202,7 @@ class SettingsController extends ChangeNotifier {
   Color get seedColor => _settings.effectiveSeed;
   bool get hapticsEnabled => _settings.hapticsEnabled;
   bool get animationsEnabled => _settings.animationsEnabled;
+  bool get updatesEnabled => _settings.updatesEnabled;
 
   static Future<SettingsController> load(SettingsStore store) async {
     return SettingsController(store, await store.load());
@@ -218,6 +230,10 @@ class SettingsController extends ChangeNotifier {
 
   void setAnimationsEnabled(bool enabled) {
     _update(_settings.copyWith(animationsEnabled: enabled));
+  }
+
+  void setUpdatesEnabled(bool enabled) {
+    _update(_settings.copyWith(updatesEnabled: enabled));
   }
 
   void setSignalColors({Color? high, Color? low}) {

@@ -13,6 +13,7 @@ import '../../learn/data/learning_progress_repository.dart';
 import '../../learn/domain/learning_state.dart';
 import '../../projects/application/projects_controller.dart';
 import '../../projects/domain/circuit_project.dart';
+import '../../updates/presentation/update_settings_content.dart';
 import '../application/settings_controller.dart';
 import '../data/backup_codec.dart';
 
@@ -103,6 +104,13 @@ class SettingsScreen extends StatelessWidget {
                 title: 'داده‌ها',
                 icon: Icons.storage_rounded,
                 children: <Widget>[_DataTools()],
+              ),
+              const SizedBox(height: 14),
+              const _SettingsSection(
+                key: Key('updates-section'),
+                title: 'به‌روزرسانی',
+                icon: Icons.system_update_alt_rounded,
+                children: <Widget>[UpdateSettingsContent()],
               ),
               const SizedBox(height: 14),
               const _SettingsSection(
@@ -986,7 +994,9 @@ class _AboutTile extends StatelessWidget {
         const SizedBox(height: 12),
         Text(
           'این برنامه یک ابزار یادگیری مدارهای منطقی ترکیبی و ترتیبی است. '
-          'هیچ داده‌ای جمع‌آوری یا ارسال نمی‌شود و همه محاسبات روی دستگاه شما انجام می‌شود.',
+          'همهٔ محاسبات روی دستگاه شما انجام می‌شود و هیچ دادهٔ شخصی جمع‌آوری '
+          'یا ارسال نمی‌شود. تنها درخواست شبکه، بررسی وجود نسخهٔ تازه در '
+          'GitHub است که می‌توانید در بخش «به‌روزرسانی» خاموشش کنید.',
           style: theme.textTheme.bodySmall,
         ),
         const SizedBox(height: 6),

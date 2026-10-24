@@ -21,6 +21,7 @@ void main() {
       controller.setPalette('emerald');
       controller.setHapticsEnabled(false);
       controller.setAnimationsEnabled(false);
+      controller.setUpdatesEnabled(false);
       controller.setSignalColors(high: const Color(0xFF123456));
       await controller.flush();
 
@@ -31,7 +32,15 @@ void main() {
       expect(reloaded.value.paletteId, 'emerald');
       expect(reloaded.value.hapticsEnabled, isFalse);
       expect(reloaded.value.animationsEnabled, isFalse);
+      expect(reloaded.value.updatesEnabled, isFalse);
       expect(reloaded.value.highSignalValue, 0xFF123456);
+    });
+
+    test('the update check is on by default', () async {
+      final SettingsController controller = await SettingsController.load(
+        await SharedPreferencesSettingsStore.create(),
+      );
+      expect(controller.updatesEnabled, isTrue);
     });
 
     test('a custom accent colour is persisted and can be cleared', () async {
