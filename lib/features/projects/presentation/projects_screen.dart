@@ -539,7 +539,8 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                                     project: project,
                                     isSelectMode: _selectMode,
                                     selected: _selected.contains(project.id),
-                                    onToggleSelection: () => _toggleSelection(project.id),
+                                    onToggleSelection:
+                                        () => _toggleSelection(project.id),
                                     onOpen:
                                         () => EditorLauncher.open(
                                           context,
