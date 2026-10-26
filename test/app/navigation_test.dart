@@ -8,6 +8,11 @@ import 'package:logic_lab/features/learn/data/learning_progress_repository.dart'
 import 'package:logic_lab/features/projects/application/projects_controller.dart';
 import 'package:logic_lab/features/projects/data/project_repository.dart';
 import 'package:logic_lab/features/settings/application/settings_controller.dart';
+import 'package:logic_lab/features/updates/application/update_controller.dart';
+import 'package:logic_lab/features/updates/data/no_release_gateway.dart';
+import 'package:logic_lab/features/updates/data/update_store.dart';
+import 'package:logic_lab/features/updates/domain/semantic_version.dart';
+import 'package:logic_lab/core/app_info.dart';
 import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
 
@@ -17,7 +22,6 @@ const Map<AppDestination, String> _pageMarkers = <AppDestination, String>{
   AppDestination.circuits: 'مدارهای من',
   AppDestination.laboratory: 'میز آزمایش گیت',
   AppDestination.learning: 'ادامهٔ یادگیری',
-  AppDestination.settings: 'پالت رنگ',
 };
 
 Future<Widget> _buildShell() async {
@@ -31,6 +35,11 @@ Future<Widget> _buildShell() async {
   final LearningController learning = LearningController(
     MemoryLearningProgressRepository(),
   );
+  final UpdateController updates = UpdateController(
+    store: MemoryUpdateStore(),
+    gateway: const NoReleaseGateway(),
+    currentVersion: SemanticVersion.tryParse(AppInfo.version),
+  );
   // Load the stores, otherwise the projects screen shows an indeterminate
   // progress indicator and `pumpAndSettle` would never settle.
   await projects.load();
@@ -40,6 +49,7 @@ Future<Widget> _buildShell() async {
       ChangeNotifierProvider<SettingsController>.value(value: settings),
       ChangeNotifierProvider<ProjectsController>.value(value: projects),
       ChangeNotifierProvider<LearningController>.value(value: learning),
+      ChangeNotifierProvider<UpdateController>.value(value: updates),
     ],
     child: const MaterialApp(
       // The real application runs in Persian, so the shell is RTL as well.
@@ -76,8 +86,9 @@ void main() {
     // is the only mapping used by the shell.
     expect(
       AppNavigation.destinations.map((AppDestination d) => d.label).toList(),
-      <String>['خانه', 'مدارها', 'آزمایشگاه', 'آموزش', 'تنظیمات'],
+      <String>['خانه', 'مدارها', 'آزمایشگاه', 'آموزش'],
     );
+    expect(AppNavigation.destinations.length, 4);
     for (int index = 0; index < AppNavigation.destinations.length; index++) {
       expect(AppNavigation.at(index).navIndex, index);
       expect(AppNavigation.indexOf(AppNavigation.at(index)), index);
@@ -120,39 +131,6 @@ void main() {
     },
   );
 
-  testWidgets('the reported mismatch is fixed: Settings and Circuits', (
-    WidgetTester tester,
-  ) async {
-    await tester.pumpWidget(await _buildShell());
-    await tester.pumpAndSettle();
-
-    // Reported bug: with Settings open the Home item looked selected.
-    await tester.tap(find.byKey(AppDestination.settings.itemKey));
-    await tester.pumpAndSettle();
-    expect(find.text(_pageMarkers[AppDestination.settings]!), findsOneWidget);
-    expect(_selectedDestination(tester), AppDestination.settings);
-    expect(
-      tester.getRect(find.byKey(AppDestination.highlightKey)).center.dx,
-      closeTo(
-        tester.getRect(find.byKey(AppDestination.settings.itemKey)).center.dx,
-        1.5,
-      ),
-    );
-
-    // Reported bug: with Circuits open the Learning item looked selected.
-    await tester.tap(find.byKey(AppDestination.circuits.itemKey));
-    await tester.pumpAndSettle();
-    expect(find.text(_pageMarkers[AppDestination.circuits]!), findsOneWidget);
-    expect(_selectedDestination(tester), AppDestination.circuits);
-    expect(
-      tester.getRect(find.byKey(AppDestination.highlightKey)).center.dx,
-      closeTo(
-        tester.getRect(find.byKey(AppDestination.circuits.itemKey)).center.dx,
-        1.5,
-      ),
-    );
-  });
-
   testWidgets('reverse navigation keeps the capsule and the page in sync', (
     WidgetTester tester,
   ) async {
@@ -164,9 +142,6 @@ void main() {
       AppDestination.circuits,
       AppDestination.laboratory,
       AppDestination.learning,
-      AppDestination.settings,
-      AppDestination.learning,
-      AppDestination.laboratory,
       AppDestination.circuits,
       AppDestination.home,
     ];
@@ -191,7 +166,7 @@ void main() {
 
     await tester.tap(find.byKey(AppDestination.learning.itemKey));
     await tester.pump(const Duration(milliseconds: 40));
-    await tester.tap(find.byKey(AppDestination.settings.itemKey));
+    await tester.tap(find.byKey(AppDestination.circuits.itemKey));
     await tester.pump(const Duration(milliseconds: 40));
     await tester.tap(find.byKey(AppDestination.home.itemKey));
     await tester.pumpAndSettle();
@@ -230,15 +205,14 @@ void main() {
     // In an RTL row the first logical destination is rendered on the right.
     final double home =
         tester.getRect(find.byKey(AppDestination.home.itemKey)).center.dx;
-    final double settings =
-        tester.getRect(find.byKey(AppDestination.settings.itemKey)).center.dx;
+    final double learning =
+        tester.getRect(find.byKey(AppDestination.learning.itemKey)).center.dx;
     expect(
       home,
-      greaterThan(settings),
+      greaterThan(learning),
       reason: 'خانه must stay the right-most item in RTL',
     );
 
-    // ... and the capsule of the selected destination follows it.
     await tester.tap(find.byKey(AppDestination.home.itemKey));
     await tester.pumpAndSettle();
     expect(
@@ -253,16 +227,20 @@ void main() {
     await tester.pumpWidget(await _buildShell());
     await tester.pumpAndSettle();
 
-    // The body only holds the page stack. A second, absolutely positioned
-    // child would be painted as a stray header line above the page title.
+    // The body holds the fixed header and the morphing page stack. The header
+    // is the first child; the page stack is the second. Nothing else is
+    // painted above the page content.
     final Stack body = tester.widget<Stack>(
       find.byKey(const Key('app-shell-body')),
     );
     expect(
       body.children.length,
-      1,
-      reason: 'the page area must not contain a top overlay',
+      2,
+      reason: 'the page area must contain only the header and the page stack',
     );
+
+    // The fixed header is visible exactly once.
+    expect(find.byKey(const Key('app-header')), findsOneWidget);
 
     // The sliding accent lives inside the capsule navigation, never above
     // the page content.
@@ -319,18 +297,21 @@ void main() {
     await tester.pumpAndSettle();
 
     await tester.tap(find.byKey(AppDestination.circuits.itemKey));
-    // Mid transition: the page is scaled and moved, so nothing may detach
-    // from it and appear above the page header.
+    // Mid transition: the page is scaled and moved, so the header must not
+    // detach from the top of the screen.
     await tester.pump(const Duration(milliseconds: 80));
 
     expect(find.text('مدارهای من'), findsOneWidget);
     expect(find.text('مدارهای اخیر'), findsNothing);
     expect(find.text('از ایده تا مدار، همین‌جا'), findsNothing);
-    expect(find.text('Logic Lab'), findsNothing);
+
+    // The header is painted exactly once, even mid-transition.
+    expect(find.byKey(const Key('app-header')), findsOneWidget);
+    expect(find.byKey(const Key('app-header-identity')), findsOneWidget);
 
     final Stack body = tester.widget<Stack>(
       find.byKey(const Key('app-shell-body')),
     );
-    expect(body.children.length, 1);
+    expect(body.children.length, 2);
   });
 }

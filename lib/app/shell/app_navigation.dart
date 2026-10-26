@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 
-/// The five top level destinations of the application.
+/// The four top level destinations of the application.
 ///
 /// The enum order *is* the canonical logical order and the index of a
 /// destination is the single source of truth for every mapping in the app:
 /// the visible capsule, the accent rail, the page stack and the accessibility
 /// state all use [AppDestination.index].
+///
+/// Settings is no longer a navigation destination: it is opened from the
+/// Settings button in the header, so the bottom bar always shows exactly the
+/// four working sections of the app.
 ///
 /// The order is intentionally **not** reversed for RTL: the navigation bar is a
 /// [Row] inside an RTL container, so the logical first item (خانه) is already
@@ -15,8 +19,7 @@ enum AppDestination {
   home('خانه', Icons.home_outlined, Icons.home_rounded),
   circuits('مدارها', Icons.account_tree_outlined, Icons.account_tree_rounded),
   laboratory('آزمایشگاه', Icons.science_outlined, Icons.science_rounded),
-  learning('آموزش', Icons.school_outlined, Icons.school_rounded),
-  settings('تنظیمات', Icons.tune_outlined, Icons.tune_rounded);
+  learning('آموزش', Icons.school_outlined, Icons.school_rounded);
 
   const AppDestination(this.label, this.icon, this.activeIcon);
 

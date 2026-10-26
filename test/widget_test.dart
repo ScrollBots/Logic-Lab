@@ -31,7 +31,7 @@ Future<LogicLabApp> _buildApp({
 }
 
 void main() {
-  testWidgets('the shell renders an RTL navigation with five destinations', (
+  testWidgets('the shell renders an RTL navigation with four destinations', (
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(await _buildApp());
@@ -45,10 +45,13 @@ void main() {
       'مدارها',
       'آزمایشگاه',
       'آموزش',
-      'تنظیمات',
     ]) {
       expect(find.text(label), findsWidgets, reason: 'missing $label');
     }
+    // Settings lives in the header, not the bottom bar.
+    expect(find.byKey(const Key('app-nav-item-settings')), findsNothing);
+    expect(find.byKey(const Key('app-header-settings')), findsOneWidget);
+    expect(find.text('Logic Lab'), findsOneWidget);
   });
 
   testWidgets('the home screen shows a first-run empty state', (

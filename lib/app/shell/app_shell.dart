@@ -7,6 +7,7 @@ import '../../features/learn/presentation/learn_screen.dart';
 import '../../features/projects/presentation/projects_screen.dart';
 import '../../features/settings/application/settings_controller.dart';
 import '../../features/settings/presentation/settings_screen.dart';
+import 'app_header.dart';
 import 'app_navigation.dart';
 
 /// Application shell with the floating capsule navigation.
@@ -77,15 +78,36 @@ class _AppShellState extends State<AppShell>
       body: Stack(
         key: const Key('app-shell-body'),
         children: <Widget>[
-          Positioned.fill(
+          // The fixed header stays on top during the page morph; it is never
+          // scaled or translated, so there is no duplicate header and no
+          // flicker between sections.
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: AppHeader(
+              onSettings: () {
+                AppHaptics.selection(settings.hapticsEnabled);
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (BuildContext context) => const SettingsScreen(),
+                  ),
+                );
+              },
+            ),
+          ),
+          // Pages morph underneath the header.
+          Positioned(
+            top: kAppHeaderHeight,
+            left: 0,
+            right: 0,
+            bottom: 0,
             child: AnimatedBuilder(
               animation: _transition,
               builder: (BuildContext context, Widget? child) {
                 final double t = Curves.easeOutCubic.transform(
                   _transition.value,
                 );
-                // A soft settle: the incoming page rises a few pixels and
-                // scales up from 98.5% while fading in.
                 final double opacity = (0.72 + 0.28 * t).clamp(0.0, 1.0);
                 final double scale = (0.985 + 0.015 * t).clamp(0.0, 1.0);
                 final double offset = 14 * (1 - t);
@@ -112,7 +134,6 @@ class _AppShellState extends State<AppShell>
                   ),
                   const LabScreen(),
                   const LearnScreen(),
-                  const SettingsScreen(),
                 ],
               ),
             ),

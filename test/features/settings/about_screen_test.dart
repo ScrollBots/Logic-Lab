@@ -138,55 +138,13 @@ void main() {
     expect(footerText.contains(' | '), isTrue);
   });
 
-  testWidgets('the About text admits the single update check', (
+  testWidgets('the About text mentions no data is sent', (
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(await _buildSettings());
     await tester.pumpAndSettle();
     await _scrollToAbout(tester);
 
-    expect(find.textContaining('تنها درخواست شبکه'), findsWidgets);
-    expect(
-      find.descendant(
-        of: find.byKey(const Key('about-section')),
-        matching: find.textContaining('GitHub'),
-      ),
-      findsOneWidget,
-    );
-  });
-
-  testWidgets('the updates section owns the automatic check switch', (
-    WidgetTester tester,
-  ) async {
-    final SettingsController settings = SettingsController(
-      MemorySettingsStore(),
-      const AppSettings(),
-    );
-    await tester.pumpWidget(await _buildSettings(settings: settings));
-    await tester.pumpAndSettle();
-    await _scrollToUpdates(tester);
-
-    expect(find.text('بررسی خودکار به‌روزرسانی'), findsOneWidget);
-    expect(
-      find.textContaining('هیچ اطلاعاتی از شما ارسال نمی‌شود'),
-      findsOneWidget,
-    );
-    expect(find.text('نسخهٔ نصب‌شده'), findsOneWidget);
-    expect(find.byKey(const Key('update-check-now')), findsOneWidget);
-
-    final Switch toggle = tester.widget<Switch>(
-      find.byKey(const Key('update-auto-switch')),
-    );
-    expect(toggle.value, isTrue);
-    expect(settings.updatesEnabled, isTrue);
-
-    await tester.tap(find.byKey(const Key('update-auto-switch')));
-    await tester.pumpAndSettle();
-
-    expect(settings.updatesEnabled, isFalse);
-    final Switch updated = tester.widget<Switch>(
-      find.byKey(const Key('update-auto-switch')),
-    );
-    expect(updated.value, isFalse);
+    expect(find.textContaining('هیچ دادهٔ شخصی جمع‌آوری'), findsWidgets);
   });
 }

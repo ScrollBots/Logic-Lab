@@ -14,7 +14,6 @@ import '../../learn/domain/lesson_models.dart';
 import '../../learn/presentation/learning_session_screen.dart';
 import '../../projects/application/projects_controller.dart';
 import '../../projects/domain/circuit_project.dart';
-import '../../settings/application/settings_controller.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({
@@ -30,7 +29,6 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final ProjectsController projects = context.watch<ProjectsController>();
     final LearningController learning = context.watch<LearningController>();
-    final SettingsController settings = context.watch<SettingsController>();
 
     return Scaffold(
       body: SafeArea(
@@ -45,8 +43,6 @@ class HomeScreen extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
             child: ListView(
               children: <Widget>[
-                _header(context, settings),
-                const SizedBox(height: 18),
                 _heroCard(context),
                 const SizedBox(height: 18),
                 if (projects.isLoading)
@@ -75,44 +71,6 @@ class HomeScreen extends StatelessWidget {
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _header(BuildContext context, SettingsController settings) {
-    final ThemeData theme = Theme.of(context);
-    final DateTime now = PersianFormat.tehranNow();
-    return Padding(
-      padding: const EdgeInsets.only(top: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: <Widget>[
-          const BrandMark(size: 42, showName: true),
-          const Spacer(),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerLowest,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: theme.colorScheme.outlineVariant),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                Icon(
-                  Icons.wb_sunny_outlined,
-                  size: 15,
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  PersianFormat.clock(now),
-                  style: theme.textTheme.labelSmall,
-                ),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }

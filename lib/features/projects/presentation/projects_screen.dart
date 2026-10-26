@@ -22,11 +22,95 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
   final TextEditingController _searchController = TextEditingController();
   ProjectSort _sort = ProjectSort.recentlyUpdated;
   String _query = '';
+  bool _selectMode = false;
+  final Set<String> _selected = <String>{};
 
   @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _enterSelectMode() {
+    setState(() {
+      _selectMode = true;
+      _selected.clear();
+    });
+  }
+
+  void _exitSelectMode() {
+    setState(() {
+      _selectMode = false;
+      _selected.clear();
+    });
+  }
+
+  void _toggleSelection(String id) {
+    setState(() {
+      if (_selected.contains(id)) {
+        _selected.remove(id);
+      } else {
+        _selected.add(id);
+      }
+    });
+  }
+
+  void _selectAll(List<CircuitProject> visible) {
+    setState(() {
+      if (_selected.length == visible.length && visible.isNotEmpty) {
+        _selected.clear();
+      } else {
+        _selected
+          ..clear()
+          ..addAll(visible.map((CircuitProject p) => p.id));
+      }
+    });
+  }
+
+  Future<void> _deleteSelected() async {
+    if (_selected.isEmpty) {
+      return;
+    }
+    final int count = _selected.length;
+    final bool? confirmed = await showDialog<bool>(
+      context: context,
+      builder:
+          (BuildContext context) => AlertDialog(
+            title: const Text('حذف مدارها'),
+            content: Text(
+              '$count مدار برای همیشه حذف می‌شود. اگر پشتیبان نگرفته‌اید، '
+              'امکان بازگردانی وجود ندارد.',
+            ),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('انصراف'),
+              ),
+              FilledButton(
+                style: FilledButton.styleFrom(
+                  backgroundColor: Theme.of(context).colorScheme.error,
+                ),
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('حذف همه'),
+              ),
+            ],
+          ),
+    );
+    if (confirmed != true || !mounted) {
+      return;
+    }
+    final ProjectsController controller = context.read<ProjectsController>();
+    for (final String id in List<String>.from(_selected)) {
+      try {
+        await controller.deleteProject(id);
+      } catch (_) {
+        // Continue with the rest; the controller surfaces the error.
+      }
+    }
+    if (mounted) {
+      _toast('$count مدار حذف شد.');
+      _exitSelectMode();
+    }
   }
 
   Future<void> _confirmDelete(CircuitProject project) async {
@@ -176,7 +260,57 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
     final ThemeData theme = Theme.of(context);
     final List<CircuitProject> visible = projects.search(_query, sort: _sort);
 
+    // App bar title/context based on select mode
+    final bool selectMode = _selectMode;
+    final int selectedCount = _selected.length;
+
+    // Title: shows "مدارهای من" normally, or selection count in select mode
+    final Widget appBarTitle =
+        selectMode
+            ? Row(
+              children: <Widget>[
+                const Icon(
+                  Icons.check_box_outline_blank_rounded,
+                  size: 20,
+                  color: Colors.amber,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  'انتخاب ${selectedCount} مدار',
+                  style: theme.textTheme.titleMedium,
+                ),
+              ],
+            )
+            : const Text('مدارهای من');
+
+    // Action button: Delete selected, visible only in select mode with selections
+    final Widget? deleteActionButton =
+        selectMode && selectedCount > 0
+            ? FilledButton(
+              onPressed: _deleteSelected,
+              child: Text('حذف ${selectedCount} مدار'),
+            )
+            : null;
+
+    // Back/close button: visible only in select mode
+    final Widget? backButton =
+        selectMode
+            ? IconButton(
+              tooltip: 'بازگشت',
+              onPressed: _exitSelectMode,
+              icon: const Icon(Icons.close_rounded),
+            )
+            : null;
+
     return Scaffold(
+      appBar: AppBar(
+        title: appBarTitle,
+        actions: <Widget>[
+          if (backButton != null) backButton,
+          if (deleteActionButton != null) deleteActionButton,
+        ],
+        automaticallyImplyLeading: false,
+      ),
       body: SafeArea(
         bottom: false,
         child: RefreshIndicator(
@@ -191,29 +325,41 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                   padding: const EdgeInsets.only(top: 10, bottom: 14),
                   child: Row(
                     children: <Widget>[
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            Text(
-                              'مدارهای من',
-                              style: theme.textTheme.headlineSmall,
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              projects.isLoading
-                                  ? 'در حال بارگذاری…'
-                                  : '${PersianFormat.digits(projects.count)} مدار ذخیره شده',
-                              style: theme.textTheme.bodySmall,
-                            ),
-                          ],
+                      // In select mode, show spacer instead of title area
+                      if (selectMode)
+                        const Spacer()
+                      else
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: <Widget>[
+                              Text(
+                                'مدارهای من',
+                                style: theme.textTheme.headlineSmall,
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                projects.isLoading
+                                    ? 'در حال بارگذاری…'
+                                    : '${PersianFormat.digits(projects.count)} مدار ذخیره شده',
+                                style: theme.textTheme.bodySmall,
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                      IconButton(
-                        tooltip: 'وارد کردن از فایل JSON',
-                        onPressed: _importProject,
-                        icon: const Icon(Icons.file_download_outlined),
-                      ),
+                      // Select mode action button on the right
+                      if (selectMode)
+                        IconButton(
+                          tooltip: 'انجام',
+                          onPressed: _exitSelectMode,
+                          icon: const Icon(Icons.done_rounded),
+                        )
+                      else
+                        IconButton(
+                          tooltip: 'وارد کردن از فایل JSON',
+                          onPressed: _importProject,
+                          icon: const Icon(Icons.file_download_outlined),
+                        ),
                       const SizedBox(width: 6),
                       FilledButton.icon(
                         onPressed: () => EditorLauncher.createAndOpen(context),
@@ -336,7 +482,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                                       : Icons.search_off_rounded,
                               title:
                                   _query.isEmpty
-                                      ? 'هنوز مداری ذخیره نشده'
+                                      ? 'هنود مداری ذخیره نشده'
                                       : 'مداری با این نام پیدا نشد',
                               message:
                                   _query.isEmpty
@@ -356,7 +502,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                                       : OutlinedButton(
                                         onPressed: () {
                                           _searchController.clear();
-                                          setState(() => _query = '');
+                                          setState() => _query = '';
                                         },
                                         child: const Text('پاک کردن جست‌وجو'),
                                       ),
@@ -389,20 +535,20 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                                 itemCount: visible.length,
                                 itemBuilder: (BuildContext context, int index) {
                                   final CircuitProject project = visible[index];
-                                  return SizedBox(
-                                    width: width,
-                                    child: _ProjectCard(
-                                      project: project,
-                                      onOpen:
-                                          () => EditorLauncher.open(
-                                            context,
-                                            project,
-                                          ),
-                                      onRename: () => _rename(project),
-                                      onDuplicate: () => _duplicate(project),
-                                      onShare: () => _share(project),
-                                      onDelete: () => _confirmDelete(project),
-                                    ),
+                                  return _ProjectCard(
+                                    project: project,
+                                    isSelectMode: _selectMode,
+                                    selected: _selected.contains(project.id),
+                                    onToggleSelection: () => _toggleSelection(project.id),
+                                    onOpen:
+                                        () => EditorLauncher.open(
+                                          context,
+                                          project,
+                                        ),
+                                    onRename: () => _rename(project),
+                                    onDuplicate: () => _duplicate(project),
+                                    onShare: () => _share(project),
+                                    onDelete: () => _confirmDelete(project),
                                   );
                                 },
                               );
@@ -421,6 +567,9 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
 class _ProjectCard extends StatelessWidget {
   const _ProjectCard({
     required this.project,
+    required this.isSelectMode,
+    required this.selected,
+    required this.onToggleSelection,
     required this.onOpen,
     required this.onRename,
     required this.onDuplicate,
@@ -429,6 +578,9 @@ class _ProjectCard extends StatelessWidget {
   });
 
   final CircuitProject project;
+  final bool isSelectMode;
+  final bool selected;
+  final VoidCallback onToggleSelection;
   final VoidCallback onOpen;
   final VoidCallback onRename;
   final VoidCallback onDuplicate;
@@ -438,76 +590,110 @@ class _ProjectCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
-    return SurfaceCard(
-      onTap: onOpen,
-      padding: EdgeInsets.zero,
-      semanticLabel: 'مدار ${project.name}',
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Expanded(flex: 5, child: CircuitPreview(graph: project.graph)),
-          Expanded(
-            flex: 4,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(14, 10, 6, 8),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        Text(
-                          project.name,
-                          style: theme.textTheme.titleSmall,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+    // In select mode, the onTap is for toggling selection, not opening
+    final bool tapIsSelection = isSelectMode;
+    return GestureDetector(
+      onTap: tapIsSelection ? onToggleSelection : onOpen,
+      onLongPress: !tapIsSelection ? onOpen : null,
+      child: SurfaceCard(
+        onTap: tapIsSelection ? null : onOpen,
+        padding: EdgeInsets.zero,
+        semanticLabel: 'مدار ${project.name}',
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Expanded(flex: 5, child: CircuitPreview(graph: project.graph)),
+            Expanded(
+              flex: 4,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(14, 10, 6, 8),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    // Selection checkbox/toggle in select mode
+                    if (isSelectMode)
+                      Container(
+                        margin: const EdgeInsets.only(
+                          top: 10,
+                          bottom: 10,
+                          right: 8,
                         ),
-                        const SizedBox(height: 3),
-                        Text(
-                          PersianFormat.relativeDate(project.updatedAt),
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            fontSize: 11,
+                        child: SelectionCheckbox(
+                          isSelected: selected,
+                          onChanged: onToggleSelection,
+                        ),
+                      )
+                    else
+                      const SizedBox(width: 0, height: 0),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Text(
+                            project.name,
+                            style: theme.textTheme.titleSmall,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                        ),
-                        const SizedBox(height: 6),
-                        Wrap(
-                          spacing: 6,
-                          runSpacing: 4,
-                          children: <Widget>[
-                            _MetaChip(
-                              icon: Icons.memory_rounded,
-                              label: PersianFormat.digits(
-                                project.componentCount,
+                          const SizedBox(height: 3),
+                          Text(
+                            PersianFormat.relativeDate(project.updatedAt),
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              fontSize: 11,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Wrap(
+                            spacing: 6,
+                            runSpacing: 4,
+                            children: <Widget>[
+                              _MetaChip(
+                                icon: Icons.memory_rounded,
+                                label: PersianFormat.digits(
+                                  project.componentCount,
+                                ),
                               ),
-                            ),
-                            _MetaChip(
-                              icon: Icons.linear_scale_rounded,
-                              label: PersianFormat.digits(project.wireCount),
-                            ),
-                          ],
-                        ),
-                      ],
+                              _MetaChip(
+                                icon: Icons.linear_scale_rounded,
+                                label: PersianFormat.digits(project.wireCount),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  PopupMenuButton<String>(
-                    tooltip: 'گزینه‌های مدار',
-                    icon: const Icon(Icons.more_vert_rounded, size: 20),
-                    onSelected: (String value) {
-                      switch (value) {
-                        case 'rename':
-                          onRename();
-                        case 'duplicate':
-                          onDuplicate();
-                        case 'share':
-                          onShare();
-                        case 'delete':
-                          onDelete();
-                      }
-                    },
-                    itemBuilder:
-                        (BuildContext context) =>
-                            const <PopupMenuEntry<String>>[
+                    // In select mode, show checkmark; otherwise show popup menu
+                    if (isSelectMode)
+                      Icon(
+                        selected
+                            ? Icons.check_circle_rounded
+                            : Icons.check_box_outline_blank_rounded,
+                        size: 20,
+                        color:
+                            selected
+                                ? Colors.amber
+                                : theme.colorScheme.onSurfaceVariant,
+                      )
+                    else
+                      PopupMenuButton<String>(
+                        tooltip: 'گزینه‌های مدار',
+                        icon: const Icon(Icons.more_vert_rounded, size: 20),
+                        onSelected: (String value) {
+                          switch (value) {
+                            case 'rename':
+                              onRename();
+                            case 'duplicate':
+                              onDuplicate();
+                            case 'share':
+                              onShare();
+                            case 'delete':
+                              onDelete();
+                          }
+                        },
+                        itemBuilder:
+                            (
+                              BuildContext context,
+                            ) => const <PopupMenuEntry<String>>[
                               PopupMenuItem<String>(
                                 value: 'rename',
                                 child: ListTile(
@@ -544,12 +730,49 @@ class _ProjectCard extends StatelessWidget {
                                 ),
                               ),
                             ],
-                  ),
-                ],
+                      ),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class SelectionCheckbox extends StatelessWidget {
+  const SelectionCheckbox({required this.isSelected, required this.onChanged});
+
+  final bool isSelected;
+  final VoidCallback onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    return Container(
+      width: 24,
+      height: 24,
+      decoration: BoxDecoration(
+        color:
+            isSelected
+                ? theme.colorScheme.primary
+                : theme.colorScheme.surfaceContainerLow,
+        border: Border.all(color: theme.colorScheme.outline, width: 2),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: IconButton(
+        icon:
+            isSelected
+                ? const Icon(Icons.check_rounded, size: 16, color: Colors.white)
+                : const Icon(
+                  Icons.check_outlined,
+                  size: 16,
+                  color: Colors.grey,
+                ),
+        onPressed: onChanged,
+        tooltip: isSelected ? 'انتخاب شده' : 'انتخاب',
       ),
     );
   }
