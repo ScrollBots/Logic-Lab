@@ -160,7 +160,8 @@ class SharedPreferencesSettingsStore implements SettingsStore {
       final Object? decoded = jsonDecode(raw);
       if (decoded is Map<String, dynamic>) {
         return AppSettings.fromJson(decoded);
-      }
+}
+
     } catch (error) {
       // A malformed preference must never prevent the app from opening; this
       // also covers valid JSON whose values have the wrong types.

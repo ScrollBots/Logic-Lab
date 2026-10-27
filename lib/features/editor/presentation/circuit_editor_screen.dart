@@ -1494,7 +1494,7 @@ class _TrayCatalogueState extends State<_TrayCatalogue> {
       if (matches.isNotEmpty) {
         filtered[entry.key] = matches;
       }
-    }
+}
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
