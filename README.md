@@ -9,11 +9,6 @@
 [![CI](https://img.shields.io/github/actions/workflow/status/ScrollBots/Logic-Lab/ci.yml?label=CI&logo=github)](https://github.com/ScrollBots/Logic-Lab/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/ScrollBots/Logic-Lab?label=Release&logo=github)](https://github.com/ScrollBots/Logic-Lab/releases)
 
-<p align="center">
-  <img src="preview.png" alt="Logic Lab Preview" width="80%" />
-</p>
-
-
 ---
 
 ## 🎯 در یک نگاه
