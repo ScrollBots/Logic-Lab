@@ -94,10 +94,13 @@ class AppSettings {
     switch (json['themeMode']) {
       case 'light':
         mode = ThemeMode.light;
+        break;
       case 'dark':
         mode = ThemeMode.dark;
+        break;
       default:
         mode = ThemeMode.system;
+        break;
     }
     const AppSettings defaults = AppSettings();
     final int? accent = _readColor(json['customAccent']);

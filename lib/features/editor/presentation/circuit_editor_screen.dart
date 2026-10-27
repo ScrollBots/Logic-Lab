@@ -520,14 +520,19 @@ class _CircuitEditorScreenState extends State<CircuitEditorScreen> {
                 switch (value) {
                   case 'rename':
                     _renameProject();
+                    break;
                   case 'truth':
                     _openTruthTable();
+                    break;
                   case 'analysis':
                     _openAnalysis();
+                    break;
                   case 'info':
                     _showCircuitReport();
+                    break;
                   case 'delete':
                     _deleteProject();
+                    break;
                 }
               },
               itemBuilder:
