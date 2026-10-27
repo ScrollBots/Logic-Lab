@@ -267,42 +267,39 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
     final int selectedCount = _selected.length;
 
     // Title: shows "مدارهای من" normally, or selection count in select mode
-    final Widget appBarTitle =
-        selectMode
-            ? Row(
-              children: <Widget>[
-                const Icon(
-                  Icons.check_box_outline_blank_rounded,
-                  size: 20,
-                  color: Colors.amber,
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  'انتخاب $selectedCount مدار',
-                  style: theme.textTheme.titleMedium,
-                ),
-              ],
-            )
-            : const Text('مدارهای من');
+    final Widget appBarTitle = selectMode
+        ? Row(
+            children: <Widget>[
+              const Icon(
+                Icons.check_box_outline_blank_rounded,
+                size: 20,
+                color: Colors.amber,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                'انتخاب $selectedCount مدار',
+                style: theme.textTheme.titleMedium,
+              ),
+            ],
+          )
+        : const Text('مدارهای من');
 
     // Action button: Delete selected, visible only in select mode with selections
-    final Widget? deleteActionButton =
-        selectMode && selectedCount > 0
-            ? FilledButton(
-              onPressed: _deleteSelected,
-              child: Text('حذف $selectedCount مدار'),
-            )
-            : null;
+    final Widget? deleteActionButton = selectMode && selectedCount > 0
+        ? FilledButton(
+            onPressed: _deleteSelected,
+            child: Text('حذف $selectedCount مدار'),
+          )
+        : null;
 
     // Back/close button: visible only in select mode
-    final Widget? backButton =
-        selectMode
-            ? IconButton(
-              tooltip: 'بازگشت',
-              onPressed: _exitSelectMode,
-              icon: const Icon(Icons.close_rounded),
-            )
-            : null;
+    final Widget? backButton = selectMode
+        ? IconButton(
+            tooltip: 'بازگشت',
+            onPressed: _exitSelectMode,
+            icon: const Icon(Icons.close_rounded),
+          )
+        : null;
 
     return Scaffold(
       appBar: AppBar(
@@ -380,24 +377,22 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                         Expanded(
                           child: TextField(
                             controller: _searchController,
-                            onChanged:
-                                (String value) =>
-                                    setState(() => _query = value),
+                            onChanged: (String value) =>
+                                setState(() => _query = value),
                             textInputAction: TextInputAction.search,
                             decoration: InputDecoration(
                               hintText: 'جست‌وجوی نام مدار…',
                               prefixIcon: const Icon(Icons.search_rounded),
-                              suffixIcon:
-                                  _query.isEmpty
-                                      ? null
-                                      : IconButton(
-                                        tooltip: 'پاک کردن جست‌وجو',
-                                        onPressed: () {
-                                          _searchController.clear();
-                                          setState(() => _query = '');
-                                        },
-                                        icon: const Icon(Icons.close_rounded),
-                                      ),
+                              suffixIcon: _query.isEmpty
+                                  ? null
+                                  : IconButton(
+                                      tooltip: 'پاک کردن جست‌وجو',
+                                      onPressed: () {
+                                        _searchController.clear();
+                                        setState(() => _query = '');
+                                      },
+                                      icon: const Icon(Icons.close_rounded),
+                                    ),
                             ),
                           ),
                         ),
@@ -405,13 +400,10 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                         PopupMenuButton<ProjectSort>(
                           tooltip: 'مرتب‌سازی',
                           initialValue: _sort,
-                          onSelected:
-                              (ProjectSort value) =>
-                                  setState(() => _sort = value),
-                          itemBuilder:
-                              (
-                                BuildContext context,
-                              ) => const <PopupMenuEntry<ProjectSort>>[
+                          onSelected: (ProjectSort value) =>
+                              setState(() => _sort = value),
+                          itemBuilder: (BuildContext context) =>
+                              const <PopupMenuEntry<ProjectSort>>[
                                 PopupMenuItem<ProjectSort>(
                                   value: ProjectSort.recentlyUpdated,
                                   child: ListTile(
@@ -466,95 +458,92 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                     ),
                   ),
                 Expanded(
-                  child:
-                      projects.isLoading
-                          ? const Center(child: CircularProgressIndicator())
-                          : projects.loadError != null
+                  child: projects.isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : projects.loadError != null
                           ? SingleChildScrollView(
-                            child: InfoBanner(
-                              tone: InfoBannerTone.danger,
-                              message: projects.loadError!,
-                            ),
-                          )
+                              child: InfoBanner(
+                                tone: InfoBannerTone.danger,
+                                message: projects.loadError!,
+                              ),
+                            )
                           : visible.isEmpty
-                          ? SingleChildScrollView(
-                            child: EmptyState(
-                              icon:
-                                  _query.isEmpty
-                                      ? Icons.account_tree_outlined
-                                      : Icons.search_off_rounded,
-                              title:
-                                  _query.isEmpty
-                                      ? 'هنود مداری ذخیره نشده'
-                                      : 'مداری با این نام پیدا نشد',
-                              message:
-                                  _query.isEmpty
-                                      ? 'یک مدار خالی بسازید یا یک فایل JSON وارد کنید. '
-                                          'همه مدارها آفلاین روی دستگاه شما ذخیره می‌شوند.'
-                                      : 'عبارت دیگری را امتحان کنید یا فیلتر جست‌وجو را پاک کنید.',
-                              action:
-                                  _query.isEmpty
-                                      ? FilledButton.icon(
-                                        onPressed:
-                                            () => EditorLauncher.createAndOpen(
-                                              context,
-                                            ),
-                                        icon: const Icon(Icons.add_rounded),
-                                        label: const Text('ساخت مدار'),
-                                      )
-                                      : OutlinedButton(
-                                        onPressed: () {
-                                          _searchController.clear();
-                                          setState(() => _query = '');
-                                        },
-                                        child: const Text('پاک کردن جست‌وجو'),
+                              ? SingleChildScrollView(
+                                  child: EmptyState(
+                                    icon: _query.isEmpty
+                                        ? Icons.account_tree_outlined
+                                        : Icons.search_off_rounded,
+                                    title: _query.isEmpty
+                                        ? 'هنود مداری ذخیره نشده'
+                                        : 'مداری با این نام پیدا نشد',
+                                    message: _query.isEmpty
+                                        ? 'یک مدار خالی بسازید یا یک فایل JSON وارد کنید. '
+                                            'همه مدارها آفلاین روی دستگاه شما ذخیره می‌شوند.'
+                                        : 'عبارت دیگری را امتحان کنید یا فیلتر جست‌وجو را پاک کنید.',
+                                    action: _query.isEmpty
+                                        ? FilledButton.icon(
+                                            onPressed: () =>
+                                                EditorLauncher.createAndOpen(
+                                                  context,
+                                                ),
+                                            icon: const Icon(Icons.add_rounded),
+                                            label: const Text('ساخت مدار'),
+                                          )
+                                        : OutlinedButton(
+                                            onPressed: () {
+                                              _searchController.clear();
+                                              setState(() => _query = '');
+                                            },
+                                            child: const Text('پاک کردن جست‌وجو'),
+                                          ),
+                                  ),
+                                )
+                              : LayoutBuilder(
+                                  builder: (
+                                    BuildContext context,
+                                    BoxConstraints constraints,
+                                  ) {
+                                    final int columns = constraints.maxWidth > 900
+                                        ? 3
+                                        : constraints.maxWidth > 580
+                                            ? 2
+                                            : 1;
+                                    return GridView.builder(
+                                      padding: const EdgeInsets.only(bottom: 8),
+                                      gridDelegate:
+                                          SliverGridDelegateWithFixedCrossAxisCount(
+                                        crossAxisCount: columns,
+                                        mainAxisSpacing: 12,
+                                        crossAxisSpacing: 12,
+                                        childAspectRatio:
+                                            columns == 1 ? 1.35 : 1.05,
                                       ),
-                            ),
-                          )
-                          : LayoutBuilder(
-                            builder: (
-                              BuildContext context,
-                              BoxConstraints constraints,
-                            ) {
-                              final int columns =
-                                  constraints.maxWidth > 900
-                                      ? 3
-                                      : constraints.maxWidth > 580
-                                      ? 2
-                                      : 1;
-                              return GridView.builder(
-                                padding: const EdgeInsets.only(bottom: 8),
-                                gridDelegate:
-                                    SliverGridDelegateWithFixedCrossAxisCount(
-                                      crossAxisCount: columns,
-                                      mainAxisSpacing: 12,
-                                      crossAxisSpacing: 12,
-                                      childAspectRatio:
-                                          columns == 1 ? 1.35 : 1.05,
-                                    ),
-                                itemCount: visible.length,
-                                itemBuilder: (BuildContext context, int index) {
-                                  final CircuitProject project = visible[index];
-                                  return _ProjectCard(
-                                    project: project,
-                                    isSelectMode: _selectMode,
-                                    selected: _selected.contains(project.id),
-                                    onToggleSelection:
-                                        () => _toggleSelection(project.id),
-                                    onOpen:
-                                        () => EditorLauncher.open(
-                                          context,
-                                          project,
-                                        ),
-                                    onRename: () => _rename(project),
-                                    onDuplicate: () => _duplicate(project),
-                                    onShare: () => _share(project),
-                                    onDelete: () => _confirmDelete(project),
-                                  );
-                                },
-                              );
-                            },
-                          ),
+                                      itemCount: visible.length,
+                                      itemBuilder: (
+                                        BuildContext context,
+                                        int index,
+                                      ) {
+                                        final CircuitProject project =
+                                            visible[index];
+                                        return _ProjectCard(
+                                          project: project,
+                                          isSelectMode: _selectMode,
+                                          selected: _selected.contains(project.id),
+                                          onToggleSelection: () =>
+                                              _toggleSelection(project.id),
+                                          onOpen: () => EditorLauncher.open(
+                                            context,
+                                            project,
+                                          ),
+                                          onRename: () => _rename(project),
+                                          onDuplicate: () => _duplicate(project),
+                                          onShare: () => _share(project),
+                                          onDelete: () => _confirmDelete(project),
+                                        );
+                                      },
+                                    );
+                                  },
+                                ),
                 ),
               ],
             ),
@@ -670,10 +659,9 @@ class _ProjectCard extends StatelessWidget {
                             ? Icons.check_circle_rounded
                             : Icons.check_box_outline_blank_rounded,
                         size: 20,
-                        color:
-                            selected
-                                ? Colors.amber
-                                : theme.colorScheme.onSurfaceVariant,
+                        color: selected
+                            ? Colors.amber
+                            : theme.colorScheme.onSurfaceVariant,
                       )
                     else
                       PopupMenuButton<String>(
@@ -691,10 +679,8 @@ class _ProjectCard extends StatelessWidget {
                               onDelete();
                           }
                         },
-                        itemBuilder:
-                            (
-                              BuildContext context,
-                            ) => const <PopupMenuEntry<String>>[
+                        itemBuilder: (BuildContext context) =>
+                            const <PopupMenuEntry<String>>[
                               PopupMenuItem<String>(
                                 value: 'rename',
                                 child: ListTile(
@@ -744,7 +730,11 @@ class _ProjectCard extends StatelessWidget {
 }
 
 class SelectionCheckbox extends StatelessWidget {
-  const SelectionCheckbox({super.key, required this.isSelected, required this.onChanged});
+  const SelectionCheckbox({
+    super.key,
+    required this.isSelected,
+    required this.onChanged,
+  });
 
   final bool isSelected;
   final VoidCallback onChanged;
@@ -756,22 +746,20 @@ class SelectionCheckbox extends StatelessWidget {
       width: 24,
       height: 24,
       decoration: BoxDecoration(
-        color:
-            isSelected
-                ? theme.colorScheme.primary
-                : theme.colorScheme.surfaceContainerLow,
+        color: isSelected
+            ? theme.colorScheme.primary
+            : theme.colorScheme.surfaceContainerLow,
         border: Border.all(color: theme.colorScheme.outline, width: 2),
         borderRadius: BorderRadius.circular(6),
       ),
       child: IconButton(
-        icon:
-            isSelected
-                ? const Icon(Icons.check_rounded, size: 16, color: Colors.white)
-                : const Icon(
-                  Icons.check_outlined,
-                  size: 16,
-                  color: Colors.grey,
-                ),
+        icon: isSelected
+            ? const Icon(Icons.check_rounded, size: 16, color: Colors.white)
+            : const Icon(
+                Icons.check_outlined,
+                size: 16,
+                color: Colors.grey,
+              ),
         onPressed: onChanged,
         tooltip: isSelected ? 'انتخاب شده' : 'انتخاب',
       ),
@@ -808,3 +796,4 @@ class _MetaChip extends StatelessWidget {
     );
   }
 }
+

@@ -10,16 +10,22 @@ enum UpdateCheckState { idle, checking, updateAvailable, error, offline }
 /// Result of checking for an update.
 class UpdateCheckResult {
   final UpdateCheckState state;
+
   /// The latest stable release version from GitHub, or null if not found.
   final String? latestVersion;
+
   /// The download URL for the universal APK asset, or null.
   final String? downloadUrl;
+
   /// Human-readable update summary, if available.
   final String? updateNotes;
+
   /// Error message, if the check failed.
   final String? errorMessage;
+
   /// Whether the installed version is already current or newer.
   final bool isUpToDate;
+
   /// The installed application version (from pubspec).
   final String installedVersion;
 
@@ -39,14 +45,14 @@ class UpdateCheckResult {
   /// Create a result indicating no update is needed.
   static UpdateCheckResult upToDate(String installedVersion) =>
       UpdateCheckResult._internal(
-    state: UpdateCheckState.idle,
-    latestVersion: null,
-    downloadUrl: null,
-    updateNotes: null,
-    errorMessage: null,
-    isUpToDate: true,
-    installedVersion: installedVersion,
-  );
+        state: UpdateCheckState.idle,
+        latestVersion: null,
+        downloadUrl: null,
+        updateNotes: null,
+        errorMessage: null,
+        isUpToDate: true,
+        installedVersion: installedVersion,
+      );
 
   /// Create a result indicating an update is available.
   static UpdateCheckResult available({
@@ -54,39 +60,40 @@ class UpdateCheckResult {
     required String downloadUrl,
     required String? updateNotes,
     required String installedVersion,
-  }) => UpdateCheckResult._internal(
-    state: UpdateCheckState.updateAvailable,
-    latestVersion: latestVersion,
-    downloadUrl: downloadUrl,
-    updateNotes: updateNotes,
-    errorMessage: null,
-    isUpToDate: false,
-    installedVersion: installedVersion,
-  );
+  }) =>
+      UpdateCheckResult._internal(
+        state: UpdateCheckState.updateAvailable,
+        latestVersion: latestVersion,
+        downloadUrl: downloadUrl,
+        updateNotes: updateNotes,
+        errorMessage: null,
+        isUpToDate: false,
+        installedVersion: installedVersion,
+      );
 
   /// Create a result indicating an error occurred.
   static UpdateCheckResult error(String message, {String? installedVersion}) =>
       UpdateCheckResult._internal(
-    state: UpdateCheckState.error,
-    latestVersion: null,
-    downloadUrl: null,
-    updateNotes: null,
-    errorMessage: message,
-    isUpToDate: true,
-    installedVersion: installedVersion ?? '0.0.0',
-  );
+        state: UpdateCheckState.error,
+        latestVersion: null,
+        downloadUrl: null,
+        updateNotes: null,
+        errorMessage: message,
+        isUpToDate: true,
+        installedVersion: installedVersion ?? '0.0.0',
+      );
 
   /// Create a result indicating offline mode (no network check performed).
   static UpdateCheckResult offline({String? installedVersion}) =>
       UpdateCheckResult._internal(
-    state: UpdateCheckState.offline,
-    latestVersion: null,
-    downloadUrl: null,
-    updateNotes: null,
-    errorMessage: null,
-    isUpToDate: true,
-    installedVersion: installedVersion ?? '0.0.0',
-  );
+        state: UpdateCheckState.offline,
+        latestVersion: null,
+        downloadUrl: null,
+        updateNotes: null,
+        errorMessage: null,
+        isUpToDate: true,
+        installedVersion: installedVersion ?? '0.0.0',
+      );
 }
 
 /// Service for checking GitHub Releases for available updates.
@@ -100,8 +107,7 @@ class GitHubUpdateChecker extends ChangeNotifier {
   final String _installedVersion;
 
   GitHubUpdateChecker({String? installedVersion})
-      : _installedVersion =
-            installedVersion ?? AppInfo.version;
+      : _installedVersion = installedVersion ?? AppInfo.version;
 
   /// The current state of the update check.
   UpdateCheckState _state = UpdateCheckState.idle;
@@ -388,8 +394,7 @@ class _UpdateCheckerWidgetState extends State<UpdateCheckerWidget>
                 'نسخه ${result.latestVersion} از فعال ${result.installedVersion}',
                 style: theme.textTheme.bodyMedium,
               ),
-              if (result.updateNotes != null &&
-                  result.updateNotes!.isNotEmpty) ...[
+              if (result.updateNotes != null && result.updateNotes!.isNotEmpty) ...[
                 const SizedBox(height: 8),
                 const Text(' redesigned تغییرات:'),
                 const SizedBox(height: 4),
@@ -442,7 +447,7 @@ class _UpdateCheckerWidgetState extends State<UpdateCheckerWidget>
         return AlertDialog(
           title: const Text('Logic Lab'),
           content: const Text('در حال دانلود آپدیت...'),
-          actions: [],
+          actions: const [],
         );
       },
     );
