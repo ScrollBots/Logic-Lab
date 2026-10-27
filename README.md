@@ -87,7 +87,7 @@
 ## 📸 تصاویر
 
 <p align="center">
-  <img src="preview.png" alt="Logic Lab Preview" width="70%" style="border-radius:12px;border:1px solid #ddd;" />
+  <img src="preview.png" alt="Logic Lab Preview" width="420" style="border-radius:12px;border:1px solid #ddd;" />
 </p>
 
 <table align="center">
