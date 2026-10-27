@@ -87,18 +87,21 @@
 ## 📸 تصاویر
 
 <p align="center">
-  <img src="preview.png" alt="Logic Lab Preview" width="90%" />
+  <img src="preview.png" alt="Logic Lab Preview" width="70%" style="border-radius:12px;border:1px solid #ddd;" />
 </p>
 
-<p align="center">
-  <img src="preview_home.png" alt="Home" width="32%" />
-  <img src="preview_projects.png" alt="Projects" width="32%" />
-  <img src="preview_settings.png" alt="Settings" width="32%" />
-</p>
-
-<p align="center">
-  <sub>محیط اصلی · داشبورد · پروژه‌ها · تنظیمات</sub>
-</p>
+<table align="center">
+  <tr>
+    <td align="center"><img src="preview_home.png" alt="Home" width="240" style="border-radius:10px;border:1px solid #ddd;" /></td>
+    <td align="center"><img src="preview_projects.png" alt="Projects" width="240" style="border-radius:10px;border:1px solid #ddd;" /></td>
+    <td align="center"><img src="preview_settings.png" alt="Settings" width="240" style="border-radius:10px;border:1px solid #ddd;" /></td>
+  </tr>
+  <tr>
+    <td align="center"><sub>داشبورد</sub></td>
+    <td align="center"><sub>پروژه‌ها</sub></td>
+    <td align="center"><sub>تنظیمات</sub></td>
+  </tr>
+</table>
 
 ## 🚀 شروع سریع
 
