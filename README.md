@@ -13,16 +13,6 @@
   <img src="preview.png" alt="Logic Lab Preview" width="80%" />
 </p>
 
-<p align="center">
-  <img src="preview_home.png" alt="Home" width="32%" />
-  <img src="preview_projects.png" alt="Projects" width="32%" />
-  <img src="preview_settings.png" alt="Settings" width="32%" />
-</p>
-
-<p align="center">
-  <sub>داشبورد · پروژه‌ها · تنظیمات</sub>
-</p>
-
 
 ---
 
@@ -93,6 +83,22 @@
 تعریف قطعات و پایه‌های آن‌ها در [ComponentSpec](lib/features/editor/domain/component_spec.dart) متمرکز است.
 
 ---
+
+## 📸 تصاویر
+
+<p align="center">
+  <img src="preview.png" alt="Logic Lab Preview" width="90%" />
+</p>
+
+<p align="center">
+  <img src="preview_home.png" alt="Home" width="32%" />
+  <img src="preview_projects.png" alt="Projects" width="32%" />
+  <img src="preview_settings.png" alt="Settings" width="32%" />
+</p>
+
+<p align="center">
+  <sub>محیط اصلی · داشبورد · پروژه‌ها · تنظیمات</sub>
+</p>
 
 ## 🚀 شروع سریع
 
