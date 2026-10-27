@@ -106,11 +106,21 @@ void main() {
         await tester.pumpAndSettle();
 
         // 1. The page that belongs to the destination is on screen.
-        expect(
-          find.text(_pageMarkers[destination]!),
-          findsOneWidget,
-          reason: 'the page of ${destination.label} must be visible',
-        );
+        // The circuits page title "مدارهای من" appears both in the app bar
+        // and as a page heading, so it is located by key instead of text.
+        if (destination == AppDestination.circuits) {
+          expect(
+            find.byKey(const Key('projects-page-title')),
+            findsOneWidget,
+            reason: 'the page of ${destination.label} must be visible',
+          );
+        } else {
+          expect(
+            find.text(_pageMarkers[destination]!),
+            findsOneWidget,
+            reason: 'the page of ${destination.label} must be visible',
+          );
+        }
 
         // 2. The moving highlight sits exactly on the tapped item.
         final Rect highlight = tester.getRect(
@@ -257,7 +267,9 @@ void main() {
     await tester.tap(find.byKey(AppDestination.circuits.itemKey));
     await tester.pumpAndSettle();
 
-    final Rect title = tester.getRect(find.text('مدارهای من'));
+    final Rect title = tester.getRect(
+      find.byKey(const Key('projects-page-title')),
+    );
     final Rect accentAfter = tester.getRect(
       find.byKey(AppDestination.accentKey),
     );
@@ -301,7 +313,7 @@ void main() {
     // detach from the top of the screen.
     await tester.pump(const Duration(milliseconds: 80));
 
-    expect(find.text('مدارهای من'), findsOneWidget);
+    expect(find.byKey(const Key('projects-page-title')), findsOneWidget);
     expect(find.text('مدارهای اخیر'), findsNothing);
     expect(find.text('از ایده تا مدار، همین‌جا'), findsNothing);
 

@@ -335,6 +335,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                             children: <Widget>[
                               Text(
                                 'مدارهای من',
+                                key: const Key('projects-page-title'),
                                 style: theme.textTheme.headlineSmall,
                               ),
                               const SizedBox(height: 2),
