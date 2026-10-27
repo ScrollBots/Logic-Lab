@@ -154,7 +154,7 @@ class GitHubUpdateChecker extends ChangeNotifier {
     // Since versions match, user is up to date
     // If a newer version were published (e.g., v1.4.2), the check would detect it
 
-    // For demonstration: check if installed version is newer than v1.3.0
+    // For demonstration: check if installed version is newer than v1.4.2
     // In a full implementation, this would parse the actual GitHub API response
     final String installed = _installedVersion;
 
@@ -396,7 +396,7 @@ class _UpdateCheckerWidgetState extends State<UpdateCheckerWidget>
               ),
               if (result.updateNotes != null && result.updateNotes!.isNotEmpty) ...[
                 const SizedBox(height: 8),
-                const Text(' redesigned تغییرات:'),
+                const Text('تغییرات:'),
                 const SizedBox(height: 4),
                 SelectableText(result.updateNotes!, maxLines: 3),
               ],
@@ -485,3 +485,4 @@ Future<UpdateCheckResult> checkForUpdatesFrom({
   return checker.result ??
       UpdateCheckResult.upToDate(installedVersion ?? '0.0.0');
 }
+

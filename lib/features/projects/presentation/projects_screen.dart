@@ -577,7 +577,6 @@ class _ProjectCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
-    // In select mode, the onTap is for toggling selection, not opening
     final bool tapIsSelection = isSelectMode;
     return GestureDetector(
       onTap: tapIsSelection ? onToggleSelection : onOpen,
@@ -597,7 +596,6 @@ class _ProjectCard extends StatelessWidget {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    // Selection checkbox/toggle in select mode
                     if (isSelectMode)
                       Container(
                         margin: const EdgeInsets.only(
@@ -649,7 +647,6 @@ class _ProjectCard extends StatelessWidget {
                         ],
                       ),
                     ),
-                    // In select mode, show checkmark; otherwise show popup menu
                     if (isSelectMode)
                       Icon(
                         selected
@@ -668,12 +665,16 @@ class _ProjectCard extends StatelessWidget {
                           switch (value) {
                             case 'rename':
                               onRename();
+                              break;
                             case 'duplicate':
                               onDuplicate();
+                              break;
                             case 'share':
                               onShare();
+                              break;
                             case 'delete':
                               onDelete();
+                              break;
                           }
                         },
                         itemBuilder: (BuildContext context) =>
@@ -793,3 +794,4 @@ class _MetaChip extends StatelessWidget {
     );
   }
 }
+
