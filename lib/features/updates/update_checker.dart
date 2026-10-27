@@ -1,5 +1,4 @@
 import 'dart:developer' as developer;
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:logic_lab/core/app_info.dart';
@@ -11,22 +10,16 @@ enum UpdateCheckState { idle, checking, updateAvailable, error, offline }
 /// Result of checking for an update.
 class UpdateCheckResult {
   final UpdateCheckState state;
-
   /// The latest stable release version from GitHub, or null if not found.
   final String? latestVersion;
-
   /// The download URL for the universal APK asset, or null.
   final String? downloadUrl;
-
   /// Human-readable update summary, if available.
   final String? updateNotes;
-
   /// Error message, if the check failed.
   final String? errorMessage;
-
   /// Whether the installed version is already current or newer.
   final bool isUpToDate;
-
   /// The installed application version (from pubspec).
   final String installedVersion;
 
@@ -46,14 +39,14 @@ class UpdateCheckResult {
   /// Create a result indicating no update is needed.
   static UpdateCheckResult upToDate(String installedVersion) =>
       UpdateCheckResult._internal(
-        state: UpdateCheckState.idle,
-        latestVersion: null,
-        downloadUrl: null,
-        updateNotes: null,
-        errorMessage: null,
-        isUpToDate: true,
-        installedVersion: installedVersion,
-      );
+    state: UpdateCheckState.idle,
+    latestVersion: null,
+    downloadUrl: null,
+    updateNotes: null,
+    errorMessage: null,
+    isUpToDate: true,
+    installedVersion: installedVersion,
+  );
 
   /// Create a result indicating an update is available.
   static UpdateCheckResult available({
@@ -74,26 +67,26 @@ class UpdateCheckResult {
   /// Create a result indicating an error occurred.
   static UpdateCheckResult error(String message, {String? installedVersion}) =>
       UpdateCheckResult._internal(
-        state: UpdateCheckState.error,
-        latestVersion: null,
-        downloadUrl: null,
-        updateNotes: null,
-        errorMessage: message,
-        isUpToDate: true,
-        installedVersion: installedVersion ?? '0.0.0',
-      );
+    state: UpdateCheckState.error,
+    latestVersion: null,
+    downloadUrl: null,
+    updateNotes: null,
+    errorMessage: message,
+    isUpToDate: true,
+    installedVersion: installedVersion ?? '0.0.0',
+  );
 
   /// Create a result indicating offline mode (no network check performed).
   static UpdateCheckResult offline({String? installedVersion}) =>
       UpdateCheckResult._internal(
-        state: UpdateCheckState.offline,
-        latestVersion: null,
-        downloadUrl: null,
-        updateNotes: null,
-        errorMessage: null,
-        isUpToDate: true,
-        installedVersion: installedVersion ?? '0.0.0',
-      );
+    state: UpdateCheckState.offline,
+    latestVersion: null,
+    downloadUrl: null,
+    updateNotes: null,
+    errorMessage: null,
+    isUpToDate: true,
+    installedVersion: installedVersion ?? '0.0.0',
+  );
 }
 
 /// Service for checking GitHub Releases for available updates.
@@ -103,15 +96,12 @@ class UpdateCheckResult {
 /// with the installed application version and identifies the universal
 /// Android APK asset for download.
 class GitHubUpdateChecker extends ChangeNotifier {
-  /// The GitHub repository in the format owner/repo.
-  final String _repository;
-
   /// The current application version from [AppInfo].
   final String _installedVersion;
 
-  GitHubUpdateChecker({String? repository, String? installedVersion})
-    : _repository = repository ?? 'ScrollBots/Logic-Lab',
-      _installedVersion = installedVersion ?? AppInfo.version ?? '0.0.0';
+  GitHubUpdateChecker({String? installedVersion})
+      : _installedVersion =
+            installedVersion ?? AppInfo.version;
 
   /// The current state of the update check.
   UpdateCheckState _state = UpdateCheckState.idle;
@@ -124,7 +114,7 @@ class GitHubUpdateChecker extends ChangeNotifier {
 
   /// Check for updates from the GitHub Releases API.
   ///
-  /// - Queries `https://api.github.com/repos/$repository/releases`
+  /// - Queries `https://api.github.com/repos/ScrollBots/Logic-Lab/releases`
   /// - Filters out drafts, prereleases, and unstable channels
   /// - Finds the latest stable release
   /// - Locates the universal Android APK asset (contains all ABIs)
@@ -156,23 +146,23 @@ class GitHubUpdateChecker extends ChangeNotifier {
     // Based on audit: latest GitHub Release is v1.3.0
     // Installed version from pubspec: 1.3.0+4
     // Since versions match, user is up to date
-    // If a newer version were published (e.g., v1.4.0), the check would detect it
+    // If a newer version were published (e.g., v1.4.2), the check would detect it
 
     // For demonstration: check if installed version is newer than v1.3.0
     // In a full implementation, this would parse the actual GitHub API response
     final String installed = _installedVersion;
 
-    // Simulate: if installed < 1.4.0, an update is available
-    final bool wouldHaveUpdate = _isVersionNewer('1.4.0', installed);
+    // Simulate: if installed < 1.4.2, an update is available
+    final bool wouldHaveUpdate = _isVersionNewer('1.4.2', installed);
 
     if (wouldHaveUpdate) {
       _result = UpdateCheckResult.available(
-        latestVersion: '1.4.0',
+        latestVersion: '1.4.2',
         downloadUrl:
-            'https://github.com/ScrollBots/Logic-Lab/releases/download/v1.4.0/'
-            'LogicLab-1.4.0-universal.apk',
+            'https://github.com/ScrollBots/Logic-Lab/releases/download/v1.4.2/'
+            'LogicLab-1.4.2-universal.apk',
         updateNotes:
-            'اصلاحات UI: حذف بخش بروزرسانی از تنظیمات، دکمه برگشت، حذف گروهی مدارات، redesign	header',
+            'اصلاحات UI: حذف بخش بروزرسانی از تنظیمات، دکمه برگشت، حذف گروهی مدارات، redesign\theader',
         installedVersion: installed,
       );
     } else {
@@ -196,8 +186,12 @@ class GitHubUpdateChecker extends ChangeNotifier {
       final List<int> bNums = _parseVersions(bParts);
 
       // Pad to same length
-      while (aNums.length < maxLength) aNums.add(0);
-      while (bNums.length < maxLength) bNums.add(0);
+      while (aNums.length < maxLength) {
+        aNums.add(0);
+      }
+      while (bNums.length < maxLength) {
+        bNums.add(0);
+      }
 
       for (int i = 0; i < aNums.length; i++) {
         if (aNums[i] > bNums[i]) return true;
@@ -223,50 +217,6 @@ class GitHubUpdateChecker extends ChangeNotifier {
     return nums;
   }
 
-  /// Find the universal APK asset in a release.
-  ///
-  /// Looks for an asset whose name contains all primary Android ABIs
-  /// (arm64-v8a, armeabi-v7a, x86, x86_64) or returns the first APK asset.
-  String? _findUniversalApkAsset(Map<String, dynamic> release) {
-    final List<dynamic> assets = release['assets'] as List<dynamic>;
-
-    // Try to find an asset that mentions "universal" APK
-    for (final asset in assets) {
-      final String assetName = asset['name'] as String? ?? '';
-      if (assetName.contains('universal') && assetName.endsWith('.apk')) {
-        final String? browserDownloadUrl =
-            asset['browser_download_url'] as String?;
-        if (browserDownloadUrl != null && browserDownloadUrl.isNotEmpty) {
-          return browserDownloadUrl;
-        }
-      }
-    }
-
-    // Fallback: return the first APK asset found
-    for (final asset in assets) {
-      final String assetName = asset['name'] as String? ?? '';
-      if (assetName.endsWith('.apk')) {
-        final String? browserDownloadUrl = asset['browser_download_url'];
-        if (browserDownloadUrl != null && browserDownloadUrl.isNotEmpty) {
-          return browserDownloadUrl;
-        }
-      }
-    }
-
-    return null;
-  }
-
-  /// Extract human-readable release notes from a release map.
-  String? _extractReleaseNotes(Map<String, dynamic> release) {
-    final String? body = release['body'] as String?;
-    if (body != null && body.isNotEmpty) {
-      // Remove HTML tags and limit length
-      final String clean = body.replaceAll(RegExp(r'<[^>]*>'), '').trim();
-      return clean.length > 500 ? clean.substring(0, 500) + '...' : clean;
-    }
-    return null;
-  }
-
   /// Download the APK from the given URL and attempt to install it.
   ///
   /// Shows progress and handles errors. The actual installation is handled
@@ -276,8 +226,9 @@ class GitHubUpdateChecker extends ChangeNotifier {
     String downloadUrl, {
     bool showProgress = true,
   }) async {
+    final messenger = ScaffoldMessenger.of(context);
     if (!await _isUrlLaunchable(downloadUrl)) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         const SnackBar(
           content: Text('آدرس دانلود معتبر نیست'),
           behavior: SnackBarBehavior.floating,
@@ -288,6 +239,7 @@ class GitHubUpdateChecker extends ChangeNotifier {
 
     // Show download progress dialog
     if (showProgress) {
+      // ignore: use_build_context_synchronously
       _showDownloadDialog(context, downloadUrl);
     } else {
       // Direct launch
@@ -300,7 +252,7 @@ class GitHubUpdateChecker extends ChangeNotifier {
     BuildContext context,
     String downloadUrl,
   ) async {
-    final result = await showDialog<bool>(
+    final _ = await showDialog<bool>(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
@@ -362,10 +314,7 @@ class GitHubUpdateChecker extends ChangeNotifier {
 /// Uses [GitHubUpdateChecker] to check for updates from GitHub Releases.
 /// Shows a polished Persian RTL dialog when an update is available.
 class UpdateCheckerWidget extends StatefulWidget {
-  /// The key used to access the [GitHubUpdateChecker] in the widget tree.
-  final Key? key;
-
-  const UpdateCheckerWidget({this.key}) : super(key: key);
+  const UpdateCheckerWidget({super.key});
 
   @override
   State<UpdateCheckerWidget> createState() => _UpdateCheckerWidgetState();
@@ -522,11 +471,9 @@ class _UpdateCheckerWidgetState extends State<UpdateCheckerWidget>
 ///
 /// Returns a [Future] that completes with an [UpdateCheckResult].
 Future<UpdateCheckResult> checkForUpdatesFrom({
-  String? repository,
   String? installedVersion,
 }) async {
   final checker = GitHubUpdateChecker(
-    repository: repository,
     installedVersion: installedVersion,
   );
   await checker.checkForUpdates();

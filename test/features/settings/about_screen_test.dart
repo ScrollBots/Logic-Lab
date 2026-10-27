@@ -54,15 +54,6 @@ Future<void> _scrollToAbout(WidgetTester tester) async {
   await tester.pumpAndSettle();
 }
 
-Future<void> _scrollToUpdates(WidgetTester tester) async {
-  await tester.scrollUntilVisible(
-    find.byKey(const Key('updates-section')),
-    300,
-    scrollable: find.byType(Scrollable).first,
-  );
-  await tester.pumpAndSettle();
-}
-
 void main() {
   testWidgets('the About screen shows the semantic version', (
     WidgetTester tester,

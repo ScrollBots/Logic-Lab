@@ -31,6 +31,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
     super.dispose();
   }
 
+  // ignore: unused_element
   void _enterSelectMode() {
     setState(() {
       _selectMode = true;
@@ -55,6 +56,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
     });
   }
 
+  // ignore: unused_element
   void _selectAll(List<CircuitProject> visible) {
     setState(() {
       if (_selected.length == visible.length && visible.isNotEmpty) {
@@ -276,7 +278,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  'انتخاب ${selectedCount} مدار',
+                  'انتخاب $selectedCount مدار',
                   style: theme.textTheme.titleMedium,
                 ),
               ],
@@ -288,7 +290,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
         selectMode && selectedCount > 0
             ? FilledButton(
               onPressed: _deleteSelected,
-              child: Text('حذف ${selectedCount} مدار'),
+              child: Text('حذف $selectedCount مدار'),
             )
             : null;
 
@@ -503,7 +505,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                                       : OutlinedButton(
                                         onPressed: () {
                                           _searchController.clear();
-                                          setState() => _query = '';
+                                          setState(() => _query = '');
                                         },
                                         child: const Text('پاک کردن جست‌وجو'),
                                       ),
@@ -520,9 +522,6 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                                       : constraints.maxWidth > 580
                                       ? 2
                                       : 1;
-                              final double width =
-                                  (constraints.maxWidth - (columns - 1) * 12) /
-                                  columns;
                               return GridView.builder(
                                 padding: const EdgeInsets.only(bottom: 8),
                                 gridDelegate:
@@ -745,7 +744,7 @@ class _ProjectCard extends StatelessWidget {
 }
 
 class SelectionCheckbox extends StatelessWidget {
-  const SelectionCheckbox({required this.isSelected, required this.onChanged});
+  const SelectionCheckbox({super.key, required this.isSelected, required this.onChanged});
 
   final bool isSelected;
   final VoidCallback onChanged;
