@@ -1,3 +1,5 @@
+<div dir="rtl" align="right">
+
 # ⚡ Logic Lab
 
 > آزمایشگاه منطق — شبیه‌ساز آفلاین و فارسی‌زبان مدارهای دیجیتال
@@ -179,3 +181,6 @@ Presentation → Application → Domain
 <p align="center">
   ساخته شده با ❤️ و Flutter
 </p>
+
+
+</div>
