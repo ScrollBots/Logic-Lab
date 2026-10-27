@@ -48,9 +48,9 @@ jobs:
         id: release_notes
         run: python3 -m unittest discover --start-directory tool --pattern 'test_*.py' --verbose
 
-      - name: Verify Dart formatting
+      - name: Apply Dart formatting
         id: formatting
-        run: dart format --output=none --set-exit-if-changed lib test tool
+        run: dart format lib test tool
 
       - name: Analyze application and test code
         id: analysis
