@@ -1,7 +1,7 @@
 name: logic_lab
 description: "Logic Lab - a Persian-first, fully offline digital logic circuit simulator."
 publish_to: 'none'
-version: 1.4.2+9
+version: 1.4.0+9
 environment:
   sdk: ^3.7.2
 

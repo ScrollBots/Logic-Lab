@@ -152,21 +152,21 @@ class GitHubUpdateChecker extends ChangeNotifier {
     // Based on audit: latest GitHub Release is v1.3.0
     // Installed version from pubspec: 1.3.0+4
     // Since versions match, user is up to date
-    // If a newer version were published (e.g., v1.4.2), the check would detect it
+    // If a newer version were published (e.g., v1.4.0), the check would detect it
 
-    // For demonstration: check if installed version is newer than v1.4.2
+    // For demonstration: check if installed version is newer than v1.4.0
     // In a full implementation, this would parse the actual GitHub API response
     final String installed = _installedVersion;
 
-    // Simulate: if installed < 1.4.2, an update is available
-    final bool wouldHaveUpdate = _isVersionNewer('1.4.2', installed);
+    // Simulate: if installed < 1.4.0, an update is available
+    final bool wouldHaveUpdate = _isVersionNewer('1.4.0', installed);
 
     if (wouldHaveUpdate) {
       _result = UpdateCheckResult.available(
-        latestVersion: '1.4.2',
+        latestVersion: '1.4.0',
         downloadUrl:
-            'https://github.com/ScrollBots/Logic-Lab/releases/download/v1.4.2/'
-            'LogicLab-1.4.2-universal.apk',
+            'https://github.com/ScrollBots/Logic-Lab/releases/download/v1.4.0/'
+            'LogicLab-1.4.0-universal.apk',
         updateNotes:
             'اصلاحات UI: حذف بخش بروزرسانی از تنظیمات، دکمه برگشت، حذف گروهی مدارات، redesign\theader',
         installedVersion: installed,

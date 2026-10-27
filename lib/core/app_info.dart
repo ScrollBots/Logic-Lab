@@ -14,7 +14,7 @@ class AppInfo {
   static const String appSubtitle = 'آزمایشگاه منطق';
 
   /// Dot separated semantic version, exactly as published.
-  static const String version = '1.4.2';
+  static const String version = '1.4.0';
 
   /// Build number, kept separate from the user-facing version.
   static const String buildNumber = '9';
