@@ -184,14 +184,12 @@ class GitHubUpdateChecker extends ChangeNotifier {
       final List<String> aParts = a.split('.');
       final List<String> bParts = b.split('.');
 
-      // Pad shorter version with zeros
       final int maxLength =
           aParts.length > bParts.length ? aParts.length : bParts.length;
 
       final List<int> aNums = _parseVersions(aParts);
       final List<int> bNums = _parseVersions(bParts);
 
-      // Pad to same length
       while (aNums.length < maxLength) {
         aNums.add(0);
       }
@@ -203,7 +201,7 @@ class GitHubUpdateChecker extends ChangeNotifier {
         if (aNums[i] > bNums[i]) return true;
         if (aNums[i] < bNums[i]) return false;
       }
-      return false; // Equal versions
+      return false;
     } catch (e) {
       developer.log('_isVersionNewer error: $e');
       return false;
@@ -212,7 +210,7 @@ class GitHubUpdateChecker extends ChangeNotifier {
 
   /// Parse version string parts into integers.
   List<int> _parseVersions(List<String> parts) {
-    final List<int> nums = [];
+    final List<int> nums = <int>[];
     for (final part in parts) {
       try {
         nums.add(int.parse(part));
@@ -243,17 +241,14 @@ class GitHubUpdateChecker extends ChangeNotifier {
       return;
     }
 
-    // Show download progress dialog
     if (showProgress) {
       // ignore: use_build_context_synchronously
       _showDownloadDialog(context, downloadUrl);
     } else {
-      // Direct launch
       await _launchApkInstaller(downloadUrl);
     }
   }
 
-  /// Show a dialog with download progress.
   Future<void> _showDownloadDialog(
     BuildContext context,
     String downloadUrl,
@@ -282,16 +277,13 @@ class GitHubUpdateChecker extends ChangeNotifier {
     );
   }
 
-  /// Launch the Android package installer for the downloaded APK.
   Future<void> _launchApkInstaller(String apkUrl) async {
     try {
       final Uri uri = Uri.parse(apkUrl);
 
-      // For web-based downloads, we launch the URL directly
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri, mode: LaunchMode.externalApplication);
       } else {
-        // Try with browser fallback
         if (await canLaunchUrl(uri)) {
           await launchUrl(uri, mode: LaunchMode.externalApplication);
         } else {
@@ -304,7 +296,6 @@ class GitHubUpdateChecker extends ChangeNotifier {
     }
   }
 
-  /// Verify that a URL is launchable (has http/https scheme).
   Future<bool> _isUrlLaunchable(String url) async {
     try {
       final Uri uri = Uri.parse(url);
@@ -315,10 +306,6 @@ class GitHubUpdateChecker extends ChangeNotifier {
   }
 }
 
-/// Widget that triggers an update check and shows the update dialog if available.
-///
-/// Uses [GitHubUpdateChecker] to check for updates from GitHub Releases.
-/// Shows a polished Persian RTL dialog when an update is available.
 class UpdateCheckerWidget extends StatefulWidget {
   const UpdateCheckerWidget({super.key});
 
@@ -338,7 +325,6 @@ class _UpdateCheckerWidgetState extends State<UpdateCheckerWidget>
     super.initState();
     _checker = GitHubUpdateChecker();
     _checker.addListener(_onCheckerChanged);
-    // Perform initial check after widget is built
     WidgetsBinding.instance.addPostFrameCallback((_) => _performCheck());
   }
 
@@ -438,7 +424,6 @@ class _UpdateCheckerWidgetState extends State<UpdateCheckerWidget>
       return;
     }
 
-    // Show a loading dialog while downloading
     if (!mounted) return;
     showDialog(
       context: context,
@@ -467,14 +452,10 @@ class _UpdateCheckerWidgetState extends State<UpdateCheckerWidget>
 
   @override
   Widget build(BuildContext context) {
-    // The checker runs async; we build a minimal placeholder
     return const SizedBox.shrink();
   }
 }
 
-/// Convenience method to check for updates from anywhere in the widget tree.
-///
-/// Returns a [Future] that completes with an [UpdateCheckResult].
 Future<UpdateCheckResult> checkForUpdatesFrom({
   String? installedVersion,
 }) async {

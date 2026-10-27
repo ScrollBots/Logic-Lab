@@ -73,6 +73,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
     if (_selected.isEmpty) {
       return;
     }
+
     final int count = _selected.length;
     final bool? confirmed = await showDialog<bool>(
       context: context,
@@ -97,9 +98,11 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
         ],
       ),
     );
+
     if (confirmed != true || !mounted) {
       return;
     }
+
     final ProjectsController controller = context.read<ProjectsController>();
     for (final String id in List<String>.from(_selected)) {
       try {
@@ -108,6 +111,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
         // Continue with the rest; the controller surfaces the error.
       }
     }
+
     if (mounted) {
       _toast('$count مدار حذف شد.');
       _exitSelectMode();
@@ -138,9 +142,11 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
         ],
       ),
     );
+
     if (confirmed != true || !mounted) {
       return;
     }
+
     try {
       await context.read<ProjectsController>().deleteProject(project.id);
       if (mounted) {
@@ -197,10 +203,13 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
         ],
       ),
     );
+
     controller.dispose();
+
     if (name == null || name.trim().isEmpty) {
       return;
     }
+
     try {
       await projectsController.renameProject(project.id, name);
     } catch (error) {
@@ -232,6 +241,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
       if (file == null) {
         return;
       }
+
       final CircuitProject project = ProjectCodec.decode(
         file.content,
         asCopy: true,
@@ -259,11 +269,9 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
     final ThemeData theme = Theme.of(context);
     final List<CircuitProject> visible = projects.search(_query, sort: _sort);
 
-    // App bar title/context based on select mode
     final bool selectMode = _selectMode;
     final int selectedCount = _selected.length;
 
-    // Title: shows "مدارهای من" normally, or selection count in select mode
     final Widget appBarTitle = selectMode
         ? Row(
             children: <Widget>[
@@ -281,7 +289,6 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
           )
         : const Text('مدارهای من');
 
-    // Action button: Delete selected, visible only in select mode with selections
     final Widget? deleteActionButton = selectMode && selectedCount > 0
         ? FilledButton(
             onPressed: _deleteSelected,
@@ -289,7 +296,6 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
           )
         : null;
 
-    // Back/close button: visible only in select mode
     final Widget? backButton = selectMode
         ? IconButton(
             tooltip: 'بازگشت',
@@ -321,7 +327,6 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                   padding: const EdgeInsets.only(top: 10, bottom: 14),
                   child: Row(
                     children: <Widget>[
-                      // In select mode, show spacer instead of title area
                       if (selectMode)
                         const Spacer()
                       else
@@ -344,7 +349,6 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                             ],
                           ),
                         ),
-                      // Select mode action button on the right
                       if (selectMode)
                         IconButton(
                           tooltip: 'انجام',
@@ -578,6 +582,7 @@ class _ProjectCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     final bool tapIsSelection = isSelectMode;
+
     return GestureDetector(
       onTap: tapIsSelection ? onToggleSelection : onOpen,
       onLongPress: !tapIsSelection ? onOpen : null,
