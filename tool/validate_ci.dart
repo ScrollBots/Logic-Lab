@@ -174,8 +174,9 @@ void _validateDependabot() {
     }
     for (final MapEntry<dynamic, dynamic> group in groups.entries) {
       final Object? configuration = group.value;
-      final Object? types =
-          configuration is YamlMap ? configuration['update-types'] : null;
+      final Object? types = configuration is YamlMap
+          ? configuration['update-types']
+          : null;
       if (types != null &&
           (types is! List ||
               types.any((Object? type) => !allowedTypes.contains(type)))) {

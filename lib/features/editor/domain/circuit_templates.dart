@@ -10,8 +10,7 @@ class CircuitTemplates {
     CircuitTemplate(
       id: 'half_adder',
       title: 'نیم‌جمع‌کننده یک‌بیتی',
-      description:
-          'دو ورودی A و B را جمع می‌کند: خروجی S مجموع و خروجی C بابتِ حمل است.',
+      description: 'دو ورودی A و B را جمع می‌کند: خروجی S مجموع و خروجی C بابتِ حمل است.',
       level: 'متوسط',
       builder: _halfAdder,
     ),
@@ -49,8 +48,7 @@ class CircuitTemplates {
     CircuitTemplate(
       id: 'd_flip_flop',
       title: 'فلیپ‌فلپ D',
-      description:
-          'با هر لبه بالارونده کلاک، مقدار D را در Q ذخیره می‌کند. برای دیدن نتیجه، پالس کلاک را بزنید.',
+      description: 'با هر لبه بالارونده کلاک، مقدار D را در Q ذخیره می‌کند. برای دیدن نتیجه، پالس کلاک را بزنید.',
       level: 'ترتیبی',
       builder: _dFlipFlop,
     ),

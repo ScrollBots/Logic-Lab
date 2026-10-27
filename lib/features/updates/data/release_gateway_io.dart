@@ -31,11 +31,10 @@ class GitHubReleaseGateway implements ReleaseGateway {
     if (uri == null || uri.scheme != 'https') {
       throw const ReleaseGatewayException(ReleaseFailure.badResponse);
     }
-    final HttpClient client =
-        HttpClient()
-          ..connectionTimeout = timeout
-          ..userAgent =
-              'LogicLab/${AppInfo.version} (+https://github.com/ScrollBots/Logic-Lab)';
+    final HttpClient client = HttpClient()
+      ..connectionTimeout = timeout
+      ..userAgent =
+          'LogicLab/${AppInfo.version} (+https://github.com/ScrollBots/Logic-Lab)';
     try {
       final HttpClientRequest request = await client
           .getUrl(uri)

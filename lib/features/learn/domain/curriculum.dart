@@ -31,8 +31,7 @@ final List<LearningUnit> kCurriculum = <LearningUnit>[
                   'این نام‌ها فقط یک قرارداد هستند؛ مقدار الکتریکی همان ولتاژ است.',
               'همین دو حالت برای ساختن جدول حقیقت، حافظه و پردازنده کافی است.',
             ],
-            explanation:
-                'خلاصه: یک سیگنال دیجیتال همیشه ۰ یا ۱ است؛ هرگز هم‌زمان هر دو.',
+            explanation: 'خلاصه: یک سیگنال دیجیتال همیشه ۰ یا ۱ است؛ هرگز هم‌زمان هر دو.',
           ),
           ConceptStep(
             id: 'signals_switches',
@@ -81,8 +80,7 @@ final List<LearningUnit> kCurriculum = <LearningUnit>[
               'AND و OR خروجی را بر اساس هر دو ورودی تغییر می‌دهند.',
               'NOT مقدار را معکوس می‌کند؛ ما دنبال تغییر نکردن هستیم.',
             ],
-            explanation:
-                'بافر خروجی را برابر ورودی نگه می‌دارد. سه گیت دیگر همیشه ورودی را دگرگون می‌کنند.',
+            explanation: 'بافر خروجی را برابر ورودی نگه می‌دارد. سه گیت دیگر همیشه ورودی را دگرگون می‌کنند.',
           ),
         ],
       ),
@@ -118,8 +116,7 @@ final List<LearningUnit> kCurriculum = <LearningUnit>[
               'اگر ورودی گیتی خالی بماند، خروجی آن نامشخص است و مدار نامعتبر می‌شود.',
               'این محدودیت‌ها از نمایش نتیجهٔ گمراه‌کننده جلوگیری می‌کنند.',
             ],
-            explanation:
-                'اتصال معتبر همیشه از خروجی به ورودی است و هر ورودی فقط یک منبع دارد.',
+            explanation: 'اتصال معتبر همیشه از خروجی به ورودی است و هر ورودی فقط یک منبع دارد.',
           ),
           TextChoiceStep(
             id: 'wiring_choose_connection',
@@ -143,8 +140,7 @@ final List<LearningUnit> kCurriculum = <LearningUnit>[
             hints: <String>[
               'فقط یک پایه سیگنال تولید می‌کند و فقط یک پایه آن را می‌پذیرد.',
             ],
-            explanation:
-                'سیگنال از خروجی تولید می‌شود و به ورودی می‌رسد. دو گزینهٔ دیگر جهت سیگنال را نقض می‌کنند.',
+            explanation: 'سیگنال از خروجی تولید می‌شود و به ورودی می‌رسد. دو گزینهٔ دیگر جهت سیگنال را نقض می‌کنند.',
           ),
           BuildCircuitStep(
             id: 'wiring_build',
@@ -219,8 +215,7 @@ final List<LearningUnit> kCurriculum = <LearningUnit>[
               'یک گیت AND روی بوم قرار دهید.',
               'هر دو ورودی A و B را به آن وصل کنید و خروجی گیت را به Y ببرید.',
             ],
-            explanation:
-                'مدار شما با شبیه‌ساز بررسی می‌شود؛ اگر جدول خروجی با AND یکسان باشد، قبول است.',
+            explanation: 'مدار شما با شبیه‌ساز بررسی می‌شود؛ اگر جدول خروجی با AND یکسان باشد، قبول است.',
           ),
         ],
       ),
@@ -287,8 +282,7 @@ final List<LearningUnit> kCurriculum = <LearningUnit>[
               'یک گیت OR روی بوم بگذارید.',
               'A و B را به ورودی‌های آن و خروجی گیت را به Y وصل کنید.',
             ],
-            explanation:
-                'اگر خروجی مدار تنها در حالت A=0,B=0 صفر باشد، مدار OR درست ساخته شده است.',
+            explanation: 'اگر خروجی مدار تنها در حالت A=0,B=0 صفر باشد، مدار OR درست ساخته شده است.',
           ),
         ],
       ),
@@ -357,8 +351,7 @@ final List<LearningUnit> kCurriculum = <LearningUnit>[
               'OR با دو ورودی ۱ هم خروجی ۱ می‌دهد؛ ما خروجی ۰ می‌خواهیم.',
               'به گیتی فکر کنید که «یا یکی یا دیگری» را نشان می‌دهد.',
             ],
-            explanation:
-                'XOR تنها وقتی ۱ است که ورودی‌ها متفاوت باشند. OR برای دو ورودی ۱ هم ۱ می‌دهد.',
+            explanation: 'XOR تنها وقتی ۱ است که ورودی‌ها متفاوت باشند. OR برای دو ورودی ۱ هم ۱ می‌دهد.',
           ),
           BuildCircuitStep(
             id: 'xor_build',
@@ -370,8 +363,7 @@ final List<LearningUnit> kCurriculum = <LearningUnit>[
               'می‌توانید مستقیماً از XOR استفاده کنید.',
               'یا XOR را با AND، OR و NOT بسازید.',
             ],
-            explanation:
-                'هر مداری که جدول حقیقت XOR را تولید کند پذیرفته می‌شود؛ شبیه‌ساز همهٔ چهار حالت را بررسی می‌کند.',
+            explanation: 'هر مداری که جدول حقیقت XOR را تولید کند پذیرفته می‌شود؛ شبیه‌ساز همهٔ چهار حالت را بررسی می‌کند.',
           ),
         ],
       ),
@@ -392,8 +384,7 @@ final List<LearningUnit> kCurriculum = <LearningUnit>[
               'به همین دلیل NAND در سخت‌افزار واقعی بسیار پرکاربرد است.',
               'XNOR معکوس XOR است: وقتی خروجی ۱ می‌دهد که دو ورودی برابر باشند.',
             ],
-            explanation:
-                'ترکیب گیت‌ها همان کاری است که ویرایشگر انجام می‌دهد؛ هر گیت خروجی خود را به ورودی بعدی می‌دهد.',
+            explanation: 'ترکیب گیت‌ها همان کاری است که ویرایشگر انجام می‌دهد؛ هر گیت خروجی خود را به ورودی بعدی می‌دهد.',
           ),
           TruthTableStep(
             id: 'xnor_table',
@@ -402,8 +393,7 @@ final List<LearningUnit> kCurriculum = <LearningUnit>[
             concepts: <String>['xnor', 'truth-table'],
             circuit: gateExercise(ComponentType.xnorGate),
             hints: <String>['XNOR دقیقاً برعکس XOR است.'],
-            explanation:
-                'ردیف‌های A=0,B=0 و A=1,B=1 خروجی ۱ دارند؛ دو ردیف دیگر ۰ هستند.',
+            explanation: 'ردیف‌های A=0,B=0 و A=1,B=1 خروجی ۱ دارند؛ دو ردیف دیگر ۰ هستند.',
           ),
           PredictionStep(
             id: 'xnor_built_predict',
@@ -415,8 +405,7 @@ final List<LearningUnit> kCurriculum = <LearningUnit>[
             hints: <String>[
               'وقتی A=1 و B=0 باشد، جملهٔ A·B صفر و جملهٔ A̅·B̅ هم صفر است.',
             ],
-            explanation:
-                'هر دو جملهٔ AND صفر می‌شوند و OR خروجی ۰ می‌دهد. این مدار همان XNOR است.',
+            explanation: 'هر دو جملهٔ AND صفر می‌شوند و OR خروجی ۰ می‌دهد. این مدار همان XNOR است.',
           ),
           BuildCircuitStep(
             id: 'xnor_build',
@@ -427,8 +416,7 @@ final List<LearningUnit> kCurriculum = <LearningUnit>[
             hints: <String>[
               'XNOR آماده را امتحان کنید یا XOR را با NOT ترکیب کنید.',
             ],
-            explanation:
-                'اگر خروجی فقط در حالت‌های ۰۰ و ۱۱ برابر ۱ باشد، مدار رفتار XNOR دارد.',
+            explanation: 'اگر خروجی فقط در حالت‌های ۰۰ و ۱۱ برابر ۱ باشد، مدار رفتار XNOR دارد.',
           ),
         ],
       ),
@@ -475,8 +463,7 @@ final List<LearningUnit> kCurriculum = <LearningUnit>[
           PredictionStep(
             id: 'table_predict',
             title: 'حدس بزنید',
-            objective:
-                'با استفاده از جدول، خروجی مدار را برای A=0 و B=1 پیش‌بینی کنید.',
+            objective: 'با استفاده از جدول، خروجی مدار را برای A=0 و B=1 پیش‌بینی کنید.',
             concepts: <String>['truth-table', 'and', 'or', 'not'],
             circuit: combiningExercise(),
             inputs: <String, bool>{'A': false, 'B': true},
@@ -484,8 +471,7 @@ final List<LearningUnit> kCurriculum = <LearningUnit>[
               'جملهٔ A·B صفر است چون A=0 است.',
               'جملهٔ A·B̅ هم صفر است. OR دو صفر برابر صفر است.',
             ],
-            explanation:
-                'هر دو جملهٔ AND صفر می‌شوند، پس خروجی ۰ است. این همان رفتار بافر با ورودی A=0 است.',
+            explanation: 'هر دو جملهٔ AND صفر می‌شوند، پس خروجی ۰ است. این همان رفتار بافر با ورودی A=0 است.',
           ),
           BuildCircuitStep(
             id: 'table_build',
@@ -497,8 +483,7 @@ final List<LearningUnit> kCurriculum = <LearningUnit>[
               'برای هر ردیف با خروجی ۱ یک جملهٔ AND بسازید.',
               'در حالت ۱۰، B باید معکوس شود.',
             ],
-            explanation:
-                'این تابع «مین‌ترم» نام دارد: یک جملهٔ AND که همهٔ ورودی‌ها را دقیقاً برای یک حالت تعیین می‌کند.',
+            explanation: 'این تابع «مین‌ترم» نام دارد: یک جملهٔ AND که همهٔ ورودی‌ها را دقیقاً برای یک حالت تعیین می‌کند.',
           ),
         ],
       ),
@@ -518,8 +503,7 @@ final List<LearningUnit> kCurriculum = <LearningUnit>[
               'سپس جمله‌ها را با OR ترکیب کنید. این شکل، «مجموع حاصل‌ضرب‌ها» یا SOP نام دارد.',
               'همین روش برای هر تابع منطقی کار می‌کند و نیازی به حدس زدن ندارد.',
             ],
-            explanation:
-                'هر ردیف با خروجی ۱ یک جمله می‌سازد؛ OR جمله‌ها تابع را کامل می‌کند.',
+            explanation: 'هر ردیف با خروجی ۱ یک جمله می‌سازد؛ OR جمله‌ها تابع را کامل می‌کند.',
           ),
           TextChoiceStep(
             id: 'sop_expression',
@@ -549,8 +533,7 @@ final List<LearningUnit> kCurriculum = <LearningUnit>[
             circuit: implicationExercise(),
             inputs: <String, bool>{'A': true, 'B': false},
             hints: <String>['¬A برابر ۰ و B هم ۰ است.'],
-            explanation:
-                'OR دو مقدار ۰ خروجی ۰ می‌دهد. این تنها حالتی است که استلزام نادرست می‌شود.',
+            explanation: 'OR دو مقدار ۰ خروجی ۰ می‌دهد. این تنها حالتی است که استلزام نادرست می‌شود.',
           ),
           BuildCircuitStep(
             id: 'sop_build',
@@ -562,8 +545,7 @@ final List<LearningUnit> kCurriculum = <LearningUnit>[
               'به NOT روی A و سپس OR با B نیاز دارید.',
               'خروجی OR را به Y وصل کنید.',
             ],
-            explanation:
-                'هر ترکیب معتبری از گیت‌ها پذیرفته می‌شود؛ مهم این است که جدول حقیقت تابع درست باشد.',
+            explanation: 'هر ترکیب معتبری از گیت‌ها پذیرفته می‌شود؛ مهم این است که جدول حقیقت تابع درست باشد.',
           ),
         ],
       ),
@@ -658,8 +640,7 @@ final List<LearningUnit> kCurriculum = <LearningUnit>[
             circuit: xnorFromGatesExercise(),
             inputs: <String, bool>{'A': true, 'B': true},
             hints: <String>['دو ورودی برابر هستند؛ خروجی برابر باید ۱ باشد.'],
-            explanation:
-                'وقتی A=B=1 باشد، جملهٔ A·B برابر ۱ می‌شود و OR خروجی ۱ می‌دهد.',
+            explanation: 'وقتی A=B=1 باشد، جملهٔ A·B برابر ۱ می‌شود و OR خروجی ۱ می‌دهد.',
           ),
           GateChoiceStep(
             id: 'equality_choose',
@@ -688,8 +669,7 @@ final List<LearningUnit> kCurriculum = <LearningUnit>[
             hints: <String>[
               'XNOR آماده را امتحان کنید یا XOR را با NOT ترکیب کنید.',
             ],
-            explanation:
-                'اگر خروجی EQ در حالت‌های ۰۰ و ۱۱ برابر ۱ باشد، مقایسه‌گر درست است.',
+            explanation: 'اگر خروجی EQ در حالت‌های ۰۰ و ۱۱ برابر ۱ باشد، مقایسه‌گر درست است.',
           ),
         ],
       ),
@@ -731,8 +711,7 @@ final List<LearningUnit> kCurriculum = <LearningUnit>[
             hints: <String>[
               'تا وقتی EN=۱ است، Q همان D است؛ کاری به مقدار قبلی نداشته باشید.',
             ],
-            explanation:
-                'در هر دو گام EN=۱ بود، پس قفل شفاف بود و Q دقیقاً D را دنبال کرد: ۱ و سپس ۰.',
+            explanation: 'در هر دو گام EN=۱ بود، پس قفل شفاف بود و Q دقیقاً D را دنبال کرد: ۱ و سپس ۰.',
           ),
           SequenceStep(
             id: 'latch_hold',
@@ -755,13 +734,11 @@ final List<LearningUnit> kCurriculum = <LearningUnit>[
             concepts: <String>['latch'],
             options: <LessonOption>[
               LessonOption(
-                text:
-                    'EN=۱: Q از D پیروی می‌کند؛ EN=۰: Q مقدار قبلی را نگه می‌دارد',
+                text: 'EN=۱: Q از D پیروی می‌کند؛ EN=۰: Q مقدار قبلی را نگه می‌دارد',
                 correct: true,
               ),
               LessonOption(
-                text:
-                    'EN=۱: Q مقدار قبلی را نگه می‌دارد؛ EN=۰: Q از D پیروی می‌کند',
+                text: 'EN=۱: Q مقدار قبلی را نگه می‌دارد؛ EN=۰: Q از D پیروی می‌کند',
                 correct: false,
               ),
               LessonOption(
@@ -795,8 +772,7 @@ final List<LearningUnit> kCurriculum = <LearningUnit>[
               'این جدایی باعث می‌شود همهٔ فلیپ‌فلپ‌های یک مدار هم‌زمان و هماهنگ به‌روز شوند؛ '
                   'همین اصل پایهٔ پردازنده‌ها و شمارنده‌هاست.',
             ],
-            explanation:
-                'فلیپ‌فلپ = حافظهٔ لبه‌ای: فقط در لبهٔ بالاروندهٔ کلاک مقدار D را می‌گیرد.',
+            explanation: 'فلیپ‌فلپ = حافظهٔ لبه‌ای: فقط در لبهٔ بالاروندهٔ کلاک مقدار D را می‌گیرد.',
           ),
           SequenceStep(
             id: 'ff_capture',
@@ -864,8 +840,7 @@ final List<LearningUnit> kCurriculum = <LearningUnit>[
               'شمارندهٔ ۴ بیتی از ۰۰۰۰ تا ۱۱۱۱ (یعنی ۰ تا ۱۵) می‌شمارد و سپس به صفر برمی‌گردد.',
               'ورودی RST شمارنده را صفر می‌کند؛ به همین دلیل در تمرین‌ها همیشه ۰ نگه داشته شده است.',
             ],
-            explanation:
-                'Q0 سریع‌ترین بیت است؛ هر بیت بعدی با نصف سرعت بیت قبلی عوض می‌شود.',
+            explanation: 'Q0 سریع‌ترین بیت است؛ هر بیت بعدی با نصف سرعت بیت قبلی عوض می‌شود.',
           ),
           SequenceStep(
             id: 'counter_lsb',
@@ -877,8 +852,7 @@ final List<LearningUnit> kCurriculum = <LearningUnit>[
               'Q0 کم‌ارزش‌ترین بیت است و با هر لبه وارونه می‌شود.',
               'شمارنده از ۰ شروع می‌کند: ۰، ۱، ۲، ۳، ۴.',
             ],
-            explanation:
-                'مقادیر شمارنده پس از هر لبه ۱، ۲، ۳ و ۴ است؛ بیت Q0 آن‌ها ۱، ۰، ۱، ۰ می‌شود.',
+            explanation: 'مقادیر شمارنده پس از هر لبه ۱، ۲، ۳ و ۴ است؛ بیت Q0 آن‌ها ۱، ۰، ۱، ۰ می‌شود.',
           ),
           SequenceStep(
             id: 'counter_second_bit',
@@ -921,8 +895,7 @@ final List<LearningUnit> kCurriculum = <LearningUnit>[
                   'این یعنی یک «کلمه» چهاربیتی به‌صورت اتمی ذخیره می‌شود.',
               'رجیسترها در پردازنده برای نگه‌داشتن operandها، آدرس‌ها و نتیجهٔ محاسبات به کار می‌روند.',
             ],
-            explanation:
-                'رجیستر = چند بیت حافظه با کلاک مشترک؛ همهٔ بیت‌ها هم‌زمان ذخیره می‌شوند.',
+            explanation: 'رجیستر = چند بیت حافظه با کلاک مشترک؛ همهٔ بیت‌ها هم‌زمان ذخیره می‌شوند.',
           ),
         ],
       ),

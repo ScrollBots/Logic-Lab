@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
@@ -63,10 +63,9 @@ class ProjectsController extends ChangeNotifier {
     final DateTime now = DateTime.now();
     final CircuitProject project = CircuitProject(
       id: IdGenerator.next('p'),
-      name:
-          name?.trim().isNotEmpty == true
-              ? name!.trim()
-              : _suggestName('مدار جدید'),
+      name: name?.trim().isNotEmpty == true
+          ? name!.trim()
+          : _suggestName('مدار جدید'),
       createdAt: now,
       updatedAt: now,
       graph: circuit,
@@ -204,14 +203,13 @@ class ProjectsController extends ChangeNotifier {
     ProjectSort sort = ProjectSort.recentlyUpdated,
   }) {
     final String normalized = query.trim().toLowerCase();
-    final List<CircuitProject> filtered =
-        _projects
-            .where(
-              (CircuitProject project) =>
-                  normalized.isEmpty ||
-                  project.name.toLowerCase().contains(normalized),
-            )
-            .toList();
+    final List<CircuitProject> filtered = _projects
+        .where(
+          (CircuitProject project) =>
+              normalized.isEmpty ||
+              project.name.toLowerCase().contains(normalized),
+        )
+        .toList();
     _sort(filtered, sort);
     return filtered;
   }

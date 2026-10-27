@@ -85,9 +85,9 @@ void main() {
     });
 
     test('rejects a project with a broken circuit', () {
-      final Map<String, dynamic> json =
-          jsonDecode(ProjectCodec.encode(_sampleProject()))
-              as Map<String, dynamic>;
+      final Map<String, dynamic> json = jsonDecode(
+        ProjectCodec.encode(_sampleProject()),
+      ) as Map<String, dynamic>;
       (json['project'] as Map<String, dynamic>)['circuit'] = <String, Object?>{
         'nodes': 'not-a-list',
         'wires': <Object?>[],

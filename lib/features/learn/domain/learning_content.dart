@@ -33,18 +33,15 @@ const List<GateDefinition> kGateDefinitions = <GateDefinition>[
     type: ComponentType.andGate,
     title: 'دروازه AND',
     expression: 'Y = A · B',
-    description:
-        'خروجی تنها زمانی ۱ است که همه ورودی‌ها ۱ باشند. این دروازه معادل «و» در منطق ریاضی است.',
-    useCase:
-        'فعال‌سازی چند شرط هم‌زمان، مثل روشن شدن سیستم وقتی هم قفل بسته است و هم کلید فعال است.',
+    description: 'خروجی تنها زمانی ۱ است که همه ورودی‌ها ۱ باشند. این دروازه معادل «و» در منطق ریاضی است.',
+    useCase: 'فعال‌سازی چند شرط هم‌زمان، مثل روشن شدن سیستم وقتی هم قفل بسته است و هم کلید فعال است.',
     truthTable: <bool>[false, false, false, true],
   ),
   GateDefinition(
     type: ComponentType.orGate,
     title: 'دروازه OR',
     expression: 'Y = A + B',
-    description:
-        'خروجی وقتی ۱ است که حداقل یکی از ورودی‌ها ۱ باشد. این دروازه معادل «یا» است.',
+    description: 'خروجی وقتی ۱ است که حداقل یکی از ورودی‌ها ۱ باشد. این دروازه معادل «یا» است.',
     useCase: 'فعال کردن زنگ هشدار از هر یک از چند حسگر.',
     truthTable: <bool>[false, true, true, true],
   ),
@@ -52,8 +49,7 @@ const List<GateDefinition> kGateDefinitions = <GateDefinition>[
     type: ComponentType.notGate,
     title: 'دروازه NOT',
     expression: 'Y = ¬A',
-    description:
-        'خروجی را معکوس می‌کند: ورودی ۱ به خروجی ۰ و ورودی ۰ به خروجی ۱ تبدیل می‌شود.',
+    description: 'خروجی را معکوس می‌کند: ورودی ۱ به خروجی ۰ و ورودی ۰ به خروجی ۱ تبدیل می‌شود.',
     useCase: 'ساخت مدار نات (NAND) و نور (NOR) با کمترین قطعه.',
     truthTable: <bool>[true, true, false, false],
   ),
@@ -61,8 +57,7 @@ const List<GateDefinition> kGateDefinitions = <GateDefinition>[
     type: ComponentType.nandGate,
     title: 'دروازه NAND',
     expression: 'Y = ¬(A · B)',
-    description:
-        'معکوس خروجی AND است. در سخت‌افزار دیجیتال پرکاربرد است چون با NOR می‌توان هر تابعی را ساخت.',
+    description: 'معکوس خروجی AND است. در سخت‌افزار دیجیتال پرکاربرد است چون با NOR می‌توان هر تابعی را ساخت.',
     useCase: 'ساخت مدارهای پیچیده با کمترین تعداد قطعه در فناوری CMOS.',
     truthTable: <bool>[true, true, true, false],
   ),
@@ -79,8 +74,7 @@ const List<GateDefinition> kGateDefinitions = <GateDefinition>[
     type: ComponentType.xorGate,
     title: 'دروازه XOR',
     expression: 'Y = A ⊕ B',
-    description:
-        'خروجی ۱ است وقتی دو ورودی متفاوت باشند؛ یعنی تعداد ورودی‌های ۱ فرد باشد.',
+    description: 'خروجی ۱ است وقتی دو ورودی متفاوت باشند؛ یعنی تعداد ورودی‌های ۱ فرد باشد.',
     useCase: 'مقایسه دو بیت، تشخیص تغییر وضعیت و ساخت نیم‌جمع‌کننده.',
     truthTable: <bool>[false, true, true, false],
   ),
@@ -141,8 +135,7 @@ const List<LearningChallenge> kChallenges = <LearningChallenge>[
   LearningChallenge(
     id: 'challenge_and',
     title: 'گیت AND بسازید',
-    brief:
-        'با دو ورودی A و B و یک خروجی، مداری بسازید که فقط وقتی هر دو ورودی ۱ باشند خروجی ۱ شود.',
+    brief: 'با دو ورودی A و B و یک خروجی، مداری بسازید که فقط وقتی هر دو ورودی ۱ باشند خروجی ۱ شود.',
     hint: 'یک دروازه AND کافی است؛ هر دو ورودی را به آن وصل کنید.',
     expectedOutputs: <bool>[false, false, false, true],
     allowedGates: <ComponentType>[ComponentType.andGate],
@@ -161,10 +154,8 @@ const List<LearningChallenge> kChallenges = <LearningChallenge>[
   LearningChallenge(
     id: 'challenge_buffer',
     title: 'سیگنال را منتقل کنید',
-    brief:
-        'ورودی A را بدون تغییر به خروجی Y برسانید. مقدار B در این مدار اهمیتی ندارد.',
-    hint:
-        'یک بافر (BUF) بردارید؛ ورودی A را به آن و خروجی بافر را به Y وصل کنید.',
+    brief: 'ورودی A را بدون تغییر به خروجی Y برسانید. مقدار B در این مدار اهمیتی ندارد.',
+    hint: 'یک بافر (BUF) بردارید؛ ورودی A را به آن و خروجی بافر را به Y وصل کنید.',
     expectedOutputs: <bool>[false, false, true, true],
     allowedGates: <ComponentType>[ComponentType.bufferGate],
     concepts: <String>['buffer', 'wiring'],
@@ -172,10 +163,8 @@ const List<LearningChallenge> kChallenges = <LearningChallenge>[
   LearningChallenge(
     id: 'challenge_xor',
     title: 'گیت XOR بسازید',
-    brief:
-        'مداری بسازید که خروجی آن فقط وقتی ۱ باشد که دو ورودی متفاوت باشند. استفاده از گیت XOR مجاز است.',
-    hint:
-        'می‌توانید از XOR مستقیم استفاده کنید یا آن را از AND و OR و NOT بسازید.',
+    brief: 'مداری بسازید که خروجی آن فقط وقتی ۱ باشد که دو ورودی متفاوت باشند. استفاده از گیت XOR مجاز است.',
+    hint: 'می‌توانید از XOR مستقیم استفاده کنید یا آن را از AND و OR و NOT بسازید.',
     expectedOutputs: <bool>[false, true, true, false],
     concepts: <String>['xor'],
   ),
@@ -209,18 +198,15 @@ const List<LearningChallenge> kChallenges = <LearningChallenge>[
   LearningChallenge(
     id: 'challenge_mixed',
     title: 'تابع ترکیبی',
-    brief:
-        'مداری بسازید که خروجی آن وقتی ۱ باشد که A=1 و B=0 باشد؛ یعنی فقط حالت ۱۰ خروجی ۱ بدهد.',
-    hint:
-        'برای حالت ۱۰ از AND با NOT روی B استفاده کنید و ورودی‌های دیگر را ببندید.',
+    brief: 'مداری بسازید که خروجی آن وقتی ۱ باشد که A=1 و B=0 باشد؛ یعنی فقط حالت ۱۰ خروجی ۱ بدهد.',
+    hint: 'برای حالت ۱۰ از AND با NOT روی B استفاده کنید و ورودی‌های دیگر را ببندید.',
     expectedOutputs: <bool>[false, false, true, false],
     concepts: <String>['and', 'not', 'sop'],
   ),
   LearningChallenge(
     id: 'challenge_implication',
     title: 'استلزام منطقی',
-    brief:
-        'مداری بسازید که فقط در حالت A=1 و B=0 خروجی ۰ بدهد؛ در بقیهٔ حالت‌ها خروجی ۱ باشد.',
+    brief: 'مداری بسازید که فقط در حالت A=1 و B=0 خروجی ۰ بدهد؛ در بقیهٔ حالت‌ها خروجی ۱ باشد.',
     hint: 'خروجی برابر است با NOT روی A، یا B. از یک OR و یک NOT استفاده کنید.',
     expectedOutputs: <bool>[true, true, false, true],
     concepts: <String>['not', 'or', 'sop'],
@@ -240,8 +226,7 @@ const List<LearningChallenge> kChallenges = <LearningChallenge>[
     brief:
         'دو خروجی S (مجموع) و C (بابت حمل) بسازید تا A و B را جمع کند. '
         'خروجی‌ها از قبل با نام S و C ساخته شده‌اند.',
-    hint:
-        'مجموع دو بیت همان XOR است و بابت حمل همان AND. یک XOR و یک AND بردارید.',
+    hint: 'مجموع دو بیت همان XOR است و بابت حمل همان AND. یک XOR و یک AND بردارید.',
     expectedOutputs: <bool>[false, true, true, false],
     requiredOutputCount: 2,
     outputLabels: <String>['S', 'C'],

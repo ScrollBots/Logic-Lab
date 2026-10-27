@@ -307,13 +307,11 @@ Widget _wrap(
   return ChangeNotifierProvider<SettingsController>(
     create: (_) => SettingsController(MemorySettingsStore(), settings),
     child: MaterialApp(
-      builder:
-          (BuildContext context, Widget? child) => MediaQuery(
-            data: MediaQuery.of(
-              context,
-            ).copyWith(disableAnimations: disableAnimations),
-            child: child!,
-          ),
+      builder: (BuildContext context, Widget? child) => MediaQuery(
+        data: MediaQuery.of(context)
+            .copyWith(disableAnimations: disableAnimations),
+        child: child!,
+      ),
       home: child,
     ),
   );

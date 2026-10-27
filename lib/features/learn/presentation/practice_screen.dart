@@ -17,10 +17,9 @@ class PracticeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final LearningController learning = context.watch<LearningController>();
-    final int done =
-        kChallenges
-            .where((LearningChallenge item) => learning.isCompleted(item.id))
-            .length;
+    final int done = kChallenges
+        .where((LearningChallenge item) => learning.isCompleted(item.id))
+        .length;
     return Scaffold(
       appBar: AppBar(title: const Text('تمرین آزاد')),
       body: SafeArea(

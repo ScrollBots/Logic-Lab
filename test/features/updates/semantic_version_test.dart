@@ -71,8 +71,9 @@ void main() {
     });
 
     test('a pre-release sorts before the final release', () {
-      final SemanticVersion prerelease =
-          SemanticVersion.tryParse('1.2.0-rc.1')!;
+      final SemanticVersion prerelease = SemanticVersion.tryParse(
+        '1.2.0-rc.1',
+      )!;
       final SemanticVersion finalRelease = SemanticVersion.tryParse('1.2.0')!;
       expect(prerelease < finalRelease, isTrue);
       expect(finalRelease > prerelease, isTrue);

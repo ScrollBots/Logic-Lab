@@ -166,9 +166,8 @@ class BrandMark extends StatelessWidget {
             ),
             Text(
               'آزمایشگاه منطق',
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(height: 1.25),
+              style: Theme.of(context).textTheme.bodySmall
+                  ?.copyWith(height: 1.25),
             ),
           ],
         ),
@@ -184,26 +183,24 @@ class _GateGlyphPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final Paint stroke =
-        Paint()
-          ..color = color
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = math.max(1.4, size.width * 0.055)
-          ..strokeCap = StrokeCap.round
-          ..strokeJoin = StrokeJoin.round;
+    final Paint stroke = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = math.max(1.4, size.width * 0.055)
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
     final double left = size.width * 0.2;
     final double right = size.width * 0.7;
     final double top = size.height * 0.3;
     final double bottom = size.height * 0.7;
     final double mid = size.height * 0.5;
-    final Path gate =
-        Path()
-          ..moveTo(left, top)
-          ..lineTo(size.width * 0.48, top)
-          ..quadraticBezierTo(right, top, right, mid)
-          ..quadraticBezierTo(right, bottom, size.width * 0.48, bottom)
-          ..lineTo(left, bottom)
-          ..close();
+    final Path gate = Path()
+      ..moveTo(left, top)
+      ..lineTo(size.width * 0.48, top)
+      ..quadraticBezierTo(right, top, right, mid)
+      ..quadraticBezierTo(right, bottom, size.width * 0.48, bottom)
+      ..lineTo(left, bottom)
+      ..close();
     canvas.drawPath(gate, stroke);
     canvas.drawLine(Offset(size.width * 0.08, mid), Offset(left, mid), stroke);
     final double outStart = right;
@@ -338,24 +335,21 @@ class SignalPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final LogicLabColors colors = LogicLabColors.of(context);
-    final Color color =
-        value == null
-            ? colors.unknownSignal
-            : value!
-            ? colors.highSignal
-            : colors.lowSignal;
-    final String state =
-        value == null
-            ? '؟'
-            : value!
-            ? '1'
-            : '0';
-    final String semantics =
-        value == null
-            ? 'نامشخص'
-            : value!
-            ? 'بالا'
-            : 'پایین';
+    final Color color = value == null
+        ? colors.unknownSignal
+        : value!
+        ? colors.highSignal
+        : colors.lowSignal;
+    final String state = value == null
+        ? '؟'
+        : value!
+        ? '1'
+        : '0';
+    final String semantics = value == null
+        ? 'نامشخص'
+        : value!
+        ? 'بالا'
+        : 'پایین';
     return Semantics(
       label: label == null ? semantics : '$label، $semantics',
       child: Container(
@@ -374,9 +368,8 @@ class SignalPill extends StatelessWidget {
             if (label != null) ...<Widget>[
               Text(
                 label!,
-                style: Theme.of(
-                  context,
-                ).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w600),
+                style: Theme.of(context).textTheme.labelSmall
+                    ?.copyWith(fontWeight: FontWeight.w600),
               ),
               const SizedBox(width: 5),
             ],

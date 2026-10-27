@@ -1,4 +1,4 @@
-﻿import '../../../core/utils/id_generator.dart';
+import '../../../core/utils/id_generator.dart';
 import '../../../features/editor/domain/circuit_models.dart';
 import 'boolean_expression.dart';
 
@@ -22,8 +22,8 @@ class ExpressionCircuitConverter {
   static const int _inputGap = 150;
 
   static CircuitGraph toCircuit(BoolExpr expression) {
-    final List<String> variables =
-        expression.collectVariables().toList()..sort();
+    final List<String> variables = expression.collectVariables().toList()
+      ..sort();
     if (variables.isEmpty) {
       throw const ExpressionConversionException(
         'عبارت‌های ثابت (بدون متغیر) به مدار تبدیل نمی‌شوند؛ عبارت باید حداقل یک متغیر داشته باشد.',

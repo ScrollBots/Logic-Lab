@@ -61,43 +61,40 @@ class LogicLabApp extends StatelessWidget {
         ChangeNotifierProvider<UpdateController>.value(value: updateController),
       ],
       child: Consumer<SettingsController>(
-        builder: (
-          BuildContext context,
-          SettingsController settings,
-          Widget? _,
-        ) {
-          return MaterialApp(
-            title: 'Logic Lab',
-            debugShowCheckedModeBanner: false,
-            themeMode: settings.themeMode,
-            theme: buildTheme(settings, Brightness.light),
-            darkTheme: buildTheme(settings, Brightness.dark),
-            locale: const Locale('fa', 'IR'),
-            supportedLocales: const <Locale>[Locale('fa', 'IR')],
-            localizationsDelegates: const <LocalizationsDelegate<Object>>[
-              GlobalMaterialLocalizations.delegate,
-              GlobalWidgetsLocalizations.delegate,
-              GlobalCupertinoLocalizations.delegate,
-            ],
-            builder: (BuildContext context, Widget? child) {
-              final MediaQueryData media = MediaQuery.of(context);
-              return MediaQuery(
-                data: media.copyWith(
-                  textScaler: media.textScaler.clamp(
-                    minScaleFactor: 0.9,
-                    maxScaleFactor: 1.4,
-                  ),
+        builder:
+            (BuildContext context, SettingsController settings, Widget? _) {
+              return MaterialApp(
+                title: 'Logic Lab',
+                debugShowCheckedModeBanner: false,
+                themeMode: settings.themeMode,
+                theme: buildTheme(settings, Brightness.light),
+                darkTheme: buildTheme(settings, Brightness.dark),
+                locale: const Locale('fa', 'IR'),
+                supportedLocales: const <Locale>[Locale('fa', 'IR')],
+                localizationsDelegates: const <LocalizationsDelegate<Object>>[
+                  GlobalMaterialLocalizations.delegate,
+                  GlobalWidgetsLocalizations.delegate,
+                  GlobalCupertinoLocalizations.delegate,
+                ],
+                builder: (BuildContext context, Widget? child) {
+                  final MediaQueryData media = MediaQuery.of(context);
+                  return MediaQuery(
+                    data: media.copyWith(
+                      textScaler: media.textScaler.clamp(
+                        minScaleFactor: 0.9,
+                        maxScaleFactor: 1.4,
+                      ),
+                    ),
+                    child: child ?? const SizedBox.shrink(),
+                  );
+                },
+                home: UpdateGate(
+                  controller: updateController,
+                  autoCheck: settings.updatesEnabled,
+                  child: const AppShell(),
                 ),
-                child: child ?? const SizedBox.shrink(),
               );
             },
-            home: UpdateGate(
-              controller: updateController,
-              autoCheck: settings.updatesEnabled,
-              child: const AppShell(),
-            ),
-          );
-        },
       ),
     );
   }

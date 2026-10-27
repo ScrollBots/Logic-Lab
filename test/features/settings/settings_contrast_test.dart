@@ -39,8 +39,9 @@ Future<Widget> _buildSettings({required Brightness brightness}) async {
     child: MaterialApp(
       theme: theme,
       darkTheme: theme,
-      themeMode:
-          brightness == Brightness.dark ? ThemeMode.dark : ThemeMode.light,
+      themeMode: brightness == Brightness.dark
+          ? ThemeMode.dark
+          : ThemeMode.light,
       locale: const Locale('fa', 'IR'),
       supportedLocales: const <Locale>[Locale('fa', 'IR')],
       localizationsDelegates: const <LocalizationsDelegate<Object>>[

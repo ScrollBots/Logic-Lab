@@ -365,13 +365,11 @@ class CircuitGraph {
   CircuitGraph removeNode(String id) {
     return copyWith(
       nodes: nodes.where((CircuitNode node) => node.id != id).toList(),
-      wires:
-          wires
-              .where(
-                (CircuitWire wire) =>
-                    wire.fromNodeId != id && wire.toNodeId != id,
-              )
-              .toList(),
+      wires: wires
+          .where(
+            (CircuitWire wire) => wire.fromNodeId != id && wire.toNodeId != id,
+          )
+          .toList(),
     );
   }
 
@@ -398,13 +396,11 @@ class CircuitGraph {
 
   CircuitGraph updateWire(CircuitWire wire) {
     return copyWith(
-      wires:
-          wires
-              .map(
-                (CircuitWire existing) =>
-                    existing.id == wire.id ? wire : existing,
-              )
-              .toList(),
+      wires: wires
+          .map(
+            (CircuitWire existing) => existing.id == wire.id ? wire : existing,
+          )
+          .toList(),
     );
   }
 

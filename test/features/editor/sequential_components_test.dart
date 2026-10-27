@@ -26,17 +26,14 @@ void main() {
       // Data goes high, but without a clock edge nothing is captured.
       simulator.updateGraph(
         builder.build().copyWith(
-          nodes:
-              builder
-                  .build()
-                  .nodes
-                  .map(
-                    (CircuitNode node) =>
-                        node.label == 'D'
-                            ? node.copyWith(inputValue: true)
-                            : node,
-                  )
-                  .toList(),
+          nodes: builder
+              .build()
+              .nodes
+              .map(
+                (CircuitNode node) =>
+                    node.label == 'D' ? node.copyWith(inputValue: true) : node,
+              )
+              .toList(),
         ),
       );
       simulator.evaluate();
@@ -206,14 +203,13 @@ void main() {
         final LogicSignal second = simulator.result.signalOf(probe.id);
 
         final bool expectedFirst = jk[0];
-        final bool expectedSecond =
-            jk[0] && jk[1]
-                ? !expectedFirst
-                : (jk[0] && !jk[1])
-                ? true
-                : (jk[1] && !jk[0])
-                ? false
-                : expectedFirst;
+        final bool expectedSecond = jk[0] && jk[1]
+            ? !expectedFirst
+            : (jk[0] && !jk[1])
+            ? true
+            : (jk[1] && !jk[0])
+            ? false
+            : expectedFirst;
         expect(
           first,
           expectedFirst ? LogicSignal.high : LogicSignal.low,
@@ -260,19 +256,17 @@ void main() {
 
       // Disable the latch and change D: the stored value must be kept.
       final CircuitGraph held = builder.build().copyWith(
-        nodes:
-            builder
-                .build()
-                .nodes
-                .map(
-                  (CircuitNode node) =>
-                      node.label == 'EN'
-                          ? node.copyWith(inputValue: false)
-                          : node.label == 'D'
-                          ? node.copyWith(inputValue: false)
-                          : node,
-                )
-                .toList(),
+        nodes: builder
+            .build()
+            .nodes
+            .map(
+              (CircuitNode node) => node.label == 'EN'
+                  ? node.copyWith(inputValue: false)
+                  : node.label == 'D'
+                  ? node.copyWith(inputValue: false)
+                  : node,
+            )
+            .toList(),
       );
       simulator.updateGraph(held);
       simulator.evaluate();
@@ -302,17 +296,14 @@ void main() {
 
       simulator.updateGraph(
         builder.build().copyWith(
-          nodes:
-              builder
-                  .build()
-                  .nodes
-                  .map(
-                    (CircuitNode node) =>
-                        node.label == 'S'
-                            ? node.copyWith(inputValue: true)
-                            : node,
-                  )
-                  .toList(),
+          nodes: builder
+              .build()
+              .nodes
+              .map(
+                (CircuitNode node) =>
+                    node.label == 'S' ? node.copyWith(inputValue: true) : node,
+              )
+              .toList(),
         ),
       );
       simulator.evaluate();
@@ -320,19 +311,17 @@ void main() {
 
       simulator.updateGraph(
         builder.build().copyWith(
-          nodes:
-              builder
-                  .build()
-                  .nodes
-                  .map(
-                    (CircuitNode node) =>
-                        node.label == 'R'
-                            ? node.copyWith(inputValue: true)
-                            : node.label == 'S'
-                            ? node.copyWith(inputValue: false)
-                            : node,
-                  )
-                  .toList(),
+          nodes: builder
+              .build()
+              .nodes
+              .map(
+                (CircuitNode node) => node.label == 'R'
+                    ? node.copyWith(inputValue: true)
+                    : node.label == 'S'
+                    ? node.copyWith(inputValue: false)
+                    : node,
+              )
+              .toList(),
         ),
       );
       simulator.evaluate();
@@ -470,17 +459,15 @@ void main() {
 
       simulator.updateGraph(
         builder.build().copyWith(
-          nodes:
-              builder
-                  .build()
-                  .nodes
-                  .map(
-                    (CircuitNode node) =>
-                        node.label == 'RST'
-                            ? node.copyWith(inputValue: true)
-                            : node,
-                  )
-                  .toList(),
+          nodes: builder
+              .build()
+              .nodes
+              .map(
+                (CircuitNode node) => node.label == 'RST'
+                    ? node.copyWith(inputValue: true)
+                    : node,
+              )
+              .toList(),
         ),
       );
       simulator.stepClock();

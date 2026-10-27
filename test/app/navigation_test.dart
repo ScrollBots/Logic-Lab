@@ -213,10 +213,14 @@ void main() {
     await tester.pumpAndSettle();
 
     // In an RTL row the first logical destination is rendered on the right.
-    final double home =
-        tester.getRect(find.byKey(AppDestination.home.itemKey)).center.dx;
-    final double learning =
-        tester.getRect(find.byKey(AppDestination.learning.itemKey)).center.dx;
+    final double home = tester
+        .getRect(find.byKey(AppDestination.home.itemKey))
+        .center
+        .dx;
+    final double learning = tester
+        .getRect(find.byKey(AppDestination.learning.itemKey))
+        .center
+        .dx;
     expect(
       home,
       greaterThan(learning),

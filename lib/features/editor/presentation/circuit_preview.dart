@@ -91,12 +91,11 @@ class _CircuitPreviewPainter extends CustomPainter {
     Offset map(CanvasPoint point) =>
         Offset(point.x * scale + offsetX, point.y * scale + offsetY);
 
-    final Paint wirePaint =
-        Paint()
-          ..color = wire
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 1.4
-          ..strokeCap = StrokeCap.round;
+    final Paint wirePaint = Paint()
+      ..color = wire
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.4
+      ..strokeCap = StrokeCap.round;
 
     for (final CircuitWire circuitWire in graph.wires) {
       final CircuitNode? source = graph.nodeById(circuitWire.fromNodeId);
@@ -119,17 +118,16 @@ class _CircuitPreviewPainter extends CustomPainter {
         start,
         end,
       );
-      final Path path =
-          Path()
-            ..moveTo(map(start).dx, map(start).dy)
-            ..cubicTo(
-              map(controls[1]).dx,
-              map(controls[1]).dy,
-              map(controls[2]).dx,
-              map(controls[2]).dy,
-              map(end).dx,
-              map(end).dy,
-            );
+      final Path path = Path()
+        ..moveTo(map(start).dx, map(start).dy)
+        ..cubicTo(
+          map(controls[1]).dx,
+          map(controls[1]).dy,
+          map(controls[2]).dx,
+          map(controls[2]).dy,
+          map(end).dx,
+          map(end).dy,
+        );
       canvas.drawPath(path, wirePaint);
     }
 

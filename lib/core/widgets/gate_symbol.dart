@@ -49,13 +49,12 @@ class _GateSymbolPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final Paint stroke =
-        Paint()
-          ..color = color
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = strokeWidth
-          ..strokeCap = StrokeCap.round
-          ..strokeJoin = StrokeJoin.round;
+    final Paint stroke = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
     final double left = size.width * 0.14;
     final double right = size.width * 0.78;
     final double top = size.height * 0.25;
@@ -68,12 +67,11 @@ class _GateSymbolPainter extends CustomPainter {
     final double gateRight = bubble ? right - size.width * 0.06 : right;
 
     if (type == ComponentType.notGate) {
-      final Path triangle =
-          Path()
-            ..moveTo(left, top)
-            ..lineTo(left, bottom)
-            ..lineTo(gateRight, mid)
-            ..close();
+      final Path triangle = Path()
+        ..moveTo(left, top)
+        ..lineTo(left, bottom)
+        ..lineTo(gateRight, mid)
+        ..close();
       canvas.drawPath(triangle, stroke);
       final double bubbleCenter = gateRight + size.width * 0.06;
       if (bubble) {
@@ -86,53 +84,38 @@ class _GateSymbolPainter extends CustomPainter {
     } else {
       Path shape;
       if (type == ComponentType.andGate || type == ComponentType.nandGate) {
-        shape =
-            Path()
-              ..moveTo(left, top)
-              ..lineTo(size.width * 0.42, top)
-              ..cubicTo(
-                gateRight + 2,
-                top,
-                gateRight + 1,
-                mid - 2,
-                gateRight,
-                mid,
-              )
-              ..cubicTo(
-                gateRight + 1,
-                mid + 2,
-                gateRight + 2,
-                bottom,
-                size.width * 0.42,
-                bottom,
-              )
-              ..lineTo(left, bottom)
-              ..close();
+        shape = Path()
+          ..moveTo(left, top)
+          ..lineTo(size.width * 0.42, top)
+          ..cubicTo(gateRight + 2, top, gateRight + 1, mid - 2, gateRight, mid)
+          ..cubicTo(
+            gateRight + 1,
+            mid + 2,
+            gateRight + 2,
+            bottom,
+            size.width * 0.42,
+            bottom,
+          )
+          ..lineTo(left, bottom)
+          ..close();
       } else {
         final bool xor =
             type == ComponentType.xorGate || type == ComponentType.xnorGate;
-        shape =
-            Path()
-              ..moveTo(left + (xor ? 3 : 0), top)
-              ..quadraticBezierTo(size.width * 0.62, top + 2, gateRight, mid)
-              ..quadraticBezierTo(
-                size.width * 0.62,
-                bottom - 2,
-                left + (xor ? 3 : 0),
-                bottom,
-              )
-              ..quadraticBezierTo(
-                size.width * 0.35,
-                mid,
-                left + (xor ? 3 : 0),
-                top,
-              )
-              ..close();
+        shape = Path()
+          ..moveTo(left + (xor ? 3 : 0), top)
+          ..quadraticBezierTo(size.width * 0.62, top + 2, gateRight, mid)
+          ..quadraticBezierTo(
+            size.width * 0.62,
+            bottom - 2,
+            left + (xor ? 3 : 0),
+            bottom,
+          )
+          ..quadraticBezierTo(size.width * 0.35, mid, left + (xor ? 3 : 0), top)
+          ..close();
         if (xor) {
-          final Path extra =
-              Path()
-                ..moveTo(left - 3, top)
-                ..quadraticBezierTo(size.width * 0.26, mid, left - 3, bottom);
+          final Path extra = Path()
+            ..moveTo(left - 3, top)
+            ..quadraticBezierTo(size.width * 0.26, mid, left - 3, bottom);
           canvas.drawPath(extra, stroke);
         }
       }

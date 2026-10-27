@@ -110,13 +110,11 @@ class LearningController extends ChangeNotifier {
   ConceptMastery masteryFor(String conceptId) =>
       _state.concepts[conceptId] ?? const ConceptMastery();
 
-  int get masteredConceptCount =>
-      _state.concepts.values
-          .where(
-            (ConceptMastery value) =>
-                value.attempts >= 2 && value.mastery >= 80,
-          )
-          .length;
+  int get masteredConceptCount => _state.concepts.values
+      .where(
+        (ConceptMastery value) => value.attempts >= 2 && value.mastery >= 80,
+      )
+      .length;
 
   int get practicedConceptCount => _state.concepts.length;
 
@@ -347,8 +345,9 @@ class LearningController extends ChangeNotifier {
     final LearningProgress updated = LearningProgress(
       itemId: itemId,
       completed: existing?.completed ?? false,
-      bestScore:
-          (existing?.bestScore ?? 0) > score ? existing!.bestScore : score,
+      bestScore: (existing?.bestScore ?? 0) > score
+          ? existing!.bestScore
+          : score,
       attempts: (existing?.attempts ?? 0) + 1,
       updatedAt: now,
     );
@@ -366,8 +365,9 @@ class LearningController extends ChangeNotifier {
     final LearningProgress updated = LearningProgress(
       itemId: itemId,
       completed: true,
-      bestScore:
-          (existing?.bestScore ?? 0) > score ? existing!.bestScore : score,
+      bestScore: (existing?.bestScore ?? 0) > score
+          ? existing!.bestScore
+          : score,
       attempts: (existing?.attempts ?? 0) + (incrementAttempts ? 1 : 0),
       updatedAt: now,
     );

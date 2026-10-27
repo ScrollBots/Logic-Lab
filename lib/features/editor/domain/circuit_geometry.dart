@@ -247,9 +247,11 @@ class CircuitGeometry {
     if (dx == 0 && dy == 0) {
       return p.distanceTo(a);
     }
-    final double t = (((p.x - a.x) * dx + (p.y - a.y) * dy) /
-            (dx * dx + dy * dy))
-        .clamp(0.0, 1.0);
+    final double t =
+        (((p.x - a.x) * dx + (p.y - a.y) * dy) / (dx * dx + dy * dy)).clamp(
+          0.0,
+          1.0,
+        );
     final CanvasPoint projection = CanvasPoint(a.x + t * dx, a.y + t * dy);
     return p.distanceTo(projection);
   }

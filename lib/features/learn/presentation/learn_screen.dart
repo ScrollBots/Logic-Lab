@@ -45,8 +45,7 @@ class LearnScreen extends StatelessWidget {
               const SizedBox(height: 22),
               SectionHeader(
                 title: 'مسیر یادگیری',
-                subtitle:
-                    'درس‌ها یکی‌یکی باز می‌شوند؛ هر درس کوتاه است و با تمرین تمام می‌شود.',
+                subtitle: 'درس‌ها یکی‌یکی باز می‌شوند؛ هر درس کوتاه است و با تمرین تمام می‌شود.',
                 trailing: Text(
                   '${PersianFormat.digits(_completedLessons(learning))} از '
                   '${PersianFormat.digits(kLessons.length)}',
@@ -77,10 +76,9 @@ class LearnScreen extends StatelessWidget {
   }
 }
 
-int _completedLessons(LearningController learning) =>
-    kLessons
-        .where((LearningLesson lesson) => learning.isLessonCompleted(lesson.id))
-        .length;
+int _completedLessons(LearningController learning) => kLessons
+    .where((LearningLesson lesson) => learning.isLessonCompleted(lesson.id))
+    .length;
 
 class _Header extends StatelessWidget {
   const _Header({required this.learning});
@@ -194,8 +192,9 @@ class _ContinueCard extends StatelessWidget {
     final LearningUnit unit = unitOfLesson(lesson.id) ?? kCurriculum.first;
     final double lessonProgress = learning.lessonProgress(lesson);
     final int completed = _completedLessons(learning);
-    final double courseProgress =
-        kLessons.isEmpty ? 0 : completed / kLessons.length;
+    final double courseProgress = kLessons.isEmpty
+        ? 0
+        : completed / kLessons.length;
     final int resume = learning.resumeStepIndex(lesson);
     final bool started = lessonProgress > 0;
 
@@ -440,8 +439,7 @@ class _OnboardingCard extends StatelessWidget {
           ),
           const _OnboardingPoint(
             icon: Icons.touch_app_outlined,
-            text:
-                'بین توضیح‌ها، خروجی را حدس بزنید، جدول را کامل کنید و مدار بسازید.',
+            text: 'بین توضیح‌ها، خروجی را حدس بزنید، جدول را کامل کنید و مدار بسازید.',
           ),
           const _OnboardingPoint(
             icon: Icons.save_outlined,
@@ -511,12 +509,9 @@ class _UnitCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
-    final int done =
-        unit.lessons
-            .where(
-              (LearningLesson lesson) => learning.isLessonCompleted(lesson.id),
-            )
-            .length;
+    final int done = unit.lessons
+        .where((LearningLesson lesson) => learning.isLessonCompleted(lesson.id))
+        .length;
     final bool unitComplete = done == unit.lessons.length;
     return SurfaceCard(
       padding: EdgeInsets.zero,
@@ -532,22 +527,19 @@ class _UnitCard extends StatelessWidget {
                   height: 36,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color:
-                        unitComplete
-                            ? LogicLabColors.of(
-                              context,
-                            ).success.withValues(alpha: 0.12)
-                            : theme.colorScheme.primary.withValues(alpha: 0.1),
+                    color: unitComplete
+                        ? LogicLabColors.of(context).success
+                              .withValues(alpha: 0.12)
+                        : theme.colorScheme.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
                     PersianFormat.digits(number),
                     style: theme.textTheme.labelLarge?.copyWith(
                       fontWeight: FontWeight.w700,
-                      color:
-                          unitComplete
-                              ? LogicLabColors.of(context).success
-                              : theme.colorScheme.primary,
+                      color: unitComplete
+                          ? LogicLabColors.of(context).success
+                          : theme.colorScheme.primary,
                     ),
                   ),
                 ),
@@ -614,17 +606,15 @@ class _LessonRow extends StatelessWidget {
     return Opacity(
       opacity: unlocked ? 1 : 0.55,
       child: InkWell(
-        onTap:
-            unlocked
-                ? () => _openLesson(context, lesson)
-                : () => _lockedMessage(context),
+        onTap: unlocked
+            ? () => _openLesson(context, lesson)
+            : () => _lockedMessage(context),
         child: Container(
           padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
           decoration: BoxDecoration(
-            color:
-                current && !completed
-                    ? theme.colorScheme.primary.withValues(alpha: 0.045)
-                    : null,
+            color: current && !completed
+                ? theme.colorScheme.primary.withValues(alpha: 0.045)
+                : null,
             border: Border(
               top: BorderSide(color: theme.colorScheme.outlineVariant),
             ),
@@ -636,20 +626,18 @@ class _LessonRow extends StatelessWidget {
                 height: 34,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color:
-                      completed
-                          ? colors.success.withValues(alpha: 0.12)
-                          : unlocked
-                          ? theme.colorScheme.primary.withValues(alpha: 0.08)
-                          : theme.colorScheme.surfaceContainer,
+                  color: completed
+                      ? colors.success.withValues(alpha: 0.12)
+                      : unlocked
+                      ? theme.colorScheme.primary.withValues(alpha: 0.08)
+                      : theme.colorScheme.surfaceContainer,
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color:
-                        completed
-                            ? colors.success.withValues(alpha: 0.3)
-                            : unlocked
-                            ? theme.colorScheme.primary.withValues(alpha: 0.2)
-                            : theme.colorScheme.outlineVariant,
+                    color: completed
+                        ? colors.success.withValues(alpha: 0.3)
+                        : unlocked
+                        ? theme.colorScheme.primary.withValues(alpha: 0.2)
+                        : theme.colorScheme.outlineVariant,
                   ),
                 ),
                 child: Icon(
@@ -659,12 +647,11 @@ class _LessonRow extends StatelessWidget {
                       ? Icons.play_arrow_rounded
                       : Icons.lock_outline_rounded,
                   size: 18,
-                  color:
-                      completed
-                          ? colors.success
-                          : unlocked
-                          ? theme.colorScheme.primary
-                          : theme.colorScheme.onSurfaceVariant,
+                  color: completed
+                      ? colors.success
+                      : unlocked
+                      ? theme.colorScheme.primary
+                      : theme.colorScheme.onSurfaceVariant,
                 ),
               ),
               const SizedBox(width: 11),
@@ -678,10 +665,9 @@ class _LessonRow extends StatelessWidget {
                           child: Text(
                             lesson.title,
                             style: theme.textTheme.bodyMedium?.copyWith(
-                              fontWeight:
-                                  current && !completed
-                                      ? FontWeight.w700
-                                      : FontWeight.w500,
+                              fontWeight: current && !completed
+                                  ? FontWeight.w700
+                                  : FontWeight.w500,
                             ),
                           ),
                         ),
@@ -840,10 +826,9 @@ class _QuickActions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
-    final int doneChallenges =
-        kChallenges
-            .where((LearningChallenge item) => learning.isCompleted(item.id))
-            .length;
+    final int doneChallenges = kChallenges
+        .where((LearningChallenge item) => learning.isCompleted(item.id))
+        .length;
     return SurfaceCard(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Column(
@@ -854,25 +839,22 @@ class _QuickActions extends StatelessWidget {
             subtitle:
                 '${PersianFormat.digits(doneChallenges)} از '
                 '${PersianFormat.digits(kChallenges.length)} چالش تکمیل شده',
-            onTap:
-                () => Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (BuildContext context) => const PracticeScreen(),
-                  ),
-                ),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (BuildContext context) => const PracticeScreen(),
+              ),
+            ),
           ),
           Divider(height: 1, color: theme.colorScheme.outlineVariant),
           _QuickRow(
             icon: Icons.menu_book_outlined,
             title: 'مرجع گیت‌ها',
             subtitle: 'نماد، عبارت و جدول حقیقت تعاملی هفت گیت',
-            onTap:
-                () => Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder:
-                        (BuildContext context) => const GateReferenceScreen(),
-                  ),
-                ),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (BuildContext context) => const GateReferenceScreen(),
+              ),
+            ),
           ),
           Divider(height: 1, color: theme.colorScheme.outlineVariant),
           _QuickRow(
@@ -963,9 +945,8 @@ void _startReview(BuildContext context, LearningController learning) {
   );
   Navigator.of(context).push(
     MaterialPageRoute<void>(
-      builder:
-          (BuildContext context) =>
-              LearningSessionScreen(lesson: review, review: true),
+      builder: (BuildContext context) =>
+          LearningSessionScreen(lesson: review, review: true),
     ),
   );
 }

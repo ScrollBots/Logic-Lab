@@ -264,8 +264,8 @@ void main() {
       expect(project.graph.nodeById('in')!.inputValue, isTrue);
       expect(project.graph.nodeById('out')!.outputCount, 1);
 
-      final SimulationResult result =
-          CircuitSimulator(project.graph).evaluate();
+      final SimulationResult result = CircuitSimulator(project.graph)
+          .evaluate();
       expect(result.signalOf('out'), LogicSignal.high);
     });
 
@@ -297,8 +297,8 @@ void main() {
       final CircuitProject project = ProjectCodec.decode(future);
       expect(project.graph.nodeById('x')!.type, ComponentType.unknown);
 
-      final SimulationResult result =
-          CircuitSimulator(project.graph).evaluate();
+      final SimulationResult result = CircuitSimulator(project.graph)
+          .evaluate();
       expect(
         result.problems.any(
           (CircuitProblem problem) =>

@@ -207,16 +207,14 @@ class _MiniSwitch extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
           decoration: BoxDecoration(
-            color:
-                value
-                    ? colors.highSignal.withValues(alpha: 0.12)
-                    : theme.colorScheme.surfaceContainerLowest,
+            color: value
+                ? colors.highSignal.withValues(alpha: 0.12)
+                : theme.colorScheme.surfaceContainerLowest,
             borderRadius: BorderRadius.circular(9),
             border: Border.all(
-              color:
-                  value
-                      ? colors.highSignal.withValues(alpha: 0.4)
-                      : theme.colorScheme.outlineVariant,
+              color: value
+                  ? colors.highSignal.withValues(alpha: 0.4)
+                  : theme.colorScheme.outlineVariant,
             ),
           ),
           child: Row(
@@ -288,12 +286,9 @@ class _TruthTableStrip extends StatelessWidget {
                       height: 30,
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
-                        color:
-                            active
-                                ? theme.colorScheme.primary.withValues(
-                                  alpha: 0.08,
-                                )
-                                : null,
+                        color: active
+                            ? theme.colorScheme.primary.withValues(alpha: 0.08)
+                            : null,
                         border: const Border(
                           right: BorderSide(color: Color(0x14000000)),
                         ),

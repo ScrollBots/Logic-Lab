@@ -112,7 +112,9 @@ void main() {
       ],
     );
     await tester.pumpWidget(
-      MaterialApp(home: TruthTableScreen(projectName: 'HA', graph: graph)),
+      MaterialApp(
+        home: TruthTableScreen(projectName: 'HA', graph: graph),
+      ),
     );
     await tester.runAsync(() async {
       final Stopwatch deadline = Stopwatch()..start();
@@ -177,17 +179,13 @@ void main() {
       );
       for (final TruthTableRow row in table.rows) {
         final CircuitGraph graph = _andGraph().copyWith(
-          nodes:
-              _andGraph().nodes
-                  .map(
-                    (CircuitNode node) =>
-                        node.type.isInput
-                            ? node.copyWith(
-                              inputValue: row.inputs[node.id] ?? false,
-                            )
-                            : node,
-                  )
-                  .toList(),
+          nodes: _andGraph().nodes
+              .map(
+                (CircuitNode node) => node.type.isInput
+                    ? node.copyWith(inputValue: row.inputs[node.id] ?? false)
+                    : node,
+              )
+              .toList(),
         );
         final SimulationResult report = CircuitValidator.simulate(graph);
         expect(report.signalOf('y'), isNotNull);

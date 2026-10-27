@@ -38,8 +38,7 @@ void main() {
             <String, Object?>{
               'name': 'app-release.aab',
               'size': 10,
-              'browser_download_url':
-                  'https://github.com/ScrollBots/Logic-Lab/releases/download/v1.2.0/app-release.aab',
+              'browser_download_url': 'https://github.com/ScrollBots/Logic-Lab/releases/download/v1.2.0/app-release.aab',
             },
           ],
         ),
@@ -57,14 +56,12 @@ void main() {
             <String, Object?>{
               'name': 'app-arm64-v8a-release.apk',
               'size': 1,
-              'browser_download_url':
-                  'https://github.com/ScrollBots/Logic-Lab/releases/download/v1.2.0/app-arm64-v8a-release.apk',
+              'browser_download_url': 'https://github.com/ScrollBots/Logic-Lab/releases/download/v1.2.0/app-arm64-v8a-release.apk',
             },
             <String, Object?>{
               'name': 'LogicLab-1.2.0-universal.apk',
               'size': 2,
-              'browser_download_url':
-                  'https://github.com/ScrollBots/Logic-Lab/releases/download/v1.2.0/LogicLab-1.2.0-universal.apk',
+              'browser_download_url': 'https://github.com/ScrollBots/Logic-Lab/releases/download/v1.2.0/LogicLab-1.2.0-universal.apk',
             },
           ],
         ),
@@ -79,8 +76,7 @@ void main() {
             <String, Object?>{
               'name': 'app-arm64-v8a-release.apk',
               'size': 1,
-              'browser_download_url':
-                  'https://github.com/ScrollBots/Logic-Lab/releases/download/v1.2.0/app-arm64-v8a-release.apk',
+              'browser_download_url': 'https://github.com/ScrollBots/Logic-Lab/releases/download/v1.2.0/app-arm64-v8a-release.apk',
             },
           ],
         ),

@@ -50,8 +50,7 @@ final List<LessonStep> kReviewBank = <LessonStep>[
     circuit: gateExercise(ComponentType.norGate),
     inputs: <String, bool>{'A': false, 'B': true},
     hints: <String>['NOR به یک ورودی ۱ واکنش نشان می‌دهد.'],
-    explanation:
-        'OR با یک ورودی ۱ خروجی ۱ می‌دهد و NOR آن را معکوس می‌کند؛ پس خروجی ۰ است.',
+    explanation: 'OR با یک ورودی ۱ خروجی ۱ می‌دهد و NOR آن را معکوس می‌کند؛ پس خروجی ۰ است.',
   ),
   PredictionStep(
     id: 'review_xor',
@@ -144,8 +143,7 @@ final List<LessonStep> kReviewBank = <LessonStep>[
       'قفل فقط تا وقتی EN=۱ است شفاف می‌ماند.',
       'پس از EN=۰، تغییر D روی Q اثر ندارد.',
     ],
-    explanation:
-        'در گام اول Q=۱ ذخیره شد و پس از بسته شدن قفل، هر دو تغییر D نادیده گرفته شد.',
+    explanation: 'در گام اول Q=۱ ذخیره شد و پس از بسته شدن قفل، هر دو تغییر D نادیده گرفته شد.',
   ),
   SequenceStep(
     id: 'review_flip_flop',

@@ -137,12 +137,12 @@ void main() {
       builder.connect(gate, probe, toPort: 0);
 
       final CircuitGraph graph = builder.build();
-      final LogicSignal first = CircuitSimulator(
-        graph,
-      ).evaluate().signalOf(probe.id);
-      final LogicSignal second = CircuitSimulator(
-        graph,
-      ).evaluate().signalOf(probe.id);
+      final LogicSignal first = CircuitSimulator(graph)
+          .evaluate()
+          .signalOf(probe.id);
+      final LogicSignal second = CircuitSimulator(graph)
+          .evaluate()
+          .signalOf(probe.id);
       expect(second, first);
     });
   });

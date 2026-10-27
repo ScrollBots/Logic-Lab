@@ -35,10 +35,9 @@ class _CircuitAnalysisScreenState extends State<CircuitAnalysisScreen> {
 
   Future<void> _pickComparison() async {
     final ProjectsController projects = context.read<ProjectsController>();
-    final List<CircuitProject> candidates =
-        projects.projects
-            .where((CircuitProject project) => project.id != widget.project.id)
-            .toList();
+    final List<CircuitProject> candidates = projects.projects
+        .where((CircuitProject project) => project.id != widget.project.id)
+        .toList();
     if (candidates.isEmpty) {
       _toast('مدار دیگری برای مقایسه وجود ندارد. ابتدا یک مدار دیگر بسازید.');
       return;
@@ -128,8 +127,8 @@ class _CircuitAnalysisScreenState extends State<CircuitAnalysisScreen> {
     final CircuitStatistics statistics = CircuitAnalyzer.statisticsOf(
       widget.graph,
     );
-    final SimulationResult simulation =
-        CircuitSimulator(widget.graph).evaluate();
+    final SimulationResult simulation = CircuitSimulator(widget.graph)
+        .evaluate();
 
     return Scaffold(
       appBar: AppBar(title: const Text('تحلیل مدار')),
@@ -209,8 +208,7 @@ class _CircuitAnalysisScreenState extends State<CircuitAnalysisScreen> {
                   children: <Widget>[
                     SectionHeader(
                       title: 'وضعیت محاسبه',
-                      subtitle:
-                          'نتیجه از اجرای شبیه‌ساز روی همین مدار به دست آمده است.',
+                      subtitle: 'نتیجه از اجرای شبیه‌ساز روی همین مدار به دست آمده است.',
                     ),
                     if (simulation.isValid)
                       const InfoBanner(
@@ -219,8 +217,8 @@ class _CircuitAnalysisScreenState extends State<CircuitAnalysisScreen> {
                             'مدار معتبر است و همه سیگنال‌ها مقدار قطعی دارند.',
                       )
                     else ...<Widget>[
-                      for (final CircuitProblem problem in simulation.errors
-                          .take(4))
+                      for (final CircuitProblem problem
+                          in simulation.errors.take(4))
                         Padding(
                           padding: const EdgeInsets.only(bottom: 8),
                           child: InfoBanner(
@@ -275,18 +273,15 @@ class _CircuitAnalysisScreenState extends State<CircuitAnalysisScreen> {
                         const LinearProgressIndicator(minHeight: 3)
                       else if (_result != null) ...<Widget>[
                         InfoBanner(
-                          tone:
-                              _result!.equivalent
-                                  ? InfoBannerTone.success
-                                  : InfoBannerTone.warning,
-                          icon:
-                              _result!.equivalent
-                                  ? Icons.verified_rounded
-                                  : Icons.warning_amber_rounded,
-                          message:
-                              _result!.equivalent
-                                  ? 'دو مدار برای همه ترکیب‌ها رفتار یکسانی دارند و هم‌ارز هستند.'
-                                  : _result!.mismatchDescription,
+                          tone: _result!.equivalent
+                              ? InfoBannerTone.success
+                              : InfoBannerTone.warning,
+                          icon: _result!.equivalent
+                              ? Icons.verified_rounded
+                              : Icons.warning_amber_rounded,
+                          message: _result!.equivalent
+                              ? 'دو مدار برای همه ترکیب‌ها رفتار یکسانی دارند و هم‌ارز هستند.'
+                              : _result!.mismatchDescription,
                         ),
                         const SizedBox(height: 10),
                         Row(
@@ -302,12 +297,11 @@ class _CircuitAnalysisScreenState extends State<CircuitAnalysisScreen> {
                             _Stat(
                               icon: Icons.flag_outlined,
                               label: 'اولین اختلاف',
-                              value:
-                                  _result!.firstMismatchIndex == null
-                                      ? '—'
-                                      : PersianFormat.digits(
-                                        _result!.firstMismatchIndex! + 1,
-                                      ),
+                              value: _result!.firstMismatchIndex == null
+                                  ? '—'
+                                  : PersianFormat.digits(
+                                      _result!.firstMismatchIndex! + 1,
+                                    ),
                             ),
                           ],
                         ),

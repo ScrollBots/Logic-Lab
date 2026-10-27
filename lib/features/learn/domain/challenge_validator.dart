@@ -58,18 +58,16 @@ class ChallengeValidator {
     }
 
     if (challenge.allowedGates != null) {
-      final Set<ComponentType> used =
-          graph.nodes
-              .where((CircuitNode node) => node.type.isGate)
-              .map((CircuitNode node) => node.type)
-              .toSet();
-      final List<String> disallowed =
-          used
-              .where(
-                (ComponentType type) => !challenge.allowedGates!.contains(type),
-              )
-              .map((ComponentType type) => type.technicalName)
-              .toList();
+      final Set<ComponentType> used = graph.nodes
+          .where((CircuitNode node) => node.type.isGate)
+          .map((CircuitNode node) => node.type)
+          .toSet();
+      final List<String> disallowed = used
+          .where(
+            (ComponentType type) => !challenge.allowedGates!.contains(type),
+          )
+          .map((ComponentType type) => type.technicalName)
+          .toList();
       if (disallowed.isNotEmpty) {
         return ChallengeResult(
           passed: false,
@@ -84,10 +82,9 @@ class ChallengeValidator {
 
     final SimulationResult report = CircuitValidator.simulate(graph);
     if (!report.isValid) {
-      final List<String> problems =
-          report.errors
-              .map((CircuitProblem problem) => problem.message)
-              .toList();
+      final List<String> problems = report.errors
+          .map((CircuitProblem problem) => problem.message)
+          .toList();
       return ChallengeResult(
         passed: false,
         title: 'مدار هنوز معتبر نیست',
@@ -107,10 +104,9 @@ class ChallengeValidator {
       for (int index = 0; index < table.outputs.length; index++) {
         outputIndexByLabel[table.outputs[index].label.trim()] = index;
       }
-      final List<String> missing =
-          byLabel.keys
-              .where((String label) => !outputIndexByLabel.containsKey(label))
-              .toList();
+      final List<String> missing = byLabel.keys
+          .where((String label) => !outputIndexByLabel.containsKey(label))
+          .toList();
       if (missing.isNotEmpty) {
         return ChallengeResult(
           passed: false,
@@ -135,8 +131,9 @@ class ChallengeValidator {
           final int outputIndex = outputIndexByLabel[entry.key]!;
           final bool? actual =
               table.rows[index].outputs[_outputKey(table.outputs[outputIndex])];
-          final bool expected =
-              index < entry.value.length ? entry.value[index] : false;
+          final bool expected = index < entry.value.length
+              ? entry.value[index]
+              : false;
           if (actual != expected) {
             rowMatches = false;
           }

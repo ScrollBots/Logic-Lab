@@ -21,20 +21,18 @@ void main() {
         UpdateMemory(lastCheckAt: checkedAt, skippedVersion: '1.2.0'),
       );
 
-      final UpdateMemory reloaded =
-          await SharedPreferencesUpdateStore(
-            await SharedPreferences.getInstance(),
-          ).load();
+      final UpdateMemory reloaded = await SharedPreferencesUpdateStore(
+        await SharedPreferences.getInstance(),
+      ).load();
 
       expect(reloaded.lastCheckAt, checkedAt);
       expect(reloaded.skippedVersion, '1.2.0');
     });
 
     test('an empty store reads as "never checked"', () async {
-      final UpdateMemory memory =
-          await SharedPreferencesUpdateStore(
-            await SharedPreferences.getInstance(),
-          ).load();
+      final UpdateMemory memory = await SharedPreferencesUpdateStore(
+        await SharedPreferences.getInstance(),
+      ).load();
 
       expect(memory.lastCheckAt, isNull);
       expect(memory.skippedVersion, isNull);
@@ -44,10 +42,9 @@ void main() {
       SharedPreferences.setMockInitialValues(<String, Object>{
         'logic_lab.updates.v1': 'this-is-not-json',
       });
-      final UpdateMemory memory =
-          await SharedPreferencesUpdateStore(
-            await SharedPreferences.getInstance(),
-          ).load();
+      final UpdateMemory memory = await SharedPreferencesUpdateStore(
+        await SharedPreferences.getInstance(),
+      ).load();
 
       expect(memory.lastCheckAt, isNull);
       expect(memory.skippedVersion, isNull);
@@ -57,10 +54,9 @@ void main() {
       SharedPreferences.setMockInitialValues(<String, Object>{
         'logic_lab.updates.v1': '{"lastCheckAt": 42, "skippedVersion": 7}',
       });
-      final UpdateMemory memory =
-          await SharedPreferencesUpdateStore(
-            await SharedPreferences.getInstance(),
-          ).load();
+      final UpdateMemory memory = await SharedPreferencesUpdateStore(
+        await SharedPreferences.getInstance(),
+      ).load();
 
       expect(memory.lastCheckAt, isNull);
       expect(memory.skippedVersion, isNull);

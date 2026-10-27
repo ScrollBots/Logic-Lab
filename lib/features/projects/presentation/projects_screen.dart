@@ -175,8 +175,8 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
   }
 
   Future<void> _rename(CircuitProject project) async {
-    final ProjectsController projectsController =
-        context.read<ProjectsController>();
+    final ProjectsController projectsController = context
+        .read<ProjectsController>();
     final TextEditingController controller = TextEditingController(
       text: project.name,
     );
@@ -462,74 +462,74 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                   child: projects.isLoading
                       ? const Center(child: CircularProgressIndicator())
                       : projects.loadError != null
-                          ? SingleChildScrollView(
-                              child: InfoBanner(
-                                tone: InfoBannerTone.danger,
-                                message: projects.loadError!,
-                              ),
-                            )
-                          : visible.isEmpty
-                              ? SingleChildScrollView(
-                                  child: EmptyState(
-                                    icon: _query.isEmpty
-                                        ? Icons.account_tree_outlined
-                                        : Icons.search_off_rounded,
-                                    title: _query.isEmpty
-                                        ? 'هنود مداری ذخیره نشده'
-                                        : 'مداری با این نام پیدا نشد',
-                                    message: _query.isEmpty
-                                        ? 'یک مدار خالی بسازید یا یک فایل JSON وارد کنید. '
-                                            'همه مدارها آفلاین روی دستگاه شما ذخیره می‌شوند.'
-                                        : 'عبارت دیگری را امتحان کنید یا فیلتر جست‌وجو را پاک کنید.',
-                                    action: _query.isEmpty
-                                        ? FilledButton.icon(
-                                            onPressed: () =>
-                                                EditorLauncher.createAndOpen(
-                                                  context,
-                                                ),
-                                            icon: const Icon(Icons.add_rounded),
-                                            label: const Text('ساخت مدار'),
-                                          )
-                                        : OutlinedButton(
-                                            onPressed: () {
-                                              _searchController.clear();
-                                              setState(() => _query = '');
-                                            },
-                                            child: const Text('پاک کردن جست‌وجو'),
-                                          ),
+                      ? SingleChildScrollView(
+                          child: InfoBanner(
+                            tone: InfoBannerTone.danger,
+                            message: projects.loadError!,
+                          ),
+                        )
+                      : visible.isEmpty
+                      ? SingleChildScrollView(
+                          child: EmptyState(
+                            icon: _query.isEmpty
+                                ? Icons.account_tree_outlined
+                                : Icons.search_off_rounded,
+                            title: _query.isEmpty
+                                ? 'هنود مداری ذخیره نشده'
+                                : 'مداری با این نام پیدا نشد',
+                            message: _query.isEmpty
+                                ? 'یک مدار خالی بسازید یا یک فایل JSON وارد کنید. '
+                                      'همه مدارها آفلاین روی دستگاه شما ذخیره می‌شوند.'
+                                : 'عبارت دیگری را امتحان کنید یا فیلتر جست‌وجو را پاک کنید.',
+                            action: _query.isEmpty
+                                ? FilledButton.icon(
+                                    onPressed: () =>
+                                        EditorLauncher.createAndOpen(context),
+                                    icon: const Icon(Icons.add_rounded),
+                                    label: const Text('ساخت مدار'),
+                                  )
+                                : OutlinedButton(
+                                    onPressed: () {
+                                      _searchController.clear();
+                                      setState(() => _query = '');
+                                    },
+                                    child: const Text('پاک کردن جست‌وجو'),
                                   ),
-                                )
-                              : LayoutBuilder(
-                                  builder: (
-                                    BuildContext context,
-                                    BoxConstraints constraints,
-                                  ) {
-                                    final int columns = constraints.maxWidth > 900
-                                        ? 3
-                                        : constraints.maxWidth > 580
-                                            ? 2
-                                            : 1;
-                                    return GridView.builder(
-                                      padding: const EdgeInsets.only(bottom: 8),
-                                      gridDelegate:
-                                          SliverGridDelegateWithFixedCrossAxisCount(
+                          ),
+                        )
+                      : LayoutBuilder(
+                          builder:
+                              (
+                                BuildContext context,
+                                BoxConstraints constraints,
+                              ) {
+                                final int columns = constraints.maxWidth > 900
+                                    ? 3
+                                    : constraints.maxWidth > 580
+                                    ? 2
+                                    : 1;
+                                return GridView.builder(
+                                  padding: const EdgeInsets.only(bottom: 8),
+                                  gridDelegate:
+                                      SliverGridDelegateWithFixedCrossAxisCount(
                                         crossAxisCount: columns,
                                         mainAxisSpacing: 12,
                                         crossAxisSpacing: 12,
-                                        childAspectRatio:
-                                            columns == 1 ? 1.35 : 1.05,
+                                        childAspectRatio: columns == 1
+                                            ? 1.35
+                                            : 1.05,
                                       ),
-                                      itemCount: visible.length,
-                                      itemBuilder: (
-                                        BuildContext context,
-                                        int index,
-                                      ) {
+                                  itemCount: visible.length,
+                                  itemBuilder:
+                                      (BuildContext context, int index) {
                                         final CircuitProject project =
                                             visible[index];
                                         return _ProjectCard(
                                           project: project,
                                           isSelectMode: _selectMode,
-                                          selected: _selected.contains(project.id),
+                                          selected: _selected.contains(
+                                            project.id,
+                                          ),
                                           onToggleSelection: () =>
                                               _toggleSelection(project.id),
                                           onOpen: () => EditorLauncher.open(
@@ -537,14 +537,16 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                                             project,
                                           ),
                                           onRename: () => _rename(project),
-                                          onDuplicate: () => _duplicate(project),
+                                          onDuplicate: () =>
+                                              _duplicate(project),
                                           onShare: () => _share(project),
-                                          onDelete: () => _confirmDelete(project),
+                                          onDelete: () =>
+                                              _confirmDelete(project),
                                         );
                                       },
-                                    );
-                                  },
-                                ),
+                                );
+                              },
+                        ),
                 ),
               ],
             ),
@@ -758,11 +760,7 @@ class SelectionCheckbox extends StatelessWidget {
       child: IconButton(
         icon: isSelected
             ? const Icon(Icons.check_rounded, size: 16, color: Colors.white)
-            : const Icon(
-                Icons.check_outlined,
-                size: 16,
-                color: Colors.grey,
-              ),
+            : const Icon(Icons.check_outlined, size: 16, color: Colors.grey),
         onPressed: onChanged,
         tooltip: isSelected ? 'انتخاب شده' : 'انتخاب',
       ),
@@ -799,4 +797,3 @@ class _MetaChip extends StatelessWidget {
     );
   }
 }
-

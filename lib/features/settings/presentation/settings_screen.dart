@@ -94,8 +94,7 @@ class SettingsScreen extends StatelessWidget {
                   const Divider(height: 24),
                   _SwitchRow(
                     title: 'انیمیشن‌ها',
-                    subtitle:
-                        'با خاموش کردن، جابه‌جایی‌ها و تغییرهای بصری فوری انجام می‌شوند.',
+                    subtitle: 'با خاموش کردن، جابه‌جایی‌ها و تغییرهای بصری فوری انجام می‌شوند.',
                     value: settings.animationsEnabled,
                     onChanged: settings.setAnimationsEnabled,
                   ),
@@ -262,10 +261,9 @@ class _PaletteTile extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
-            color:
-                selected
-                    ? palette.seed.withValues(alpha: 0.08)
-                    : theme.colorScheme.surfaceContainerLowest,
+            color: selected
+                ? palette.seed.withValues(alpha: 0.08)
+                : theme.colorScheme.surfaceContainerLowest,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: selected ? palette.seed : theme.colorScheme.outlineVariant,
@@ -404,10 +402,9 @@ class _ColorPickerDialogState extends State<_ColorPickerDialog> {
             child: Text(
               'Logic Lab',
               style: theme.textTheme.titleMedium?.copyWith(
-                color:
-                    _color.toColor().computeLuminance() > 0.5
-                        ? Colors.black87
-                        : Colors.white,
+                color: _color.toColor().computeLuminance() > 0.5
+                    ? Colors.black87
+                    : Colors.white,
               ),
             ),
           ),
@@ -632,21 +629,15 @@ class _ColorDot extends StatelessWidget {
             color: color,
             shape: BoxShape.circle,
             border: Border.all(
-              color:
-                  selected
-                      ? Theme.of(context).colorScheme.onSurface
-                      : Colors.transparent,
+              color: selected
+                  ? Theme.of(context).colorScheme.onSurface
+                  : Colors.transparent,
               width: 2.5,
             ),
           ),
-          child:
-              selected
-                  ? const Icon(
-                    Icons.check_rounded,
-                    color: Colors.white,
-                    size: 18,
-                  )
-                  : null,
+          child: selected
+              ? const Icon(Icons.check_rounded, color: Colors.white, size: 18)
+              : null,
         ),
       ),
     );
@@ -720,36 +711,35 @@ class _DataToolsState extends State<_DataTools> {
     }
     final bool? confirmed = await showDialog<bool>(
       context: context,
-      builder:
-          (BuildContext context) => AlertDialog(
-            title: const Text('بازیابی پشتیبان'),
-            content: Text(
-              'این پشتیبان شامل ${PersianFormat.digits(backup.projects.length)} مدار است. '
-              'با بازیابی، مدارهای فعلی جایگزین می‌شوند.',
-            ),
-            actions: <Widget>[
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text('انصراف'),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: const Text('جایگزینی و بازیابی'),
-              ),
-            ],
+      builder: (BuildContext context) => AlertDialog(
+        title: const Text('بازیابی پشتیبان'),
+        content: Text(
+          'این پشتیبان شامل ${PersianFormat.digits(backup.projects.length)} مدار است. '
+          'با بازیابی، مدارهای فعلی جایگزین می‌شوند.',
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('انصراف'),
           ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('جایگزینی و بازیابی'),
+          ),
+        ],
+      ),
     );
     if (confirmed != true || !mounted) {
       return;
     }
     setState(() => _busy = true);
     try {
-      final ProjectsController projectsController =
-          context.read<ProjectsController>();
-      final LearningController learningController =
-          context.read<LearningController>();
-      final SettingsController settingsController =
-          context.read<SettingsController>();
+      final ProjectsController projectsController = context
+          .read<ProjectsController>();
+      final LearningController learningController = context
+          .read<LearningController>();
+      final SettingsController settingsController = context
+          .read<SettingsController>();
       await projectsController.replaceAll(backup.projects);
       await learningController.restoreAll(backup.progress);
       final LearningState? learningState = backup.learningState;
@@ -781,37 +771,36 @@ class _DataToolsState extends State<_DataTools> {
   Future<void> _deleteAll() async {
     final bool? confirmed = await showDialog<bool>(
       context: context,
-      builder:
-          (BuildContext context) => AlertDialog(
-            title: const Text('حذف همه داده‌ها'),
-            content: const Text(
-              'تمام مدارهای ذخیره‌شده، پیشرفت یادگیری و تنظیمات بازنشانی می‌شوند. '
-              'این عمل قابل بازگشت نیست. پیش از ادامه، پشتیبان بگیرید.',
-            ),
-            actions: <Widget>[
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text('انصراف'),
-              ),
-              FilledButton(
-                style: FilledButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.error,
-                ),
-                onPressed: () => Navigator.pop(context, true),
-                child: const Text('حذف همه داده‌ها'),
-              ),
-            ],
+      builder: (BuildContext context) => AlertDialog(
+        title: const Text('حذف همه داده‌ها'),
+        content: const Text(
+          'تمام مدارهای ذخیره‌شده، پیشرفت یادگیری و تنظیمات بازنشانی می‌شوند. '
+          'این عمل قابل بازگشت نیست. پیش از ادامه، پشتیبان بگیرید.',
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('انصراف'),
           ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('حذف همه داده‌ها'),
+          ),
+        ],
+      ),
     );
     if (confirmed != true || !mounted) {
       return;
     }
     setState(() => _busy = true);
     try {
-      final ProjectsController projectsController =
-          context.read<ProjectsController>();
-      final LearningController learningController =
-          context.read<LearningController>();
+      final ProjectsController projectsController = context
+          .read<ProjectsController>();
+      final LearningController learningController = context
+          .read<LearningController>();
       await projectsController.deleteAllProjects();
       await learningController.resetAll();
       if (mounted) {
@@ -893,8 +882,9 @@ class _ActionRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
-    final Color color =
-        destructive ? theme.colorScheme.error : theme.colorScheme.primary;
+    final Color color = destructive
+        ? theme.colorScheme.error
+        : theme.colorScheme.primary;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
@@ -1013,14 +1003,13 @@ class _AboutTile extends StatelessWidget {
           children: <Widget>[
             Expanded(
               child: OutlinedButton.icon(
-                onPressed:
-                    () => showLicensePage(
-                      context: context,
-                      applicationName: AppInfo.appName,
-                      applicationVersion: AppInfo.versionDisplay,
-                      applicationLegalese:
-                          '${AppInfo.appSubtitle} — فونت وزیرمتن و JetBrains Mono با مجوز SIL Open Font License منتشر شده‌اند.',
-                    ),
+                onPressed: () => showLicensePage(
+                  context: context,
+                  applicationName: AppInfo.appName,
+                  applicationVersion: AppInfo.versionDisplay,
+                  applicationLegalese:
+                      '${AppInfo.appSubtitle} — فونت وزیرمتن و JetBrains Mono با مجوز SIL Open Font License منتشر شده‌اند.',
+                ),
                 icon: const Icon(Icons.description_outlined),
                 label: const Text('مجوزها'),
               ),

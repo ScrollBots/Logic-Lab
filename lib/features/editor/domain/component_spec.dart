@@ -87,16 +87,22 @@ class ComponentState {
 }
 
 /// Evaluates a component and returns one signal per output port.
-typedef ModuleEvaluator =
-    List<LogicSignal> Function(List<LogicSignal> inputs, ComponentState state);
+typedef ModuleEvaluator = List<LogicSignal> Function(
+  List<LogicSignal> inputs,
+  ComponentState state,
+);
 
 /// Updates the state of a level-sensitive component while it is enabled.
-typedef LatchUpdater =
-    ComponentState Function(List<LogicSignal> inputs, ComponentState state);
+typedef LatchUpdater = ComponentState Function(
+  List<LogicSignal> inputs,
+  ComponentState state,
+);
 
 /// Updates the state of an edge-triggered component on a rising clock edge.
-typedef EdgeUpdater =
-    ComponentState Function(List<LogicSignal> inputs, ComponentState state);
+typedef EdgeUpdater = ComponentState Function(
+  List<LogicSignal> inputs,
+  ComponentState state,
+);
 
 /// Complete description of one component type.
 class ComponentSpec {
@@ -397,8 +403,7 @@ class ComponentLibrary {
           type: ComponentType.triStateBuffer,
           kind: ComponentKind.gate,
           title: 'بافر سه‌حالته',
-          description:
-              'با فعال شدن EN خروجی را می‌راند و در غیر این صورت حالت Z می‌گیرد',
+          description: 'با فعال شدن EN خروجی را می‌راند و در غیر این صورت حالت Z می‌گیرد',
           inputLabels: <String>['A', 'EN'],
           outputLabels: <String>['Y'],
           minInputs: 2,
@@ -738,8 +743,7 @@ class ComponentLibrary {
           type: ComponentType.shiftRegister4,
           kind: ComponentKind.sequential,
           title: 'رجیستر شیفت ۴ بیتی',
-          description:
-              'با هر لبه کلاک داده یک بیت جابه‌جا می‌شود (DIR=۰ راست، DIR=۱ چپ)',
+          description: 'با هر لبه کلاک داده یک بیت جابه‌جا می‌شود (DIR=۰ راست، DIR=۱ چپ)',
           inputLabels: <String>['D', 'DIR', 'CLK'],
           outputLabels: <String>['Q0', 'Q1', 'Q2', 'Q3'],
           minInputs: 3,
@@ -1492,21 +1496,19 @@ class ComponentLibrary {
     if (inputs.length < 3) {
       return state;
     }
-    final List<LogicSignal> current =
-        state.bits.length == 4
-            ? state.bits
-            : const <LogicSignal>[
-              LogicSignal.low,
-              LogicSignal.low,
-              LogicSignal.low,
-              LogicSignal.low,
-            ];
+    final List<LogicSignal> current = state.bits.length == 4
+        ? state.bits
+        : const <LogicSignal>[
+            LogicSignal.low,
+            LogicSignal.low,
+            LogicSignal.low,
+            LogicSignal.low,
+          ];
     final LogicSignal data = _asData(inputs[0]);
     final bool shiftRight = inputs[1] == LogicSignal.low;
-    final List<LogicSignal> next =
-        shiftRight
-            ? <LogicSignal>[data, current[0], current[1], current[2]]
-            : <LogicSignal>[current[1], current[2], current[3], data];
+    final List<LogicSignal> next = shiftRight
+        ? <LogicSignal>[data, current[0], current[1], current[2]]
+        : <LogicSignal>[current[1], current[2], current[3], data];
     return state.copyWith(bits: next, initialized: true);
   }
 
@@ -1528,15 +1530,14 @@ class ComponentLibrary {
         initialized: true,
       );
     }
-    final List<LogicSignal> current =
-        state.bits.length == 4
-            ? state.bits
-            : const <LogicSignal>[
-              LogicSignal.low,
-              LogicSignal.low,
-              LogicSignal.low,
-              LogicSignal.low,
-            ];
+    final List<LogicSignal> current = state.bits.length == 4
+        ? state.bits
+        : const <LogicSignal>[
+            LogicSignal.low,
+            LogicSignal.low,
+            LogicSignal.low,
+            LogicSignal.low,
+          ];
     final int value = _bitsToInt(current) + 1 & 0xF;
     return state.copyWith(bits: _intToBits(value), initialized: true);
   }
@@ -1559,19 +1560,17 @@ class ComponentLibrary {
         initialized: true,
       );
     }
-    final List<LogicSignal> current =
-        state.bits.length == 4
-            ? state.bits
-            : const <LogicSignal>[
-              LogicSignal.low,
-              LogicSignal.low,
-              LogicSignal.low,
-              LogicSignal.low,
-            ];
-    final int value =
-        inputs[2] == LogicSignal.high
-            ? _bitsToInt(current) + 1 & 0xF
-            : _bitsToInt(current) - 1 & 0xF;
+    final List<LogicSignal> current = state.bits.length == 4
+        ? state.bits
+        : const <LogicSignal>[
+            LogicSignal.low,
+            LogicSignal.low,
+            LogicSignal.low,
+            LogicSignal.low,
+          ];
+    final int value = inputs[2] == LogicSignal.high
+        ? _bitsToInt(current) + 1 & 0xF
+        : _bitsToInt(current) - 1 & 0xF;
     return state.copyWith(bits: _intToBits(value), initialized: true);
   }
 

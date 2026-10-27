@@ -25,11 +25,11 @@ class MemoryProjectRepository implements ProjectRepository {
 
   @override
   Future<List<CircuitProject>> loadAll() async {
-    final List<CircuitProject> projects =
-        _projects.values.toList()..sort(
-          (CircuitProject a, CircuitProject b) =>
-              b.updatedAt.compareTo(a.updatedAt),
-        );
+    final List<CircuitProject> projects = _projects.values.toList()
+      ..sort(
+        (CircuitProject a, CircuitProject b) =>
+            b.updatedAt.compareTo(a.updatedAt),
+      );
     return projects;
   }
 

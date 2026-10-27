@@ -84,16 +84,16 @@ class UpdateSettingsContent extends StatelessWidget {
             const SizedBox(width: 12),
             OutlinedButton.icon(
               key: const Key('update-check-now'),
-              onPressed:
-                  updates.isChecking ? null : () => _checkNow(context, updates),
-              icon:
-                  updates.isChecking
-                      ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                      : const Icon(Icons.refresh_rounded),
+              onPressed: updates.isChecking
+                  ? null
+                  : () => _checkNow(context, updates),
+              icon: updates.isChecking
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.refresh_rounded),
               label: Text(updates.isChecking ? 'در حال بررسی…' : 'بررسی الان'),
             ),
           ],
@@ -126,12 +126,11 @@ class UpdateSettingsContent extends StatelessWidget {
                 ),
                 TextButton(
                   key: const Key('update-open-prompt'),
-                  onPressed:
-                      () => promptForUpdate(
-                        context,
-                        controller: updates,
-                        release: available,
-                      ),
+                  onPressed: () => promptForUpdate(
+                    context,
+                    controller: updates,
+                    release: available,
+                  ),
                   child: const Text('جزئیات'),
                 ),
               ],

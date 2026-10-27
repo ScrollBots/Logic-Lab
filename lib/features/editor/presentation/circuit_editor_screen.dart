@@ -77,26 +77,25 @@ class _CircuitEditorScreenState extends State<CircuitEditorScreen> {
     if (_editor.saveStatus == SaveStatus.error) {
       final bool? leave = await showDialog<bool>(
         context: context,
-        builder:
-            (BuildContext context) => AlertDialog(
-              title: const Text('ذخیره انجام نشد'),
-              content: const Text(
-                'آخرین تغییرات روی این دستگاه ذخیره نشده است. می‌خواهید بدون ذخیره خارج شوید؟',
-              ),
-              actions: <Widget>[
-                TextButton(
-                  onPressed: () => Navigator.pop(context, false),
-                  child: const Text('تلاش دوباره'),
-                ),
-                FilledButton(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.error,
-                  ),
-                  onPressed: () => Navigator.pop(context, true),
-                  child: const Text('خروج بدون ذخیره'),
-                ),
-              ],
+        builder: (BuildContext context) => AlertDialog(
+          title: const Text('ذخیره انجام نشد'),
+          content: const Text(
+            'آخرین تغییرات روی این دستگاه ذخیره نشده است. می‌خواهید بدون ذخیره خارج شوید؟',
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('تلاش دوباره'),
             ),
+            FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.error,
+              ),
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('خروج بدون ذخیره'),
+            ),
+          ],
+        ),
       );
       if (!mounted) {
         return;
@@ -173,11 +172,8 @@ class _CircuitEditorScreenState extends State<CircuitEditorScreen> {
   Future<void> _openTruthTable() async {
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder:
-            (BuildContext context) => TruthTableScreen(
-              projectName: _editor.name,
-              graph: _editor.graph,
-            ),
+        builder: (BuildContext context) =>
+            TruthTableScreen(projectName: _editor.name, graph: _editor.graph),
       ),
     );
   }
@@ -205,26 +201,25 @@ class _CircuitEditorScreenState extends State<CircuitEditorScreen> {
   Future<void> _deleteProject() async {
     final bool? confirmed = await showDialog<bool>(
       context: context,
-      builder:
-          (BuildContext context) => AlertDialog(
-            title: const Text('حذف مدار'),
-            content: Text(
-              'مدار «${_editor.name}» برای همیشه حذف می‌شود. این عمل قابل بازگشت نیست.',
-            ),
-            actions: <Widget>[
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text('انصراف'),
-              ),
-              FilledButton(
-                style: FilledButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.error,
-                ),
-                onPressed: () => Navigator.pop(context, true),
-                child: const Text('حذف کن'),
-              ),
-            ],
+      builder: (BuildContext context) => AlertDialog(
+        title: const Text('حذف مدار'),
+        content: Text(
+          'مدار «${_editor.name}» برای همیشه حذف می‌شود. این عمل قابل بازگشت نیست.',
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('انصراف'),
           ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('حذف کن'),
+          ),
+        ],
+      ),
     );
     if (confirmed != true) {
       return;
@@ -272,19 +267,18 @@ class _CircuitEditorScreenState extends State<CircuitEditorScreen> {
       isScrollControlled: true,
       useSafeArea: true,
       showDragHandle: true,
-      builder:
-          (BuildContext context) => _NodeSettingsSheet(
-            editor: _editor,
-            node: node,
-            onDelete: () {
-              Navigator.pop(context);
-              _editor.deleteSelected();
-            },
-            onDuplicate: () {
-              Navigator.pop(context);
-              _editor.duplicateSelected();
-            },
-          ),
+      builder: (BuildContext context) => _NodeSettingsSheet(
+        editor: _editor,
+        node: node,
+        onDelete: () {
+          Navigator.pop(context);
+          _editor.deleteSelected();
+        },
+        onDuplicate: () {
+          Navigator.pop(context);
+          _editor.duplicateSelected();
+        },
+      ),
     );
   }
 
@@ -313,62 +307,59 @@ class _CircuitEditorScreenState extends State<CircuitEditorScreen> {
     }
     await showDialog<void>(
       context: context,
-      builder:
-          (BuildContext context) => AlertDialog(
-            icon: Icon(
-              result.passed
-                  ? Icons.verified_rounded
-                  : Icons.assignment_late_rounded,
-              color:
-                  result.passed
-                      ? LogicLabColors.of(context).success
-                      : Theme.of(context).colorScheme.error,
-            ),
-            title: Text(result.title),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Text(result.message),
-                if (result.details.isNotEmpty) ...<Widget>[
-                  const SizedBox(height: 12),
-                  for (final String detail in result.details)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 4),
-                      child: TechnicalText(
-                        detail,
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    ),
-                ],
-                if (!result.passed) ...<Widget>[
-                  const SizedBox(height: 12),
-                  InfoBanner(
-                    tone: InfoBannerTone.neutral,
-                    icon: Icons.lightbulb_outline_rounded,
-                    message: 'راهنما: ${challenge.hint}',
+      builder: (BuildContext context) => AlertDialog(
+        icon: Icon(
+          result.passed
+              ? Icons.verified_rounded
+              : Icons.assignment_late_rounded,
+          color: result.passed
+              ? LogicLabColors.of(context).success
+              : Theme.of(context).colorScheme.error,
+        ),
+        title: Text(result.title),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text(result.message),
+            if (result.details.isNotEmpty) ...<Widget>[
+              const SizedBox(height: 12),
+              for (final String detail in result.details)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: TechnicalText(
+                    detail,
+                    style: Theme.of(context).textTheme.bodySmall,
                   ),
-                ],
-              ],
-            ),
-            actions: <Widget>[
-              FilledButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('متوجه شدم'),
+                ),
+            ],
+            if (!result.passed) ...<Widget>[
+              const SizedBox(height: 12),
+              InfoBanner(
+                tone: InfoBannerTone.neutral,
+                icon: Icons.lightbulb_outline_rounded,
+                message: 'راهنما: ${challenge.hint}',
               ),
             ],
+          ],
+        ),
+        actions: <Widget>[
+          FilledButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('متوجه شدم'),
           ),
+        ],
+      ),
     );
   }
 
   Future<void> _openAnalysis() async {
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder:
-            (BuildContext context) => CircuitAnalysisScreen(
-              project: _editor.project,
-              graph: _editor.graph,
-            ),
+        builder: (BuildContext context) => CircuitAnalysisScreen(
+          project: _editor.project,
+          graph: _editor.graph,
+        ),
       ),
     );
   }
@@ -399,8 +390,7 @@ class _CircuitEditorScreenState extends State<CircuitEditorScreen> {
                 const InfoBanner(
                   tone: InfoBannerTone.success,
                   icon: Icons.verified_rounded,
-                  message:
-                      'همه اتصال‌ها معتبر است و مدار یک مقدار قطعی برای هر خروجی دارد.',
+                  message: 'همه اتصال‌ها معتبر است و مدار یک مقدار قطعی برای هر خروجی دارد.',
                 )
               else
                 Flexible(
@@ -412,10 +402,9 @@ class _CircuitEditorScreenState extends State<CircuitEditorScreen> {
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 8),
                         child: InfoBanner(
-                          tone:
-                              problem.isError
-                                  ? InfoBannerTone.danger
-                                  : InfoBannerTone.warning,
+                          tone: problem.isError
+                              ? InfoBannerTone.danger
+                              : InfoBannerTone.warning,
                           message: problem.message,
                         ),
                       );
@@ -535,8 +524,8 @@ class _CircuitEditorScreenState extends State<CircuitEditorScreen> {
                     break;
                 }
               },
-              itemBuilder:
-                  (BuildContext context) => const <PopupMenuEntry<String>>[
+              itemBuilder: (BuildContext context) =>
+                  const <PopupMenuEntry<String>>[
                     PopupMenuItem<String>(
                       value: 'rename',
                       child: ListTile(
@@ -631,10 +620,8 @@ class _CircuitEditorScreenState extends State<CircuitEditorScreen> {
                                   onSettings: _showNodeSettings,
                                   onTruthTable: _openTruthTable,
                                   onReport: _showCircuitReport,
-                                  onToggleGrid:
-                                      () => setState(
-                                        () => _showGrid = !_showGrid,
-                                      ),
+                                  onToggleGrid: () =>
+                                      setState(() => _showGrid = !_showGrid),
                                   showGrid: _showGrid,
                                   haptics: settings.hapticsEnabled,
                                 ),
@@ -819,46 +806,42 @@ class _EditorToolbar extends StatelessWidget {
             _ToolChip(
               icon: Icons.undo_rounded,
               label: 'بازگشت',
-              onTap:
-                  editor.canUndo
-                      ? () {
-                        AppHaptics.selection(haptics);
-                        editor.undo();
-                      }
-                      : null,
+              onTap: editor.canUndo
+                  ? () {
+                      AppHaptics.selection(haptics);
+                      editor.undo();
+                    }
+                  : null,
             ),
             _ToolChip(
               icon: Icons.redo_rounded,
               label: 'تکرار',
-              onTap:
-                  editor.canRedo
-                      ? () {
-                        AppHaptics.selection(haptics);
-                        editor.redo();
-                      }
-                      : null,
+              onTap: editor.canRedo
+                  ? () {
+                      AppHaptics.selection(haptics);
+                      editor.redo();
+                    }
+                  : null,
             ),
             _ToolChip(
               icon: Icons.copy_all_rounded,
               label: 'تکثیر',
-              onTap:
-                  editor.selectedNode == null
-                      ? null
-                      : () {
-                        AppHaptics.selection(haptics);
-                        editor.duplicateSelected();
-                      },
+              onTap: editor.selectedNode == null
+                  ? null
+                  : () {
+                      AppHaptics.selection(haptics);
+                      editor.duplicateSelected();
+                    },
             ),
             _ToolChip(
               icon: Icons.delete_outline_rounded,
               label: 'حذف',
-              onTap:
-                  editor.hasSelection
-                      ? () {
-                        AppHaptics.selection(haptics);
-                        editor.deleteSelected();
-                      }
-                      : null,
+              onTap: editor.hasSelection
+                  ? () {
+                      AppHaptics.selection(haptics);
+                      editor.deleteSelected();
+                    }
+                  : null,
             ),
             _ToolChip(
               icon: Icons.tune_rounded,
@@ -892,14 +875,12 @@ class _EditorToolbar extends StatelessWidget {
               onTap: canvasController.zoomIn,
             ),
             _ToolChip(
-              icon:
-                  editor.gridSnapEnabled
-                      ? Icons.grid_on_rounded
-                      : Icons.grid_off_rounded,
-              label:
-                  editor.gridSnapEnabled
-                      ? 'چسبیدن به شبکه روشن'
-                      : 'چسبیدن به شبکه خاموش',
+              icon: editor.gridSnapEnabled
+                  ? Icons.grid_on_rounded
+                  : Icons.grid_off_rounded,
+              label: editor.gridSnapEnabled
+                  ? 'چسبیدن به شبکه روشن'
+                  : 'چسبیدن به شبکه خاموش',
               active: editor.gridSnapEnabled,
               onTap: () {
                 AppHaptics.selection(haptics);
@@ -955,20 +936,18 @@ class _ToolChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     final bool enabled = onTap != null;
-    final Color background =
-        primary
-            ? theme.colorScheme.primary
-            : active
-            ? theme.colorScheme.primary.withValues(alpha: 0.1)
-            : theme.colorScheme.surfaceContainerLowest;
-    final Color foreground =
-        primary
-            ? theme.colorScheme.onPrimary
-            : active
-            ? theme.colorScheme.primary
-            : enabled
-            ? theme.colorScheme.onSurface
-            : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.45);
+    final Color background = primary
+        ? theme.colorScheme.primary
+        : active
+        ? theme.colorScheme.primary.withValues(alpha: 0.1)
+        : theme.colorScheme.surfaceContainerLowest;
+    final Color foreground = primary
+        ? theme.colorScheme.onPrimary
+        : active
+        ? theme.colorScheme.primary
+        : enabled
+        ? theme.colorScheme.onSurface
+        : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.45);
     return Padding(
       padding: const EdgeInsetsDirectional.only(start: 5),
       child: Tooltip(
@@ -1027,74 +1006,72 @@ class _FeedbackOverlay extends StatelessWidget {
     return IgnorePointer(
       ignoring: feedback == null,
       child: AnimatedSwitcher(
-        duration:
-            animationsEnabled && !MediaQuery.disableAnimationsOf(context)
-                ? const Duration(milliseconds: 220)
-                : Duration.zero,
-        child:
-            feedback == null
-                ? const SizedBox.shrink()
-                : Center(
-                  key: ValueKey<String>(feedback.message),
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 520),
-                    child: Material(
-                      color: Colors.transparent,
-                      child: Container(
-                        padding: const EdgeInsets.fromLTRB(12, 9, 8, 9),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .surfaceContainerLowest
-                              .withValues(alpha: 0.96),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: _toneColor(
-                              context,
-                              feedback.tone,
-                            ).withValues(alpha: 0.35),
+        duration: animationsEnabled && !MediaQuery.disableAnimationsOf(context)
+            ? const Duration(milliseconds: 220)
+            : Duration.zero,
+        child: feedback == null
+            ? const SizedBox.shrink()
+            : Center(
+                key: ValueKey<String>(feedback.message),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 520),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: Container(
+                      padding: const EdgeInsets.fromLTRB(12, 9, 8, 9),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .surfaceContainerLowest
+                            .withValues(alpha: 0.96),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: _toneColor(
+                            context,
+                            feedback.tone,
+                          ).withValues(alpha: 0.35),
+                        ),
+                        boxShadow: <BoxShadow>[
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.08),
+                            blurRadius: 14,
+                            offset: const Offset(0, 4),
                           ),
-                          boxShadow: <BoxShadow>[
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.08),
-                              blurRadius: 14,
-                              offset: const Offset(0, 4),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: <Widget>[
+                          Icon(
+                            _toneIcon(feedback.tone),
+                            size: 17,
+                            color: _toneColor(context, feedback.tone),
+                          ),
+                          const SizedBox(width: 8),
+                          Flexible(
+                            child: Text(
+                              feedback.message,
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurface,
+                                  ),
                             ),
-                          ],
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: <Widget>[
-                            Icon(
-                              _toneIcon(feedback.tone),
-                              size: 17,
-                              color: _toneColor(context, feedback.tone),
-                            ),
-                            const SizedBox(width: 8),
-                            Flexible(
-                              child: Text(
-                                feedback.message,
-                                style: Theme.of(
-                                  context,
-                                ).textTheme.bodySmall?.copyWith(
-                                  color:
-                                      Theme.of(context).colorScheme.onSurface,
-                                ),
-                              ),
-                            ),
-                            IconButton(
-                              tooltip: 'بستن پیام',
-                              onPressed: editor.clearFeedback,
-                              iconSize: 16,
-                              visualDensity: VisualDensity.compact,
-                              icon: const Icon(Icons.close_rounded),
-                            ),
-                          ],
-                        ),
+                          ),
+                          IconButton(
+                            tooltip: 'بستن پیام',
+                            onPressed: editor.clearFeedback,
+                            iconSize: 16,
+                            visualDensity: VisualDensity.compact,
+                            icon: const Icon(Icons.close_rounded),
+                          ),
+                        ],
                       ),
                     ),
                   ),
                 ),
+              ),
       ),
     );
   }
@@ -1146,13 +1123,13 @@ class _StatusDock extends StatelessWidget {
             animation: editor,
             builder: (BuildContext context, Widget? child) {
               final SimulationResult report = editor.report;
-              final List<CircuitProblem> errors =
-                  report.problems
-                      .where((CircuitProblem p) => p.isError)
-                      .toList();
+              final List<CircuitProblem> errors = report.problems
+                  .where((CircuitProblem p) => p.isError)
+                  .toList();
               final bool valid = report.isValid;
-              final Color statusColor =
-                  valid ? colors.success : theme.colorScheme.error;
+              final Color statusColor = valid
+                  ? colors.success
+                  : theme.colorScheme.error;
               return Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1264,12 +1241,12 @@ class _SimulationBar extends StatelessWidget {
           runSpacing: 4,
           children: <Widget>[
             _SimButton(
-              icon:
-                  editor.isRunning
-                      ? Icons.pause_rounded
-                      : Icons.play_arrow_rounded,
-              tooltip:
-                  editor.isRunning ? 'توقف کلاک خودکار' : 'اجرای کلاک خودکار',
+              icon: editor.isRunning
+                  ? Icons.pause_rounded
+                  : Icons.play_arrow_rounded,
+              tooltip: editor.isRunning
+                  ? 'توقف کلاک خودکار'
+                  : 'اجرای کلاک خودکار',
               active: editor.isRunning,
               onTap: () {
                 editor.setRunning(!editor.isRunning);
@@ -1357,12 +1334,12 @@ class _SimButton extends StatelessWidget {
         onPressed: onTap,
         visualDensity: VisualDensity.compact,
         style: IconButton.styleFrom(
-          backgroundColor:
-              active
-                  ? theme.colorScheme.primary.withValues(alpha: 0.14)
-                  : theme.colorScheme.surfaceContainerLow,
-          foregroundColor:
-              active ? theme.colorScheme.primary : theme.colorScheme.onSurface,
+          backgroundColor: active
+              ? theme.colorScheme.primary.withValues(alpha: 0.14)
+              : theme.colorScheme.surfaceContainerLow,
+          foregroundColor: active
+              ? theme.colorScheme.primary
+              : theme.colorScheme.onSurface,
           minimumSize: const Size(38, 34),
         ),
         icon: Icon(icon, size: 18),
@@ -1392,9 +1369,8 @@ class _LegendDot extends StatelessWidget {
           const SizedBox(width: 3),
           Text(
             label,
-            style: Theme.of(
-              context,
-            ).textTheme.labelSmall?.copyWith(fontSize: 10),
+            style: Theme.of(context).textTheme.labelSmall
+                ?.copyWith(fontSize: 10),
           ),
         ],
       ),
@@ -1494,7 +1470,7 @@ class _TrayCatalogueState extends State<_TrayCatalogue> {
       if (matches.isNotEmpty) {
         filtered[entry.key] = matches;
       }
-}
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1506,17 +1482,16 @@ class _TrayCatalogueState extends State<_TrayCatalogue> {
           decoration: InputDecoration(
             hintText: 'جست‌وجوی قطعه…',
             prefixIcon: const Icon(Icons.search_rounded),
-            suffixIcon:
-                _query.isEmpty
-                    ? null
-                    : IconButton(
-                      tooltip: 'پاک کردن',
-                      onPressed: () {
-                        _controller.clear();
-                        setState(() => _query = '');
-                      },
-                      icon: const Icon(Icons.close_rounded),
-                    ),
+            suffixIcon: _query.isEmpty
+                ? null
+                : IconButton(
+                    tooltip: 'پاک کردن',
+                    onPressed: () {
+                      _controller.clear();
+                      setState(() => _query = '');
+                    },
+                    icon: const Icon(Icons.close_rounded),
+                  ),
             isDense: true,
           ),
         ),
@@ -1775,19 +1750,14 @@ class _NodeSettingsSheetState extends State<_NodeSettingsSheet> {
                     borderRadius: BorderRadius.circular(13),
                     border: Border.all(color: theme.colorScheme.outlineVariant),
                   ),
-                  child:
-                      node.type.isInput || node.type.isOutput
-                          ? Icon(
-                            node.type.isInput
-                                ? Icons.login_rounded
-                                : Icons.logout_rounded,
-                            color: theme.colorScheme.primary,
-                          )
-                          : GateSymbol(
-                            type: node.type,
-                            size: 32,
-                            strokeWidth: 1.6,
-                          ),
+                  child: node.type.isInput || node.type.isOutput
+                      ? Icon(
+                          node.type.isInput
+                              ? Icons.login_rounded
+                              : Icons.logout_rounded,
+                          color: theme.colorScheme.primary,
+                        )
+                      : GateSymbol(type: node.type, size: 32, strokeWidth: 1.6),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -1904,12 +1874,11 @@ class EditorLauncher {
     final ProjectsController controller = context.read<ProjectsController>();
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder:
-            (BuildContext context) => CircuitEditorScreen(
-              project: project,
-              projectsController: controller,
-              challenge: challenge,
-            ),
+        builder: (BuildContext context) => CircuitEditorScreen(
+          project: project,
+          projectsController: controller,
+          challenge: challenge,
+        ),
       ),
     );
   }

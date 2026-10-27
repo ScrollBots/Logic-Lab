@@ -87,8 +87,8 @@ class LogicLabColors extends ThemeExtension<LogicLabColors> {
   final Color technicalBackground;
 
   static LogicLabColors of(BuildContext context) {
-    final LogicLabColors? extension =
-        Theme.of(context).extension<LogicLabColors>();
+    final LogicLabColors? extension = Theme.of(context)
+        .extension<LogicLabColors>();
     return extension ?? fallback;
   }
 
@@ -149,8 +149,11 @@ class LogicLabColors extends ThemeExtension<LogicLabColors> {
       canvas: Color.lerp(canvas, other.canvas, t)!,
       canvasGrid: Color.lerp(canvasGrid, other.canvasGrid, t)!,
       canvasBorder: Color.lerp(canvasBorder, other.canvasBorder, t)!,
-      technicalBackground:
-          Color.lerp(technicalBackground, other.technicalBackground, t)!,
+      technicalBackground: Color.lerp(
+        technicalBackground,
+        other.technicalBackground,
+        t,
+      )!,
     );
   }
 }
@@ -176,22 +179,30 @@ class LogicLabTheme {
       dynamicSchemeVariant: DynamicSchemeVariant.fidelity,
     );
 
-    final Color background =
-        isDark ? const Color(0xFF0A0E15) : const Color(0xFFF4F6FA);
-    final Color surface =
-        isDark ? const Color(0xFF111722) : const Color(0xFFFFFFFF);
-    final Color surfaceLow =
-        isDark ? const Color(0xFF0E141E) : const Color(0xFFF8FAFD);
-    final Color surfaceHigh =
-        isDark ? const Color(0xFF1A2230) : const Color(0xFFEDF1F7);
-    final Color outline =
-        isDark ? const Color(0xFF2A3545) : const Color(0xFFE1E6EF);
-    final Color outlineStrong =
-        isDark ? const Color(0xFF3B485B) : const Color(0xFFC7D0DE);
-    final Color textPrimary =
-        isDark ? const Color(0xFFF2F5FA) : const Color(0xFF111827);
-    final Color textSecondary =
-        isDark ? const Color(0xFFA4B0C2) : const Color(0xFF5C687B);
+    final Color background = isDark
+        ? const Color(0xFF0A0E15)
+        : const Color(0xFFF4F6FA);
+    final Color surface = isDark
+        ? const Color(0xFF111722)
+        : const Color(0xFFFFFFFF);
+    final Color surfaceLow = isDark
+        ? const Color(0xFF0E141E)
+        : const Color(0xFFF8FAFD);
+    final Color surfaceHigh = isDark
+        ? const Color(0xFF1A2230)
+        : const Color(0xFFEDF1F7);
+    final Color outline = isDark
+        ? const Color(0xFF2A3545)
+        : const Color(0xFFE1E6EF);
+    final Color outlineStrong = isDark
+        ? const Color(0xFF3B485B)
+        : const Color(0xFFC7D0DE);
+    final Color textPrimary = isDark
+        ? const Color(0xFFF2F5FA)
+        : const Color(0xFF111827);
+    final Color textSecondary = isDark
+        ? const Color(0xFFA4B0C2)
+        : const Color(0xFF5C687B);
 
     final ColorScheme scheme = generated.copyWith(
       surface: background,
@@ -199,25 +210,28 @@ class LogicLabTheme {
       onSurfaceVariant: textSecondary,
       surfaceContainerLowest: surface,
       surfaceContainerLow: surfaceLow,
-      surfaceContainer:
-          isDark ? const Color(0xFF141C28) : const Color(0xFFF1F4F9),
+      surfaceContainer: isDark
+          ? const Color(0xFF141C28)
+          : const Color(0xFFF1F4F9),
       surfaceContainerHigh: surfaceHigh,
-      surfaceContainerHighest:
-          isDark ? const Color(0xFF222C3C) : const Color(0xFFE7ECF4),
+      surfaceContainerHighest: isDark
+          ? const Color(0xFF222C3C)
+          : const Color(0xFFE7ECF4),
       outline: outlineStrong,
       outlineVariant: outline,
       error: isDark ? const Color(0xFFFF8A87) : const Color(0xFFB42318),
       onError: isDark ? const Color(0xFF3B0705) : Colors.white,
     );
 
-    final TextTheme base = Typography.material2021(
-      platform: TargetPlatform.android,
-      colorScheme: scheme,
-    ).black.apply(
-      fontFamily: 'Vazirmatn',
-      bodyColor: textPrimary,
-      displayColor: textPrimary,
-    );
+    final TextTheme base =
+        Typography.material2021(
+          platform: TargetPlatform.android,
+          colorScheme: scheme,
+        ).black.apply(
+          fontFamily: 'Vazirmatn',
+          bodyColor: textPrimary,
+          displayColor: textPrimary,
+        );
 
     final TextTheme textTheme = base.copyWith(
       displayLarge: base.displayLarge?.copyWith(
@@ -320,8 +334,9 @@ class LogicLabTheme {
         scrolledUnderElevation: 0,
         centerTitle: false,
         titleTextStyle: textTheme.titleLarge,
-        systemOverlayStyle:
-            isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
+        systemOverlayStyle: isDark
+            ? SystemUiOverlayStyle.light
+            : SystemUiOverlayStyle.dark,
       ),
       cardTheme: CardThemeData(
         color: surface,
@@ -433,11 +448,13 @@ class LogicLabTheme {
       ),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
-        backgroundColor:
-            isDark ? const Color(0xFF243044) : const Color(0xFF1B2533),
+        backgroundColor: isDark
+            ? const Color(0xFF243044)
+            : const Color(0xFF1B2533),
         contentTextStyle: textTheme.bodyMedium?.copyWith(color: Colors.white),
-        actionTextColor:
-            isDark ? const Color(0xFF9EC5FF) : const Color(0xFFB8D4FF),
+        actionTextColor: isDark
+            ? const Color(0xFF9EC5FF)
+            : const Color(0xFFB8D4FF),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         insetPadding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
       ),
@@ -483,25 +500,26 @@ class LogicLabTheme {
       ),
       extensions: <ThemeExtension<dynamic>>[
         LogicLabColors(
-          highSignal:
-              isDark && highSignal == const Color(0xFF1D9B72)
-                  ? const Color(0xFF22C55E)
-                  : highSignal,
-          lowSignal:
-              isDark && lowSignal == const Color(0xFF6D7B8E)
-                  ? const Color(0xFF334155)
-                  : lowSignal,
-          unknownSignal:
-              isDark ? const Color(0xFF8793A6) : const Color(0xFF7D8798),
+          highSignal: isDark && highSignal == const Color(0xFF1D9B72)
+              ? const Color(0xFF22C55E)
+              : highSignal,
+          lowSignal: isDark && lowSignal == const Color(0xFF6D7B8E)
+              ? const Color(0xFF334155)
+              : lowSignal,
+          unknownSignal: isDark
+              ? const Color(0xFF8793A6)
+              : const Color(0xFF7D8798),
           success: isDark ? const Color(0xFF4ADE9A) : const Color(0xFF087A55),
           warning: isDark ? const Color(0xFFF6C25B) : const Color(0xFF99600A),
           danger: isDark ? const Color(0xFFFF8A87) : const Color(0xFFB42318),
           canvas: isDark ? const Color(0xFF0F172A) : const Color(0xFFFBFCFE),
-          canvasGrid:
-              isDark ? const Color(0xFF334155) : const Color(0xFFE8EDF5),
+          canvasGrid: isDark
+              ? const Color(0xFF334155)
+              : const Color(0xFFE8EDF5),
           canvasBorder: outline,
-          technicalBackground:
-              isDark ? const Color(0xFF0C121C) : const Color(0xFFF1F4F9),
+          technicalBackground: isDark
+              ? const Color(0xFF0C121C)
+              : const Color(0xFFF1F4F9),
         ),
       ],
     );

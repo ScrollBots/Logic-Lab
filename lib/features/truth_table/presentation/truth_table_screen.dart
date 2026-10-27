@@ -94,8 +94,9 @@ class _TruthTableScreenState extends State<TruthTableScreen> {
             if (expected == '?' || expected == 'x' || expected == 'X') {
               continue;
             }
-            final String actual =
-                row.inputs[table.inputNodes[i].id] == true ? '1' : '0';
+            final String actual = row.inputs[table.inputNodes[i].id] == true
+                ? '1'
+                : '0';
             if (expected != actual) {
               return false;
             }
@@ -129,10 +130,9 @@ class _TruthTableScreenState extends State<TruthTableScreen> {
     setState(() {
       _generating = false;
       _table = computation.result;
-      _error =
-          computation.error == null
-              ? null
-              : TruthTableGenerationException(computation.error!);
+      _error = computation.error == null
+          ? null
+          : TruthTableGenerationException(computation.error!);
     });
   }
 
@@ -164,10 +164,9 @@ class _TruthTableScreenState extends State<TruthTableScreen> {
                         horizontal: 14,
                         vertical: 10,
                       ),
-                      borderColor:
-                          rows == _limits.maxRows
-                              ? theme.colorScheme.primary
-                              : null,
+                      borderColor: rows == _limits.maxRows
+                          ? theme.colorScheme.primary
+                          : null,
                       onTap: () => Navigator.pop(context, rows),
                       child: Row(
                         children: <Widget>[
@@ -175,10 +174,9 @@ class _TruthTableScreenState extends State<TruthTableScreen> {
                             rows == _limits.maxRows
                                 ? Icons.radio_button_checked_rounded
                                 : Icons.radio_button_off_rounded,
-                            color:
-                                rows == _limits.maxRows
-                                    ? theme.colorScheme.primary
-                                    : theme.colorScheme.onSurfaceVariant,
+                            color: rows == _limits.maxRows
+                                ? theme.colorScheme.primary
+                                : theme.colorScheme.onSurfaceVariant,
                           ),
                           const SizedBox(width: 10),
                           Expanded(
@@ -268,8 +266,9 @@ class _TruthTableScreenState extends State<TruthTableScreen> {
   }
 
   String _safeName(String value) {
-    final String cleaned =
-        value.replaceAll(RegExp(r'[\\/:*?"<>|]'), '-').trim();
+    final String cleaned = value
+        .replaceAll(RegExp(r'[\\/:*?"<>|]'), '-')
+        .trim();
     return cleaned.isEmpty ? 'logic-lab' : cleaned;
   }
 
@@ -313,8 +312,8 @@ class _TruthTableScreenState extends State<TruthTableScreen> {
                 _shareCsv();
               }
             },
-            itemBuilder:
-                (BuildContext context) => const <PopupMenuEntry<String>>[
+            itemBuilder: (BuildContext context) =>
+                const <PopupMenuEntry<String>>[
                   PopupMenuItem<String>(
                     value: 'copy',
                     child: ListTile(
@@ -380,8 +379,7 @@ class _TruthTableScreenState extends State<TruthTableScreen> {
                     child: EmptyState(
                       icon: Icons.output_rounded,
                       title: 'خروجی تعریف نشده است',
-                      message:
-                          'برای ساخت جدول حقیقت، ابتدا یک قطعه خروجی به مدار اضافه و آن را به سیگنال متصل کنید.',
+                      message: 'برای ساخت جدول حقیقت، ابتدا یک قطعه خروجی به مدار اضافه و آن را به سیگنال متصل کنید.',
                       action: FilledButton(
                         onPressed: () => Navigator.pop(context),
                         child: const Text('بازگشت به ویرایشگر'),
@@ -395,8 +393,7 @@ class _TruthTableScreenState extends State<TruthTableScreen> {
                     padding: const EdgeInsets.only(bottom: 10),
                     child: InfoBanner(
                       tone: InfoBannerTone.danger,
-                      message:
-                          'مدار در حال حاضر معتبر نیست. مقادیر قابل محاسبه نمایش داده می‌شوند و خروجی‌های نامشخص با «؟» مشخص شده‌اند.',
+                      message: 'مدار در حال حاضر معتبر نیست. مقادیر قابل محاسبه نمایش داده می‌شوند و خروجی‌های نامشخص با «؟» مشخص شده‌اند.',
                       action: TextButton(
                         onPressed: () => _showProblems(table),
                         child: const Text('جزئیات'),
@@ -408,8 +405,7 @@ class _TruthTableScreenState extends State<TruthTableScreen> {
                     padding: const EdgeInsets.only(bottom: 10),
                     child: InfoBanner(
                       icon: Icons.info_outline_rounded,
-                      message:
-                          'این مدار ورودی مستقل ندارد؛ تنها یک وضعیت برای محاسبه وجود دارد.',
+                      message: 'این مدار ورودی مستقل ندارد؛ تنها یک وضعیت برای محاسبه وجود دارد.',
                     ),
                   ),
                 if (table.hasSequentialParts)
@@ -492,9 +488,8 @@ class _TruthTableScreenState extends State<TruthTableScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
               decoration: BoxDecoration(
-                color: LogicLabColors.of(
-                  context,
-                ).success.withValues(alpha: 0.1),
+                color: LogicLabColors.of(context).success
+                    .withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Row(
@@ -595,32 +590,30 @@ class _TruthTableScreenState extends State<TruthTableScreen> {
                 Expanded(
                   child: TextField(
                     controller: _filterController,
-                    onChanged:
-                        (String value) => setState(() => _filter = value),
+                    onChanged: (String value) =>
+                        setState(() => _filter = value),
                     textDirection: TextDirection.ltr,
                     textAlign: TextAlign.left,
                     style: LogicLabTheme.technical(theme.textTheme.bodyMedium),
                     decoration: InputDecoration(
                       isDense: true,
-                      hintText:
-                          inputs.isEmpty
-                              ? 'بدون ورودی برای فیلتر'
-                              : 'فیلتر ردیف‌ها، مثل ${inputs.length > 1 ? '101' : '1'} (؟ یعنی هر مقدار)',
+                      hintText: inputs.isEmpty
+                          ? 'بدون ورودی برای فیلتر'
+                          : 'فیلتر ردیف‌ها، مثل ${inputs.length > 1 ? '101' : '1'} (؟ یعنی هر مقدار)',
                       prefixIcon: const Icon(
                         Icons.filter_alt_outlined,
                         size: 19,
                       ),
-                      suffixIcon:
-                          _filter.isEmpty
-                              ? null
-                              : IconButton(
-                                tooltip: 'پاک کردن فیلتر',
-                                onPressed: () {
-                                  _filterController.clear();
-                                  setState(() => _filter = '');
-                                },
-                                icon: const Icon(Icons.close_rounded, size: 18),
-                              ),
+                      suffixIcon: _filter.isEmpty
+                          ? null
+                          : IconButton(
+                              tooltip: 'پاک کردن فیلتر',
+                              onPressed: () {
+                                _filterController.clear();
+                                setState(() => _filter = '');
+                              },
+                              icon: const Icon(Icons.close_rounded, size: 18),
+                            ),
                     ),
                   ),
                 ),
@@ -642,10 +635,9 @@ class _TruthTableScreenState extends State<TruthTableScreen> {
                     controller: _horizontalScroll,
                     scrollDirection: Axis.horizontal,
                     child: SizedBox(
-                      width:
-                          tableWidth < constraints.maxWidth
-                              ? constraints.maxWidth
-                              : tableWidth,
+                      width: tableWidth < constraints.maxWidth
+                          ? constraints.maxWidth
+                          : tableWidth,
                       height: constraints.maxHeight,
                       child: Column(
                         children: <Widget>[
@@ -703,12 +695,11 @@ class _TruthTableScreenState extends State<TruthTableScreen> {
                                           row.outputs[output.port == 0
                                               ? output.nodeId
                                               : '${output.nodeId}#${output.port}'];
-                                      final String state =
-                                          value == null
-                                              ? 'نامشخص'
-                                              : value
-                                              ? 'یک'
-                                              : 'صفر';
+                                      final String state = value == null
+                                          ? 'نامشخص'
+                                          : value
+                                          ? 'یک'
+                                          : 'صفر';
                                       return '${output.label} $state';
                                     })
                                     .join('، ');
@@ -727,25 +718,23 @@ class _TruthTableScreenState extends State<TruthTableScreen> {
                                   label: semantics,
                                   child: Container(
                                     decoration: BoxDecoration(
-                                      color:
-                                          active
-                                              ? theme.colorScheme.primary
-                                                  .withValues(alpha: 0.075)
-                                              : index.isEven
-                                              ? Colors.transparent
-                                              : theme
-                                                  .colorScheme
-                                                  .surfaceContainerLow
-                                                  .withValues(alpha: 0.52),
+                                      color: active
+                                          ? theme.colorScheme.primary
+                                                .withValues(alpha: 0.075)
+                                          : index.isEven
+                                          ? Colors.transparent
+                                          : theme
+                                                .colorScheme
+                                                .surfaceContainerLow
+                                                .withValues(alpha: 0.52),
                                       border: Border(
-                                        right:
-                                            active
-                                                ? BorderSide(
-                                                  color:
-                                                      theme.colorScheme.primary,
-                                                  width: 2.5,
-                                                )
-                                                : BorderSide.none,
+                                        right: active
+                                            ? BorderSide(
+                                                color:
+                                                    theme.colorScheme.primary,
+                                                width: 2.5,
+                                              )
+                                            : BorderSide.none,
                                       ),
                                     ),
                                     child: Row(
@@ -759,10 +748,9 @@ class _TruthTableScreenState extends State<TruthTableScreen> {
                                               ),
                                               style: theme.textTheme.labelSmall
                                                   ?.copyWith(
-                                                    color:
-                                                        theme
-                                                            .colorScheme
-                                                            .onSurfaceVariant,
+                                                    color: theme
+                                                        .colorScheme
+                                                        .onSurfaceVariant,
                                                   ),
                                             ),
                                           ),
@@ -859,10 +847,9 @@ class _TruthTableScreenState extends State<TruthTableScreen> {
             textDirection: TextDirection.ltr,
             style: theme.textTheme.labelSmall?.copyWith(
               fontSize: 8,
-              color:
-                  isOutput
-                      ? theme.colorScheme.primary
-                      : theme.colorScheme.onSurfaceVariant,
+              color: isOutput
+                  ? theme.colorScheme.primary
+                  : theme.colorScheme.onSurfaceVariant,
             ),
           ),
         ],
@@ -878,21 +865,19 @@ class _TruthTableScreenState extends State<TruthTableScreen> {
     bool emphasis = false,
   }) {
     final LogicLabColors colors = LogicLabColors.of(context);
-    final Color color =
-        value == null
-            ? colors.unknownSignal
-            : value
-            ? colors.highSignal
-            : colors.lowSignal;
+    final Color color = value == null
+        ? colors.unknownSignal
+        : value
+        ? colors.highSignal
+        : colors.lowSignal;
     final Widget chip = Container(
       width: 28,
       height: 26,
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color:
-            value == null
-                ? colors.unknownSignal.withValues(alpha: 0.08)
-                : color.withValues(alpha: emphasis ? 0.14 : 0.07),
+        color: value == null
+            ? colors.unknownSignal.withValues(alpha: 0.08)
+            : color.withValues(alpha: emphasis ? 0.14 : 0.07),
         borderRadius: BorderRadius.circular(7),
         border: Border.all(
           color: color.withValues(alpha: emphasis ? 0.38 : 0.18),
@@ -904,10 +889,8 @@ class _TruthTableScreenState extends State<TruthTableScreen> {
             : value
             ? '1'
             : '0',
-        style: Theme.of(context).textTheme.labelMedium?.copyWith(
-          fontWeight: FontWeight.w700,
-          color: color,
-        ),
+        style: Theme.of(context).textTheme.labelMedium
+            ?.copyWith(fontWeight: FontWeight.w700, color: color),
       ),
     );
     return Container(
@@ -942,10 +925,9 @@ class _TruthTableScreenState extends State<TruthTableScreen> {
       showDragHandle: true,
       isScrollControlled: true,
       builder: (BuildContext context) {
-        final List<CircuitProblem> errors =
-            table.problems
-                .where((CircuitProblem problem) => problem.isError)
-                .toList();
+        final List<CircuitProblem> errors = table.problems
+            .where((CircuitProblem problem) => problem.isError)
+            .toList();
         return SafeArea(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),

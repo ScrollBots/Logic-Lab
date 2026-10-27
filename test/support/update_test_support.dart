@@ -32,14 +32,12 @@ Map<String, Object?> releasePayload({
           <String, Object?>{
             'name': 'LogicLab-1.2.0-universal.apk',
             'size': 24326963,
-            'browser_download_url':
-                'https://github.com/ScrollBots/Logic-Lab/releases/download/v1.2.0/LogicLab-1.2.0-universal.apk',
+            'browser_download_url': 'https://github.com/ScrollBots/Logic-Lab/releases/download/v1.2.0/LogicLab-1.2.0-universal.apk',
           },
           <String, Object?>{
             'name': 'app-release.aab',
             'size': 24956108,
-            'browser_download_url':
-                'https://github.com/ScrollBots/Logic-Lab/releases/download/v1.2.0/app-release.aab',
+            'browser_download_url': 'https://github.com/ScrollBots/Logic-Lab/releases/download/v1.2.0/app-release.aab',
           },
         ],
   };

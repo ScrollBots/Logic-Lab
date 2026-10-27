@@ -262,10 +262,9 @@ class CircuitEditorController extends ChangeNotifier {
 
   String _nextInputLabel() {
     const String alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    final Set<String> used =
-        _graph.inputs
-            .map((CircuitNode input) => input.label.toUpperCase())
-            .toSet();
+    final Set<String> used = _graph.inputs
+        .map((CircuitNode input) => input.label.toUpperCase())
+        .toSet();
     for (int i = 0; i < alphabet.length; i++) {
       if (!used.contains(alphabet[i])) {
         return alphabet[i];
@@ -384,8 +383,9 @@ class CircuitEditorController extends ChangeNotifier {
     if (node == null) {
       return;
     }
-    final String normalized =
-        label.trim().isEmpty ? node.type.technicalName : label.trim();
+    final String normalized = label.trim().isEmpty
+        ? node.type.technicalName
+        : label.trim();
     if (normalized == node.label) {
       return;
     }
@@ -431,16 +431,17 @@ class CircuitEditorController extends ChangeNotifier {
     if (node == null) {
       return;
     }
-    final String normalizedLabel =
-        label.trim().isEmpty ? node.type.technicalName : label.trim();
+    final String normalizedLabel = label.trim().isEmpty
+        ? node.type.technicalName
+        : label.trim();
     final ComponentSpec spec = ComponentLibrary.specOf(node.type);
     final int requestedCount = inputCount ?? node.inputCount;
-    final int normalizedCount =
-        node.type.isBinaryGate
-            ? requestedCount.clamp(spec.minInputs, spec.maxInputs)
-            : node.inputCount;
-    final bool normalizedValue =
-        node.type.isInput ? (inputValue ?? node.inputValue) : node.inputValue;
+    final int normalizedCount = node.type.isBinaryGate
+        ? requestedCount.clamp(spec.minInputs, spec.maxInputs)
+        : node.inputCount;
+    final bool normalizedValue = node.type.isInput
+        ? (inputValue ?? node.inputValue)
+        : node.inputValue;
     if (normalizedLabel == node.label &&
         normalizedCount == node.inputCount &&
         normalizedValue == node.inputValue) {
@@ -847,10 +848,12 @@ class CircuitEditorController extends ChangeNotifier {
 
   CanvasPoint _snapPosition(CanvasPoint point) {
     const double grid = CircuitGeometry.gridSize;
-    final double x =
-        _gridSnapEnabled ? (point.x / grid).round() * grid : point.x;
-    final double y =
-        _gridSnapEnabled ? (point.y / grid).round() * grid : point.y;
+    final double x = _gridSnapEnabled
+        ? (point.x / grid).round() * grid
+        : point.x;
+    final double y = _gridSnapEnabled
+        ? (point.y / grid).round() * grid
+        : point.y;
     return CanvasPoint(
       x.clamp(48, CircuitGeometry.canvasWidth - 48),
       y.clamp(48, CircuitGeometry.canvasHeight - 48),

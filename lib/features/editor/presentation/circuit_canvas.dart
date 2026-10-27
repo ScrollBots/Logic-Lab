@@ -170,10 +170,9 @@ class _CircuitCanvasState extends State<CircuitCanvas>
     final double centerY = bounds.top + bounds.height / 2;
     final double dx = _viewport.width / 2 - centerX * scale;
     final double dy = _viewport.height / 2 - centerY * scale;
-    final Matrix4 target =
-        Matrix4.identity()
-          ..translate(dx, dy)
-          ..scale(scale, scale);
+    final Matrix4 target = Matrix4.identity()
+      ..translate(dx, dy)
+      ..scale(scale, scale);
     _transform.value = target;
   }
 
@@ -187,11 +186,10 @@ class _CircuitCanvasState extends State<CircuitCanvas>
     final double targetScale = (currentScale * factor).clamp(0.28, 2.6);
     final double actualFactor = targetScale / currentScale;
     final Offset sceneCenter = _transform.toScene(center);
-    final Matrix4 next =
-        Matrix4.copy(current)
-          ..translate(sceneCenter.dx, sceneCenter.dy)
-          ..scale(actualFactor, actualFactor)
-          ..translate(-sceneCenter.dx, -sceneCenter.dy);
+    final Matrix4 next = Matrix4.copy(current)
+      ..translate(sceneCenter.dx, sceneCenter.dy)
+      ..scale(actualFactor, actualFactor)
+      ..translate(-sceneCenter.dx, -sceneCenter.dy);
     _transform.value = next;
   }
 
@@ -232,8 +230,8 @@ class _CircuitCanvasState extends State<CircuitCanvas>
   }
 
   CanvasPoint? _scenePointFromGlobal(Offset globalPosition) {
-    final RenderObject? renderObject =
-        _viewportKey.currentContext?.findRenderObject();
+    final RenderObject? renderObject = _viewportKey.currentContext
+        ?.findRenderObject();
     if (renderObject is! RenderBox) {
       return null;
     }
@@ -479,9 +477,9 @@ class _CircuitCanvasState extends State<CircuitCanvas>
                                         connectionPreview: _wireDragPoint,
                                         flowAnimation:
                                             layer == CircuitPaintLayer.wires &&
-                                                    _canAnimate
-                                                ? _flowAnimation
-                                                : null,
+                                                _canAnimate
+                                            ? _flowAnimation
+                                            : null,
                                       ),
                                     ),
                                   ),
@@ -508,10 +506,9 @@ class _CircuitCanvasState extends State<CircuitCanvas>
   List<Widget> _nodeOverlays(BuildContext context, CircuitNode node) {
     final CanvasRect bounds = CircuitGeometry.nodeBounds(node);
     final bool isInput = node.type.isInput;
-    final String semantics =
-        isInput
-            ? '${node.label}، ورودی، مقدار ${node.inputValue ? 'یک' : 'صفر'}؛ برای تغییر مقدار دو بار ضربه بزنید یا از دکمه استفاده کنید.'
-            : '${node.label}، ${node.type.persianName}';
+    final String semantics = isInput
+        ? '${node.label}، ورودی، مقدار ${node.inputValue ? 'یک' : 'صفر'}؛ برای تغییر مقدار دو بار ضربه بزنید یا از دکمه استفاده کنید.'
+        : '${node.label}، ${node.type.persianName}';
     return <Widget>[
       Positioned(
         left: bounds.left,
@@ -564,13 +561,13 @@ class _CircuitCanvasState extends State<CircuitCanvas>
     if (node.type.producesSignal) {
       final ComponentSpec spec = ComponentLibrary.specOf(node.type);
       for (int port = 0; port < node.outputCount; port++) {
-        final CanvasPoint position =
-            CircuitGeometry.portPosition(
-              node,
-              CircuitPin.output(node.id, port),
-            )!;
-        final String portName =
-            port < spec.outputLabels.length ? spec.outputLabels[port] : 'Y';
+        final CanvasPoint position = CircuitGeometry.portPosition(
+          node,
+          CircuitPin.output(node.id, port),
+        )!;
+        final String portName = port < spec.outputLabels.length
+            ? spec.outputLabels[port]
+            : 'Y';
         overlays.add(
           _pinOverlay(
             context: context,
@@ -586,10 +583,13 @@ class _CircuitCanvasState extends State<CircuitCanvas>
     if (node.type.acceptsInputs) {
       final ComponentSpec spec = ComponentLibrary.specOf(node.type);
       for (int i = 0; i < node.inputCount; i++) {
-        final CanvasPoint position =
-            CircuitGeometry.portPosition(node, CircuitPin.input(node.id, i))!;
-        final String portName =
-            i < spec.inputLabels.length ? spec.inputLabels[i] : 'IN${i + 1}';
+        final CanvasPoint position = CircuitGeometry.portPosition(
+          node,
+          CircuitPin.input(node.id, i),
+        )!;
+        final String portName = i < spec.inputLabels.length
+            ? spec.inputLabels[i]
+            : 'IN${i + 1}';
         overlays.add(
           _pinOverlay(
             context: context,
@@ -649,12 +649,11 @@ class _CircuitCanvasState extends State<CircuitCanvas>
               }
             },
             dragStartBehavior: DragStartBehavior.down,
-            onPanStart:
-                pin.isInput
-                    ? null
-                    : (DragStartDetails details) {
-                      _startWireDrag(details);
-                    },
+            onPanStart: pin.isInput
+                ? null
+                : (DragStartDetails details) {
+                    _startWireDrag(details);
+                  },
             onPanUpdate: pin.isInput ? null : _updateWireDrag,
             onPanEnd: pin.isInput ? null : (_) => _endWireDrag(),
             onPanCancel: pin.isInput ? null : _cancelWireDrag,
@@ -744,17 +743,16 @@ class CircuitPainter extends CustomPainter {
       start,
       end,
     );
-    final Path path =
-        Path()
-          ..moveTo(start.x, start.y)
-          ..cubicTo(
-            controls[1].x,
-            controls[1].y,
-            controls[2].x,
-            controls[2].y,
-            end.x,
-            end.y,
-          );
+    final Path path = Path()
+      ..moveTo(start.x, start.y)
+      ..cubicTo(
+        controls[1].x,
+        controls[1].y,
+        controls[2].x,
+        controls[2].y,
+        end.x,
+        end.y,
+      );
     _drawDashedPath(
       canvas,
       path,
@@ -884,17 +882,16 @@ class CircuitPainter extends CustomPainter {
       if (!_isWireVisible(controls)) {
         continue;
       }
-      final Path path =
-          Path()
-            ..moveTo(start.x, start.y)
-            ..cubicTo(
-              controls[1].x,
-              controls[1].y,
-              controls[2].x,
-              controls[2].y,
-              end.x,
-              end.y,
-            );
+      final Path path = Path()
+        ..moveTo(start.x, start.y)
+        ..cubicTo(
+          controls[1].x,
+          controls[1].y,
+          controls[2].x,
+          controls[2].y,
+          end.x,
+          end.y,
+        );
       final LogicSignal signal = report.signalForWire(wire);
       final Color color = signalColor(signal);
       final bool selected = selectedWireId == wire.id;
@@ -940,12 +937,11 @@ class CircuitPainter extends CustomPainter {
         );
       }
       if (signal == LogicSignal.high && flowAnimation != null) {
-        final Paint flow =
-            Paint()
-              ..color = Color.lerp(color, Colors.white, 0.65)!
-              ..style = PaintingStyle.stroke
-              ..strokeWidth = selected ? 3.3 : 2.2
-              ..strokeCap = StrokeCap.round;
+        final Paint flow = Paint()
+          ..color = Color.lerp(color, Colors.white, 0.65)!
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = selected ? 3.3 : 2.2
+          ..strokeCap = StrokeCap.round;
         const double spacing = 48;
         const double dash = 10;
         for (final PathMetric metric in path.computeMetrics()) {
@@ -1062,8 +1058,9 @@ class CircuitPainter extends CustomPainter {
       const Radius.circular(12),
     );
     final bool isSequential = spec.kind == ComponentKind.sequential;
-    final Color headerColor =
-        isSequential ? theme.colorScheme.tertiary : theme.colorScheme.primary;
+    final Color headerColor = isSequential
+        ? theme.colorScheme.tertiary
+        : theme.colorScheme.primary;
     canvas.drawRRect(
       body,
       Paint()
@@ -1080,8 +1077,9 @@ class CircuitPainter extends CustomPainter {
     canvas.drawRRect(
       body,
       Paint()
-        ..color =
-            selected ? theme.colorScheme.primary : theme.colorScheme.outline
+        ..color = selected
+            ? theme.colorScheme.primary
+            : theme.colorScheme.outline
         ..style = PaintingStyle.stroke
         ..strokeWidth = selected ? 1.6 : 1.1,
     );
@@ -1100,10 +1098,9 @@ class CircuitPainter extends CustomPainter {
     final List<LogicSignal> inputs =
         report.inputSignals[node.id] ?? const <LogicSignal>[];
     for (int port = 0; port < node.inputCount; port++) {
-      final String label =
-          port < spec.inputLabels.length
-              ? spec.inputLabels[port]
-              : 'IN${port + 1}';
+      final String label = port < spec.inputLabels.length
+          ? spec.inputLabels[port]
+          : 'IN${port + 1}';
       final double y = CircuitGeometry.inputPortY(node, port);
       _drawText(
         canvas,
@@ -1120,8 +1117,9 @@ class CircuitPainter extends CustomPainter {
           ..color = theme.colorScheme.outline
           ..strokeWidth = 1,
       );
-      final LogicSignal signal =
-          port < inputs.length ? inputs[port] : LogicSignal.unknown;
+      final LogicSignal signal = port < inputs.length
+          ? inputs[port]
+          : LogicSignal.unknown;
       _drawTextInCircle(
         canvas,
         _signalGlyph(signal),
@@ -1132,8 +1130,9 @@ class CircuitPainter extends CustomPainter {
     }
 
     for (int port = 0; port < node.outputCount; port++) {
-      final String label =
-          port < spec.outputLabels.length ? spec.outputLabels[port] : 'Y';
+      final String label = port < spec.outputLabels.length
+          ? spec.outputLabels[port]
+          : 'Y';
       final double y = CircuitGeometry.outputPortY(node, port);
       _drawText(
         canvas,
@@ -1181,8 +1180,9 @@ class CircuitPainter extends CustomPainter {
     canvas.drawRRect(
       body,
       Paint()
-        ..color =
-            selected ? theme.colorScheme.primary : theme.colorScheme.outline
+        ..color = selected
+            ? theme.colorScheme.primary
+            : theme.colorScheme.outline
         ..style = PaintingStyle.stroke
         ..strokeWidth = selected ? 1.5 : 1,
     );
@@ -1242,8 +1242,9 @@ class CircuitPainter extends CustomPainter {
     canvas.drawRRect(
       body,
       Paint()
-        ..color =
-            selected ? theme.colorScheme.primary : theme.colorScheme.outline
+        ..color = selected
+            ? theme.colorScheme.primary
+            : theme.colorScheme.outline
         ..style = PaintingStyle.stroke
         ..strokeWidth = selected ? 1.5 : 1,
     );
@@ -1322,8 +1323,9 @@ class CircuitPainter extends CustomPainter {
     canvas.drawRRect(
       body,
       Paint()
-        ..color =
-            selected ? theme.colorScheme.primary : theme.colorScheme.outline
+        ..color = selected
+            ? theme.colorScheme.primary
+            : theme.colorScheme.outline
         ..style = PaintingStyle.stroke
         ..strokeWidth = selected ? 1.5 : 1,
     );
@@ -1387,27 +1389,25 @@ class CircuitPainter extends CustomPainter {
     bool selected,
     LogicSignal output,
   ) {
-    final Color fill =
-        theme.brightness == Brightness.dark ? _gateFillDark : _gateFillLight;
-    final Color border =
-        selected
-            ? theme.colorScheme.primary
-            : report.problems.any(
-              (CircuitProblem problem) =>
-                  problem.nodeId == node.id && problem.isError,
-            )
-            ? signalColor(LogicSignal.unknown)
-            : theme.colorScheme.outline;
-    final Paint fillPaint =
-        Paint()
-          ..color = fill
-          ..style = PaintingStyle.fill;
-    final Paint stroke =
-        Paint()
-          ..color = border
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = selected ? 1.7 : 1.2
-          ..strokeJoin = StrokeJoin.round;
+    final Color fill = theme.brightness == Brightness.dark
+        ? _gateFillDark
+        : _gateFillLight;
+    final Color border = selected
+        ? theme.colorScheme.primary
+        : report.problems.any(
+            (CircuitProblem problem) =>
+                problem.nodeId == node.id && problem.isError,
+          )
+        ? signalColor(LogicSignal.unknown)
+        : theme.colorScheme.outline;
+    final Paint fillPaint = Paint()
+      ..color = fill
+      ..style = PaintingStyle.fill;
+    final Paint stroke = Paint()
+      ..color = border
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = selected ? 1.7 : 1.2
+      ..strokeJoin = StrokeJoin.round;
     final double left = bounds.left + 18;
     final double right = bounds.right - 26;
     final double top = bounds.top + 15;
@@ -1436,68 +1436,56 @@ class CircuitPainter extends CustomPainter {
     switch (node.type) {
       case ComponentType.andGate:
       case ComponentType.nandGate:
-        shape =
-            Path()
-              ..moveTo(left, top)
-              ..lineTo(left + 30, top)
-              ..cubicTo(
-                right + 2,
-                top,
-                right + 19,
-                centerY - 16,
-                right,
-                centerY,
-              )
-              ..cubicTo(
-                right + 19,
-                centerY + 16,
-                right + 2,
-                bottom,
-                left + 30,
-                bottom,
-              )
-              ..lineTo(left, bottom)
-              ..close();
+        shape = Path()
+          ..moveTo(left, top)
+          ..lineTo(left + 30, top)
+          ..cubicTo(right + 2, top, right + 19, centerY - 16, right, centerY)
+          ..cubicTo(
+            right + 19,
+            centerY + 16,
+            right + 2,
+            bottom,
+            left + 30,
+            bottom,
+          )
+          ..lineTo(left, bottom)
+          ..close();
       case ComponentType.orGate:
       case ComponentType.norGate:
-        shape =
-            Path()
-              ..moveTo(left, top)
-              ..quadraticBezierTo(left + 53, top + 4, right, centerY)
-              ..quadraticBezierTo(left + 53, bottom - 4, left, bottom)
-              ..quadraticBezierTo(left + 26, centerY, left, top)
-              ..close();
+        shape = Path()
+          ..moveTo(left, top)
+          ..quadraticBezierTo(left + 53, top + 4, right, centerY)
+          ..quadraticBezierTo(left + 53, bottom - 4, left, bottom)
+          ..quadraticBezierTo(left + 26, centerY, left, top)
+          ..close();
       case ComponentType.xorGate:
       case ComponentType.xnorGate:
-        shape =
-            Path()
-              ..moveTo(left + 8, top)
-              ..quadraticBezierTo(left + 58, top + 4, right, centerY)
-              ..quadraticBezierTo(left + 58, bottom - 4, left + 8, bottom)
-              ..quadraticBezierTo(left + 34, centerY, left + 8, top)
-              ..close();
+        shape = Path()
+          ..moveTo(left + 8, top)
+          ..quadraticBezierTo(left + 58, top + 4, right, centerY)
+          ..quadraticBezierTo(left + 58, bottom - 4, left + 8, bottom)
+          ..quadraticBezierTo(left + 34, centerY, left + 8, top)
+          ..close();
       case ComponentType.notGate:
-        shape =
-            Path()
-              ..moveTo(left, top)
-              ..lineTo(left, bottom)
-              ..lineTo(activeRight, centerY)
-              ..close();
+        shape = Path()
+          ..moveTo(left, top)
+          ..lineTo(left, bottom)
+          ..lineTo(activeRight, centerY)
+          ..close();
       default:
-        shape =
-            Path()..addRRect(
-              RRect.fromRectAndRadius(bounds, const Radius.circular(14)),
-            );
+        shape = Path()
+          ..addRRect(
+            RRect.fromRectAndRadius(bounds, const Radius.circular(14)),
+          );
     }
     canvas.drawPath(shape, fillPaint);
     canvas.drawPath(shape, stroke);
 
     if (node.type == ComponentType.xorGate ||
         node.type == ComponentType.xnorGate) {
-      final Path extra =
-          Path()
-            ..moveTo(left - 3, top)
-            ..quadraticBezierTo(left + 23, centerY, left - 3, bottom);
+      final Path extra = Path()
+        ..moveTo(left - 3, top)
+        ..quadraticBezierTo(left + 23, centerY, left - 3, bottom);
       canvas.drawPath(extra, stroke);
     }
 
@@ -1519,8 +1507,9 @@ class CircuitPainter extends CustomPainter {
           ..strokeWidth = 1.2,
       );
     } else {
-      final double startX =
-          node.type == ComponentType.notGate ? activeRight : right;
+      final double startX = node.type == ComponentType.notGate
+          ? activeRight
+          : right;
       canvas.drawLine(
         Offset(startX, centerY),
         Offset(bounds.right, centerY),
@@ -1546,9 +1535,9 @@ class CircuitPainter extends CustomPainter {
     // that it sits inside the curved body instead of the flat input side.
     final double labelOffset =
         (node.type == ComponentType.andGate ||
-                node.type == ComponentType.nandGate)
-            ? 9
-            : 0;
+            node.type == ComponentType.nandGate)
+        ? 9
+        : 0;
     if (hasCustomLabel) {
       _drawText(
         canvas,
@@ -1583,10 +1572,9 @@ class CircuitPainter extends CustomPainter {
         fontSize: node.type == ComponentType.nandGate ? 8 : 9.5,
         fontWeight: FontWeight.w700,
         color: theme.colorScheme.onSurface,
-        textAlign:
-            node.type == ComponentType.notGate
-                ? TextAlign.left
-                : TextAlign.center,
+        textAlign: node.type == ComponentType.notGate
+            ? TextAlign.left
+            : TextAlign.center,
         letterSpacing: 0.4,
       );
     }

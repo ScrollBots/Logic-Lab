@@ -435,8 +435,8 @@ class ExpressionTruthTable {
     BoolExpr expression, {
     int maxVariables = 8,
   }) {
-    final List<String> variables =
-        expression.collectVariables().toList()..sort();
+    final List<String> variables = expression.collectVariables().toList()
+      ..sort();
     if (variables.length > maxVariables) {
       throw BooleanParseException(
         'این عبارت ${variables.length} متغیر دارد؛ حداکثر $maxVariables متغیر پشتیبانی می‌شود.',
@@ -498,8 +498,8 @@ class BooleanSimplifier {
   /// assignment. For more than six variables we explicitly decline to claim a
   /// minimum rather than presenting an unverified heuristic as exact.
   static SimplificationResult simplify(BoolExpr expression) {
-    final List<String> variables =
-        expression.collectVariables().toList()..sort();
+    final List<String> variables = expression.collectVariables().toList()
+      ..sort();
     if (variables.length > exactVariableLimit) {
       return SimplificationResult(
         original: expression,
@@ -550,8 +550,9 @@ class BooleanSimplifier {
     final Map<int, List<_Implicant>> coversByMinterm =
         <int, List<_Implicant>>{};
     for (final int minterm in minterms) {
-      coversByMinterm[minterm] =
-          primes.where((_Implicant p) => p.covers.contains(minterm)).toList();
+      coversByMinterm[minterm] = primes
+          .where((_Implicant p) => p.covers.contains(minterm))
+          .toList();
     }
     for (final _Implicant prime in primes) {
       allCovered.addAll(prime.covers);
@@ -662,8 +663,7 @@ class BooleanSimplifier {
         simplifiedText: null,
         exact: false,
         method: 'کوئین–مک‌کلاسکی',
-        message:
-            'جست‌وجوی دقیق به سقف محاسباتی رسید؛ برای جلوگیری از ادعای نادرست، نتیجه‌ای به‌عنوان حداقل ارائه نشده است.',
+        message: 'جست‌وجوی دقیق به سقف محاسباتی رسید؛ برای جلوگیری از ادعای نادرست، نتیجه‌ای به‌عنوان حداقل ارائه نشده است.',
         variableCount: variables.length,
       );
     }
@@ -703,8 +703,7 @@ class BooleanSimplifier {
         simplifiedText: null,
         exact: false,
         method: 'کوئین–مک‌کلاسکی',
-        message:
-            'عبارت ساده‌شده بازسازی شد اما اعتبارسنجی جامع آن موفق نبود؛ بنابراین نتیجه نمایش داده نمی‌شود.',
+        message: 'عبارت ساده‌شده بازسازی شد اما اعتبارسنجی جامع آن موفق نبود؛ بنابراین نتیجه نمایش داده نمی‌شود.',
         variableCount: variables.length,
       );
     }
@@ -749,16 +748,15 @@ class BooleanSimplifier {
   }
 
   static List<_Implicant> _primeImplicants(Set<int> minterms, int n) {
-    List<_Implicant> current =
-        minterms
-            .map(
-              (int minterm) => _Implicant(
-                mask: (1 << n) - 1,
-                bits: minterm,
-                covers: <int>{minterm},
-              ),
-            )
-            .toList();
+    List<_Implicant> current = minterms
+        .map(
+          (int minterm) => _Implicant(
+            mask: (1 << n) - 1,
+            bits: minterm,
+            covers: <int>{minterm},
+          ),
+        )
+        .toList();
     final List<_Implicant> primes = <_Implicant>[];
 
     while (current.isNotEmpty) {
@@ -954,8 +952,8 @@ class BooleanExpressionTools {
   }
 
   static String variableSummary(BoolExpr expression) {
-    final List<String> variables =
-        expression.collectVariables().toList()..sort();
+    final List<String> variables = expression.collectVariables().toList()
+      ..sort();
     if (variables.isEmpty) {
       return 'بدون متغیر';
     }

@@ -142,14 +142,12 @@ class HomeScreen extends StatelessWidget {
                 style: TextButton.styleFrom(
                   foregroundColor: theme.colorScheme.onPrimary,
                 ),
-                onPressed:
-                    () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder:
-                            (BuildContext context) =>
-                                const BooleanWorkspaceScreen(),
-                      ),
-                    ),
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (BuildContext context) =>
+                        const BooleanWorkspaceScreen(),
+                  ),
+                ),
                 icon: const Icon(Icons.functions_rounded),
                 label: const Text('عبارت بولی'),
               ),
@@ -275,17 +273,16 @@ class HomeScreen extends StatelessWidget {
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: gates.length,
-            separatorBuilder:
-                (BuildContext context, int index) => const SizedBox(width: 10),
+            separatorBuilder: (BuildContext context, int index) =>
+                const SizedBox(width: 10),
             itemBuilder: (BuildContext context, int index) {
               final ComponentType type = gates[index];
               return SurfaceCard(
-                onTap:
-                    () => EditorLauncher.createAndOpen(
-                      context,
-                      quickGate: type,
-                      name: 'مدار ${type.technicalName}',
-                    ),
+                onTap: () => EditorLauncher.createAndOpen(
+                  context,
+                  quickGate: type,
+                  name: 'مدار ${type.technicalName}',
+                ),
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
                   vertical: 14,
@@ -315,12 +312,9 @@ class HomeScreen extends StatelessWidget {
 
   Widget _learningSection(BuildContext context, LearningController learning) {
     final ThemeData theme = Theme.of(context);
-    final int done =
-        kLessons
-            .where(
-              (LearningLesson lesson) => learning.isLessonCompleted(lesson.id),
-            )
-            .length;
+    final int done = kLessons
+        .where((LearningLesson lesson) => learning.isLessonCompleted(lesson.id))
+        .length;
     final double ratio = kLessons.isEmpty ? 0 : done / kLessons.length;
     final LearningLesson? next = learning.nextLesson;
     final LearningUnit? unit = next == null ? null : unitOfLesson(next.id);
@@ -377,14 +371,12 @@ class HomeScreen extends StatelessWidget {
           if (next != null) ...<Widget>[
             const SizedBox(height: 12),
             InkWell(
-              onTap:
-                  () => Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder:
-                          (BuildContext context) =>
-                              LearningSessionScreen(lesson: next),
-                    ),
-                  ),
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (BuildContext context) =>
+                      LearningSessionScreen(lesson: next),
+                ),
+              ),
               borderRadius: BorderRadius.circular(12),
               child: Container(
                 padding: const EdgeInsets.all(12),
@@ -461,17 +453,14 @@ class HomeScreen extends StatelessWidget {
                   child: _ToolCard(
                     icon: Icons.functions_rounded,
                     title: 'عبارت بولی',
-                    description:
-                        'تجزیه، جدول حقیقت، ساده‌سازی و مقایسه عبارت‌ها و ساخت مدار از روی عبارت.',
+                    description: 'تجزیه، جدول حقیقت، ساده‌سازی و مقایسه عبارت‌ها و ساخت مدار از روی عبارت.',
                     actionLabel: 'باز کردن',
-                    onTap:
-                        () => Navigator.of(context).push(
-                          MaterialPageRoute<void>(
-                            builder:
-                                (BuildContext context) =>
-                                    const BooleanWorkspaceScreen(),
-                          ),
-                        ),
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (BuildContext context) =>
+                            const BooleanWorkspaceScreen(),
+                      ),
+                    ),
                   ),
                 ),
                 SizedBox(
@@ -479,8 +468,7 @@ class HomeScreen extends StatelessWidget {
                   child: _ToolCard(
                     icon: Icons.school_outlined,
                     title: 'آموزش و چالش',
-                    description:
-                        'مرجع گیت‌ها، درس‌های گام‌به‌گام و چالش‌هایی که با مدار واقعی سنجیده می‌شوند.',
+                    description: 'مرجع گیت‌ها، درس‌های گام‌به‌گام و چالش‌هایی که با مدار واقعی سنجیده می‌شوند.',
                     actionLabel: 'دیدن مسیر',
                     onTap: onOpenLearn,
                   ),
@@ -503,9 +491,8 @@ class HomeScreen extends StatelessWidget {
                 width: 62,
                 height: 62,
                 decoration: BoxDecoration(
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.primary.withValues(alpha: 0.08),
+                  color: Theme.of(context).colorScheme.primary
+                      .withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Icon(
@@ -673,33 +660,24 @@ class _HeroGlyphPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final Paint stroke =
-        Paint()
-          ..color = color.withValues(alpha: 0.75)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 2
-          ..strokeCap = StrokeCap.round
-          ..strokeJoin = StrokeJoin.round;
+    final Paint stroke = Paint()
+      ..color = color.withValues(alpha: 0.75)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
     final double left = size.width * 0.1;
     final double right = size.width * 0.62;
     final double top = size.height * 0.22;
     final double bottom = size.height * 0.78;
     final double mid = size.height * 0.5;
-    final Path gate =
-        Path()
-          ..moveTo(left, top)
-          ..lineTo(size.width * 0.36, top)
-          ..cubicTo(right, top, right + 6, mid - 6, right, mid)
-          ..cubicTo(
-            right + 6,
-            mid + 6,
-            right,
-            bottom,
-            size.width * 0.36,
-            bottom,
-          )
-          ..lineTo(left, bottom)
-          ..close();
+    final Path gate = Path()
+      ..moveTo(left, top)
+      ..lineTo(size.width * 0.36, top)
+      ..cubicTo(right, top, right + 6, mid - 6, right, mid)
+      ..cubicTo(right + 6, mid + 6, right, bottom, size.width * 0.36, bottom)
+      ..lineTo(left, bottom)
+      ..close();
     canvas.drawPath(gate, stroke);
     canvas.drawLine(Offset(0, mid), Offset(left, mid), stroke);
     canvas.drawLine(Offset(right, mid), Offset(size.width, mid), stroke);

@@ -155,14 +155,12 @@ class _LabScreenState extends State<LabScreen> {
               ),
               const SizedBox(height: 16),
               SurfaceCard(
-                onTap:
-                    () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder:
-                            (BuildContext context) =>
-                                const BooleanWorkspaceScreen(),
-                      ),
-                    ),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (BuildContext context) =>
+                        const BooleanWorkspaceScreen(),
+                  ),
+                ),
                 child: Row(
                   children: <Widget>[
                     IconTile(icon: Icons.functions_rounded),
@@ -316,16 +314,14 @@ class _GateChoice extends StatelessWidget {
           width: 74,
           padding: const EdgeInsets.symmetric(vertical: 10),
           decoration: BoxDecoration(
-            color:
-                selected
-                    ? theme.colorScheme.primary.withValues(alpha: 0.1)
-                    : theme.colorScheme.surfaceContainerLowest,
+            color: selected
+                ? theme.colorScheme.primary.withValues(alpha: 0.1)
+                : theme.colorScheme.surfaceContainerLowest,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color:
-                  selected
-                      ? theme.colorScheme.primary
-                      : theme.colorScheme.outlineVariant,
+              color: selected
+                  ? theme.colorScheme.primary
+                  : theme.colorScheme.outlineVariant,
               width: selected ? 1.5 : 1,
             ),
           ),
@@ -335,20 +331,18 @@ class _GateChoice extends StatelessWidget {
                 type: type,
                 size: 32,
                 strokeWidth: 1.6,
-                color:
-                    selected
-                        ? theme.colorScheme.primary
-                        : theme.colorScheme.onSurfaceVariant,
+                color: selected
+                    ? theme.colorScheme.primary
+                    : theme.colorScheme.onSurfaceVariant,
               ),
               const SizedBox(height: 6),
               TechnicalText(
                 type.technicalName,
                 style: theme.textTheme.labelSmall?.copyWith(
                   fontWeight: FontWeight.w700,
-                  color:
-                      selected
-                          ? theme.colorScheme.primary
-                          : theme.colorScheme.onSurfaceVariant,
+                  color: selected
+                      ? theme.colorScheme.primary
+                      : theme.colorScheme.onSurfaceVariant,
                 ),
               ),
             ],
@@ -382,10 +376,9 @@ class _InputToggle extends StatelessWidget {
       button: true,
       enabled: enabled,
       child: Material(
-        color:
-            enabled
-                ? theme.colorScheme.surfaceContainerLow
-                : theme.colorScheme.surfaceContainerLow.withValues(alpha: 0.5),
+        color: enabled
+            ? theme.colorScheme.surfaceContainerLow
+            : theme.colorScheme.surfaceContainerLow.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(12),
         child: InkWell(
           onTap: enabled ? () => onChanged(!value) : null,
@@ -395,10 +388,9 @@ class _InputToggle extends StatelessWidget {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color:
-                    value
-                        ? colors.highSignal.withValues(alpha: 0.4)
-                        : theme.colorScheme.outlineVariant,
+                color: value
+                    ? colors.highSignal.withValues(alpha: 0.4)
+                    : theme.colorScheme.outlineVariant,
               ),
             ),
             child: Row(

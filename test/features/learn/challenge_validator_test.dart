@@ -11,12 +11,9 @@ void main() {
       final LearningChallenge challenge = kChallenges.firstWhere(
         (LearningChallenge item) => item.id == 'challenge_and',
       );
-      final CircuitGraph graph =
-          CircuitTemplates.all
-              .firstWhere(
-                (CircuitTemplate template) => template.id == 'half_adder',
-              )
-              .builder();
+      final CircuitGraph graph = CircuitTemplates.all
+          .firstWhere((CircuitTemplate template) => template.id == 'half_adder')
+          .builder();
       // A plain AND circuit for the challenge.
       final CircuitGraph andGraph = CircuitGraph(
         nodes: <CircuitNode>[
@@ -272,22 +269,16 @@ void main() {
     });
 
     test('the half adder adds 1 + 1 correctly', () {
-      final CircuitGraph graph =
-          CircuitTemplates.all
-              .firstWhere(
-                (CircuitTemplate template) => template.id == 'half_adder',
-              )
-              .builder();
+      final CircuitGraph graph = CircuitTemplates.all
+          .firstWhere((CircuitTemplate template) => template.id == 'half_adder')
+          .builder();
       final CircuitGraph withInputs = graph.copyWith(
-        nodes:
-            graph.nodes
-                .map(
-                  (CircuitNode node) =>
-                      node.type.isInput
-                          ? node.copyWith(inputValue: true)
-                          : node,
-                )
-                .toList(),
+        nodes: graph.nodes
+            .map(
+              (CircuitNode node) =>
+                  node.type.isInput ? node.copyWith(inputValue: true) : node,
+            )
+            .toList(),
       );
       final SimulationResult report = CircuitValidator.simulate(withInputs);
       final CircuitNode sum = withInputs.outputs.firstWhere(

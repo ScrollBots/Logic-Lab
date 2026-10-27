@@ -21,8 +21,9 @@ class UpdateMemory {
   }) {
     return UpdateMemory(
       lastCheckAt: lastCheckAt ?? this.lastCheckAt,
-      skippedVersion:
-          clearSkipped ? null : (skippedVersion ?? this.skippedVersion),
+      skippedVersion: clearSkipped
+          ? null
+          : (skippedVersion ?? this.skippedVersion),
     );
   }
 }
@@ -51,10 +52,12 @@ class SharedPreferencesUpdateStore implements UpdateStore {
         final Object? checkedAt = decoded['lastCheckAt'];
         final Object? skipped = decoded['skippedVersion'];
         return UpdateMemory(
-          lastCheckAt:
-              checkedAt is String ? DateTime.tryParse(checkedAt) : null,
-          skippedVersion:
-              skipped is String && skipped.isNotEmpty ? skipped : null,
+          lastCheckAt: checkedAt is String
+              ? DateTime.tryParse(checkedAt)
+              : null,
+          skippedVersion: skipped is String && skipped.isNotEmpty
+              ? skipped
+              : null,
         );
       }
     } on FormatException {

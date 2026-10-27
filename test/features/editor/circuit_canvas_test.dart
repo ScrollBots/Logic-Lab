@@ -46,17 +46,16 @@ CircuitProject _wireProject({bool high = false, bool decoder = false}) {
           label: 'TARGET',
         ),
       ],
-      wires:
-          high
-              ? <CircuitWire>[
-                CircuitWire(
-                  id: 'wire',
-                  fromNodeId: 'source',
-                  toNodeId: 'target',
-                  toInputIndex: 0,
-                ),
-              ]
-              : const <CircuitWire>[],
+      wires: high
+          ? <CircuitWire>[
+              CircuitWire(
+                id: 'wire',
+                fromNodeId: 'source',
+                toNodeId: 'target',
+                toInputIndex: 0,
+              ),
+            ]
+          : const <CircuitWire>[],
     ),
   );
 }
@@ -100,14 +99,16 @@ void main() {
     expect(dark.canvas, const Color(0xFF0F172A));
     const Color customHigh = Color(0xFF00FFFF);
     const Color customLow = Color(0xFFFF00FF);
-    final LogicLabColors custom =
-        theme(high: customHigh, low: customLow).extension<LogicLabColors>()!;
+    final LogicLabColors custom = theme(
+      high: customHigh,
+      low: customLow,
+    ).extension<LogicLabColors>()!;
     expect(custom.highSignal, customHigh);
     expect(custom.lowSignal, customLow);
     expect(
-      theme(
-        brightness: Brightness.light,
-      ).extension<LogicLabColors>()!.highSignal,
+      theme(brightness: Brightness.light)
+          .extension<LogicLabColors>()!
+          .highSignal,
       const Color(0xFF1D9B72),
     );
   });
@@ -152,9 +153,8 @@ void main() {
       );
       expect(painter(pendingSourcePort: 1).shouldRepaint(original), isTrue);
       expect(
-        painter(
-          selectedNodeIds: const <String>{'gate'},
-        ).shouldRepaint(original),
+        painter(selectedNodeIds: const <String>{'gate'})
+            .shouldRepaint(original),
         isTrue,
       );
     },

@@ -183,8 +183,8 @@ void main() {
       final CircuitNode gate = builder.addModule(ComponentType.andGate);
       builder.connect(a, gate, 0);
       // The second input stays unconnected, so it is unknown.
-      final SimulationResult result =
-          CircuitSimulator(builder.build()).evaluate();
+      final SimulationResult result = CircuitSimulator(builder.build())
+          .evaluate();
       expect(result.signalOf(gate.id), LogicSignal.low);
     });
 
@@ -193,8 +193,8 @@ void main() {
       final CircuitNode a = builder.addInput('A', value: true);
       final CircuitNode gate = builder.addModule(ComponentType.orGate);
       builder.connect(a, gate, 0);
-      final SimulationResult result =
-          CircuitSimulator(builder.build()).evaluate();
+      final SimulationResult result = CircuitSimulator(builder.build())
+          .evaluate();
       expect(result.signalOf(gate.id), LogicSignal.high);
     });
 
@@ -203,8 +203,8 @@ void main() {
       final CircuitNode a = builder.addInput('A');
       final CircuitNode gate = builder.addModule(ComponentType.andGate);
       builder.connect(a, gate, 0);
-      final SimulationResult result =
-          CircuitSimulator(builder.build()).evaluate();
+      final SimulationResult result = CircuitSimulator(builder.build())
+          .evaluate();
       // AND with a LOW input is LOW even if the other input is unknown, but
       // the circuit itself is still reported as incomplete.
       expect(result.signalOf(gate.id), LogicSignal.low);
@@ -229,8 +229,8 @@ void main() {
       );
       builder.connect(data, buffer, 0);
       builder.connect(enable, buffer, 1);
-      final SimulationResult result =
-          CircuitSimulator(builder.build()).evaluate();
+      final SimulationResult result = CircuitSimulator(builder.build())
+          .evaluate();
       expect(result.signalOf(buffer.id), LogicSignal.high);
     });
 
@@ -243,8 +243,8 @@ void main() {
       );
       builder.connect(data, buffer, 0);
       builder.connect(enable, buffer, 1);
-      final SimulationResult result =
-          CircuitSimulator(builder.build()).evaluate();
+      final SimulationResult result = CircuitSimulator(builder.build())
+          .evaluate();
       expect(result.signalOf(buffer.id), LogicSignal.highImpedance);
       expect(result.signalOf(buffer.id).isKnown, isFalse);
     });
@@ -328,8 +328,8 @@ void main() {
       final CircuitNode adder = builder.addModule(ComponentType.halfAdder);
       builder.connect(a, adder, 0);
       builder.connect(b, adder, 1);
-      final SimulationResult result =
-          CircuitSimulator(builder.build()).evaluate();
+      final SimulationResult result = CircuitSimulator(builder.build())
+          .evaluate();
       expect(result.signalOf(adder.id, 0), LogicSignal.low);
       expect(result.signalOf(adder.id, 1), LogicSignal.low);
 
@@ -583,17 +583,14 @@ void main() {
 
       // With the enable low the latch keeps its value.
       final CircuitGraph hold = builder.build().copyWith(
-        nodes:
-            builder
-                .build()
-                .nodes
-                .map(
-                  (CircuitNode node) =>
-                      node.label == 'EN'
-                          ? node.copyWith(inputValue: false)
-                          : node,
-                )
-                .toList(),
+        nodes: builder
+            .build()
+            .nodes
+            .map(
+              (CircuitNode node) =>
+                  node.label == 'EN' ? node.copyWith(inputValue: false) : node,
+            )
+            .toList(),
       );
       simulator.updateGraph(hold);
       result = simulator.evaluate();

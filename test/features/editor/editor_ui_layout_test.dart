@@ -31,8 +31,8 @@ CircuitProject _emptyProject() {
 
 Widget _wrap(Widget child) {
   return ChangeNotifierProvider<SettingsController>(
-    create:
-        (_) => SettingsController(MemorySettingsStore(), const AppSettings()),
+    create: (_) =>
+        SettingsController(MemorySettingsStore(), const AppSettings()),
     child: MaterialApp(home: child),
   );
 }
@@ -86,8 +86,8 @@ void main() {
     WidgetTester tester,
   ) async {
     await _openTray(tester);
-    final String halfAdder =
-        ComponentLibrary.specOf(ComponentType.halfAdder).title;
+    final String halfAdder = ComponentLibrary.specOf(ComponentType.halfAdder)
+        .title;
     final Finder bases = find.descendant(
       of: find.byType(ChoiceChip),
       matching: find.text('پایه‌ها'),

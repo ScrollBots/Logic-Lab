@@ -89,8 +89,9 @@ ExerciseCircuit gateExercise(
   final bool unary =
       type == ComponentType.notGate || type == ComponentType.bufferGate;
   final int ports = inputCount ?? (unary ? 1 : 2);
-  final List<String> labels =
-      ports == 1 ? const <String>['A'] : const <String>['A', 'B'];
+  final List<String> labels = ports == 1
+      ? const <String>['A']
+      : const <String>['A', 'B'];
   return ExerciseCircuit(
     expression: expression ?? expressionForGate(type),
     inputLabels: labels,
@@ -151,8 +152,9 @@ CircuitGraph buildCompound({
   Map<String, bool> values = const <String, bool>{},
   int inputCount = 2,
 }) {
-  final List<String> labels =
-      inputCount == 1 ? const <String>['A'] : const <String>['A', 'B'];
+  final List<String> labels = inputCount == 1
+      ? const <String>['A']
+      : const <String>['A', 'B'];
   final List<CircuitNode> nodes = <CircuitNode>[
     for (int index = 0; index < labels.length; index++)
       CircuitNode(
@@ -212,26 +214,25 @@ ExerciseCircuit compoundExercise({
 ExerciseCircuit combiningExercise() {
   return compoundExercise(
     expression: 'Y = A·B + A·B̅',
-    build:
-        (Map<String, bool> values) => buildCompound(
-          values: values,
-          gates: const <ComponentType>[
-            ComponentType.notGate,
-            ComponentType.andGate,
-            ComponentType.andGate,
-            ComponentType.orGate,
-          ],
-          wires: const <(int, int, int)>[
-            (1, 2, 0),
-            (0, 3, 0),
-            (1, 3, 1),
-            (0, 4, 0),
-            (2, 4, 1),
-            (3, 5, 0),
-            (4, 5, 1),
-            (5, 6, 0),
-          ],
-        ),
+    build: (Map<String, bool> values) => buildCompound(
+      values: values,
+      gates: const <ComponentType>[
+        ComponentType.notGate,
+        ComponentType.andGate,
+        ComponentType.andGate,
+        ComponentType.orGate,
+      ],
+      wires: const <(int, int, int)>[
+        (1, 2, 0),
+        (0, 3, 0),
+        (1, 3, 1),
+        (0, 4, 0),
+        (2, 4, 1),
+        (3, 5, 0),
+        (4, 5, 1),
+        (5, 6, 0),
+      ],
+    ),
   );
 }
 
@@ -239,20 +240,16 @@ ExerciseCircuit combiningExercise() {
 ExerciseCircuit implicationExercise() {
   return compoundExercise(
     expression: 'Y = ¬A + B',
-    build:
-        (Map<String, bool> values) => buildCompound(
-          values: values,
-          gates: const <ComponentType>[
-            ComponentType.notGate,
-            ComponentType.orGate,
-          ],
-          wires: const <(int, int, int)>[
-            (0, 2, 0),
-            (2, 3, 0),
-            (1, 3, 1),
-            (3, 4, 0),
-          ],
-        ),
+    build: (Map<String, bool> values) => buildCompound(
+      values: values,
+      gates: const <ComponentType>[ComponentType.notGate, ComponentType.orGate],
+      wires: const <(int, int, int)>[
+        (0, 2, 0),
+        (2, 3, 0),
+        (1, 3, 1),
+        (3, 4, 0),
+      ],
+    ),
   );
 }
 
@@ -260,28 +257,27 @@ ExerciseCircuit implicationExercise() {
 ExerciseCircuit xnorFromGatesExercise() {
   return compoundExercise(
     expression: 'Y = A·B + A̅·B̅',
-    build:
-        (Map<String, bool> values) => buildCompound(
-          values: values,
-          gates: const <ComponentType>[
-            ComponentType.notGate,
-            ComponentType.notGate,
-            ComponentType.andGate,
-            ComponentType.andGate,
-            ComponentType.orGate,
-          ],
-          wires: const <(int, int, int)>[
-            (0, 2, 0),
-            (1, 3, 0),
-            (0, 4, 0),
-            (1, 4, 1),
-            (2, 5, 0),
-            (3, 5, 1),
-            (4, 6, 0),
-            (5, 6, 1),
-            (6, 7, 0),
-          ],
-        ),
+    build: (Map<String, bool> values) => buildCompound(
+      values: values,
+      gates: const <ComponentType>[
+        ComponentType.notGate,
+        ComponentType.notGate,
+        ComponentType.andGate,
+        ComponentType.andGate,
+        ComponentType.orGate,
+      ],
+      wires: const <(int, int, int)>[
+        (0, 2, 0),
+        (1, 3, 0),
+        (0, 4, 0),
+        (1, 4, 1),
+        (2, 5, 0),
+        (3, 5, 1),
+        (4, 6, 0),
+        (5, 6, 1),
+        (6, 7, 0),
+      ],
+    ),
   );
 }
 
@@ -332,8 +328,9 @@ class SequentialExercise {
     final List<bool?> states = <bool?>[];
     for (final Map<String, bool> values in steps) {
       simulator.updateGraph(build(values));
-      final SimulationResult result =
-          clocked ? simulator.stepClock() : simulator.evaluate();
+      final SimulationResult result = clocked
+          ? simulator.stepClock()
+          : simulator.evaluate();
       states.add(
         result.hasErrors ? null : result.signalOf(outputNodeId).booleanValue,
       );
@@ -420,12 +417,11 @@ SequentialExercise dLatchTransparentExercise() {
       <String, bool>{'D': true, 'EN': true},
       <String, bool>{'D': false, 'EN': true},
     ],
-    build:
-        (Map<String, bool> values) => _statefulExerciseGraph(
-          type: ComponentType.dLatch,
-          values: values,
-          inputPorts: const <String, int>{'D': 0, 'EN': 1},
-        ),
+    build: (Map<String, bool> values) => _statefulExerciseGraph(
+      type: ComponentType.dLatch,
+      values: values,
+      inputPorts: const <String, int>{'D': 0, 'EN': 1},
+    ),
   );
 }
 
@@ -442,12 +438,11 @@ SequentialExercise dLatchHoldExercise() {
       <String, bool>{'D': false, 'EN': false},
       <String, bool>{'D': true, 'EN': false},
     ],
-    build:
-        (Map<String, bool> values) => _statefulExerciseGraph(
-          type: ComponentType.dLatch,
-          values: values,
-          inputPorts: const <String, int>{'D': 0, 'EN': 1},
-        ),
+    build: (Map<String, bool> values) => _statefulExerciseGraph(
+      type: ComponentType.dLatch,
+      values: values,
+      inputPorts: const <String, int>{'D': 0, 'EN': 1},
+    ),
   );
 }
 
@@ -463,12 +458,11 @@ SequentialExercise srLatchExercise() {
       <String, bool>{'S': true, 'R': false},
       <String, bool>{'S': false, 'R': true},
     ],
-    build:
-        (Map<String, bool> values) => _statefulExerciseGraph(
-          type: ComponentType.srLatch,
-          values: values,
-          inputPorts: const <String, int>{'S': 0, 'R': 1},
-        ),
+    build: (Map<String, bool> values) => _statefulExerciseGraph(
+      type: ComponentType.srLatch,
+      values: values,
+      inputPorts: const <String, int>{'S': 0, 'R': 1},
+    ),
   );
 }
 
@@ -484,13 +478,12 @@ SequentialExercise dFlipFlopExercise() {
       <String, bool>{'D': false},
       <String, bool>{'D': true},
     ],
-    build:
-        (Map<String, bool> values) => _statefulExerciseGraph(
-          type: ComponentType.dFlipFlop,
-          values: values,
-          inputPorts: const <String, int>{'D': 0},
-          clockPort: 1,
-        ),
+    build: (Map<String, bool> values) => _statefulExerciseGraph(
+      type: ComponentType.dFlipFlop,
+      values: values,
+      inputPorts: const <String, int>{'D': 0},
+      clockPort: 1,
+    ),
   );
 }
 
@@ -507,13 +500,12 @@ SequentialExercise tFlipFlopExercise() {
       <String, bool>{'T': true},
       <String, bool>{'T': true},
     ],
-    build:
-        (Map<String, bool> values) => _statefulExerciseGraph(
-          type: ComponentType.tFlipFlop,
-          values: values,
-          inputPorts: const <String, int>{'T': 0},
-          clockPort: 1,
-        ),
+    build: (Map<String, bool> values) => _statefulExerciseGraph(
+      type: ComponentType.tFlipFlop,
+      values: values,
+      inputPorts: const <String, int>{'T': 0},
+      clockPort: 1,
+    ),
   );
 }
 
@@ -531,15 +523,14 @@ SequentialExercise counterBitExercise(int bit) {
       <String, bool>{'RST': false},
       <String, bool>{'RST': false},
     ],
-    build:
-        (Map<String, bool> values) => _statefulExerciseGraph(
-          type: ComponentType.counter4,
-          values: values,
-          inputPorts: const <String, int>{'RST': 1},
-          clockPort: 0,
-          outputPort: bit,
-          outputLabel: 'Q$bit',
-        ),
+    build: (Map<String, bool> values) => _statefulExerciseGraph(
+      type: ComponentType.counter4,
+      values: values,
+      inputPorts: const <String, int>{'RST': 1},
+      clockPort: 0,
+      outputPort: bit,
+      outputLabel: 'Q$bit',
+    ),
   );
 }
 
@@ -741,11 +732,10 @@ final class GateChoiceStep extends LessonStep {
     final bool isCorrect = choice == correct;
     return StepEvaluation(
       correct: isCorrect,
-      feedback:
-          isCorrect
-              ? 'درست است.'
-              : 'این گزینه درست نیست. رفتار گیت‌ها را در جدول یا تعریفشان '
-                  'دوباره مقایسه کنید.',
+      feedback: isCorrect
+          ? 'درست است.'
+          : 'این گزینه درست نیست. رفتار گیت‌ها را در جدول یا تعریفشان '
+                'دوباره مقایسه کنید.',
       solution: explanation,
       correctLabel: correct.persianName,
     );
@@ -789,10 +779,9 @@ final class TextChoiceStep extends LessonStep {
     final bool isCorrect = choice.correct;
     return StepEvaluation(
       correct: isCorrect,
-      feedback:
-          isCorrect
-              ? 'درست است.'
-              : 'این گزینه درست نیست. به جدول یا تعریف صورت مسئله برگردید.',
+      feedback: isCorrect
+          ? 'درست است.'
+          : 'این گزینه درست نیست. به جدول یا تعریف صورت مسئله برگردید.',
       solution: explanation,
       correctLabel: correctOption.text,
     );

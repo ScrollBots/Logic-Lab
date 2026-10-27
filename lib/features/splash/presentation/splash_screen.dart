@@ -31,9 +31,8 @@ class SplashScreen extends StatelessWidget {
               Text(
                 AppInfo.appName,
                 textDirection: TextDirection.ltr,
-                style: LogicLabTheme.technical(
-                  theme.textTheme.headlineMedium,
-                ).copyWith(fontWeight: FontWeight.w700, letterSpacing: 0.5),
+                style: LogicLabTheme.technical(theme.textTheme.headlineMedium)
+                    .copyWith(fontWeight: FontWeight.w700, letterSpacing: 0.5),
               ),
               const SizedBox(height: 2),
               Text(

@@ -190,11 +190,10 @@ class _LearningSessionScreenState extends State<LearningSessionScreen> {
         _buildPassed = passed;
         _evaluation = StepEvaluation(
           correct: passed,
-          feedback:
-              passed
-                  ? 'مدار شما با شبیه‌ساز بررسی و تأیید شد.'
-                  : 'مدار هنوز شرایط چالش را برآورده نمی‌کند. می‌توانید '
-                      'همان پروژه را باز کنید و سیم‌کشی را اصلاح کنید.',
+          feedback: passed
+              ? 'مدار شما با شبیه‌ساز بررسی و تأیید شد.'
+              : 'مدار هنوز شرایط چالش را برآورده نمی‌کند. می‌توانید '
+                    'همان پروژه را باز کنید و سیم‌کشی را اصلاح کنید.',
           solution: step.explanation,
         );
         _showSolution = passed;
@@ -309,70 +308,69 @@ class _LearningSessionScreenState extends State<LearningSessionScreen> {
         ),
         centerTitle: false,
       ),
-      body:
-          _finished
-              ? _SummaryView(
-                lesson: widget.lesson,
-                review: widget.review,
-                earnedXp: _earnedXp,
-                onClose: () => Navigator.of(context).pop(),
-                onNext: _openNextLesson,
-              )
-              : SafeArea(
-                top: false,
-                child: ResponsiveCenter(
-                  maxWidth: 720,
-                  child: Column(
-                    children: <Widget>[
-                      _SessionProgress(
-                        index: _index,
-                        total: widget.lesson.steps.length,
-                        earnedXp: _earnedXp,
-                      ),
-                      Expanded(
-                        child: ListView(
-                          padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
-                          children: <Widget>[
-                            Text(
-                              _step.title,
-                              style: theme.textTheme.headlineSmall,
+      body: _finished
+          ? _SummaryView(
+              lesson: widget.lesson,
+              review: widget.review,
+              earnedXp: _earnedXp,
+              onClose: () => Navigator.of(context).pop(),
+              onNext: _openNextLesson,
+            )
+          : SafeArea(
+              top: false,
+              child: ResponsiveCenter(
+                maxWidth: 720,
+                child: Column(
+                  children: <Widget>[
+                    _SessionProgress(
+                      index: _index,
+                      total: widget.lesson.steps.length,
+                      earnedXp: _earnedXp,
+                    ),
+                    Expanded(
+                      child: ListView(
+                        padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
+                        children: <Widget>[
+                          Text(
+                            _step.title,
+                            style: theme.textTheme.headlineSmall,
+                          ),
+                          const SizedBox(height: 5),
+                          Text(
+                            _step.objective,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                              height: 1.6,
                             ),
-                            const SizedBox(height: 5),
-                            Text(
-                              _step.objective,
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                                height: 1.6,
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            _buildStepContent(context),
-                            if (_hintsShown > 0) ...<Widget>[
-                              const SizedBox(height: 14),
-                              for (int index = 0; index < _hintsShown; index++)
-                                Padding(
-                                  padding: const EdgeInsets.only(bottom: 8),
-                                  child: InfoBanner(
-                                    icon: Icons.lightbulb_outline_rounded,
-                                    message: _step.hints[index],
-                                  ),
+                          ),
+                          const SizedBox(height: 16),
+                          _buildStepContent(context),
+                          if (_hintsShown > 0) ...<Widget>[
+                            const SizedBox(height: 14),
+                            for (int index = 0; index < _hintsShown; index++)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 8),
+                                child: InfoBanner(
+                                  icon: Icons.lightbulb_outline_rounded,
+                                  message: _step.hints[index],
                                 ),
-                            ],
-                            if (_evaluation != null) ...<Widget>[
-                              const SizedBox(height: 14),
-                              _FeedbackPanel(
-                                evaluation: _evaluation!,
-                                revealSolution: _showSolution,
                               ),
-                            ],
                           ],
-                        ),
+                          if (_evaluation != null) ...<Widget>[
+                            const SizedBox(height: 14),
+                            _FeedbackPanel(
+                              evaluation: _evaluation!,
+                              revealSolution: _showSolution,
+                            ),
+                          ],
+                        ],
                       ),
-                      _buildBottomBar(context),
-                    ],
-                  ),
+                    ),
+                    _buildBottomBar(context),
+                  ],
                 ),
               ),
+            ),
     );
   }
 
@@ -731,16 +729,14 @@ class _BinaryChoice extends StatelessWidget {
           duration: const Duration(milliseconds: 160),
           padding: const EdgeInsets.symmetric(vertical: 18),
           decoration: BoxDecoration(
-            color:
-                selected
-                    ? color.withValues(alpha: 0.13)
-                    : theme.colorScheme.surfaceContainerLowest,
+            color: selected
+                ? color.withValues(alpha: 0.13)
+                : theme.colorScheme.surfaceContainerLowest,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color:
-                  selected
-                      ? color.withValues(alpha: 0.65)
-                      : theme.colorScheme.outlineVariant,
+              color: selected
+                  ? color.withValues(alpha: 0.65)
+                  : theme.colorScheme.outlineVariant,
               width: selected ? 2 : 1,
             ),
           ),
@@ -848,16 +844,14 @@ class _TruthTableRow extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
-        color:
-            mismatch
-                ? colors.danger.withValues(alpha: 0.06)
-                : theme.colorScheme.surfaceContainerLow,
+        color: mismatch
+            ? colors.danger.withValues(alpha: 0.06)
+            : theme.colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color:
-              mismatch
-                  ? colors.danger.withValues(alpha: 0.4)
-                  : theme.colorScheme.outlineVariant,
+          color: mismatch
+              ? colors.danger.withValues(alpha: 0.4)
+              : theme.colorScheme.outlineVariant,
         ),
       ),
       child: Row(
@@ -930,16 +924,14 @@ class _TableToggle extends StatelessWidget {
           height: 40,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color:
-                selected
-                    ? color.withValues(alpha: 0.13)
-                    : theme.colorScheme.surfaceContainerLowest,
+            color: selected
+                ? color.withValues(alpha: 0.13)
+                : theme.colorScheme.surfaceContainerLowest,
             borderRadius: BorderRadius.circular(10),
             border: Border.all(
-              color:
-                  selected
-                      ? color.withValues(alpha: 0.6)
-                      : theme.colorScheme.outlineVariant,
+              color: selected
+                  ? color.withValues(alpha: 0.6)
+                  : theme.colorScheme.outlineVariant,
               width: selected ? 1.6 : 1,
             ),
           ),
@@ -988,10 +980,9 @@ class _SequenceView extends StatelessWidget {
         const SizedBox(height: 10),
         for (int index = 0; index < answers.length; index++)
           _SequenceRow(
-            label:
-                circuit.clocked
-                    ? 'لبهٔ ${PersianFormat.digits(index + 1)}'
-                    : 'گام ${PersianFormat.digits(index + 1)}',
+            label: circuit.clocked
+                ? 'لبهٔ ${PersianFormat.digits(index + 1)}'
+                : 'گام ${PersianFormat.digits(index + 1)}',
             inputs: <String>[
               for (final String label in inputs)
                 '$label=${circuit.steps[index][label] == true ? 1 : 0}',
@@ -1038,16 +1029,14 @@ class _SequenceRow extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
-        color:
-            mismatch
-                ? colors.danger.withValues(alpha: 0.06)
-                : theme.colorScheme.surfaceContainerLow,
+        color: mismatch
+            ? colors.danger.withValues(alpha: 0.06)
+            : theme.colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color:
-              mismatch
-                  ? colors.danger.withValues(alpha: 0.4)
-                  : theme.colorScheme.outlineVariant,
+          color: mismatch
+              ? colors.danger.withValues(alpha: 0.4)
+              : theme.colorScheme.outlineVariant,
         ),
       ),
       child: Row(
@@ -1184,13 +1173,12 @@ class _TextChoiceView extends StatelessWidget {
               correct: locked && option.correct,
               semanticLabel: option.text,
               onTap: locked ? null : () => onChanged(option),
-              child:
-                  option.technical
-                      ? TechnicalText(
-                        option.text,
-                        style: theme.textTheme.titleSmall,
-                      )
-                      : Text(option.text, style: theme.textTheme.bodyMedium),
+              child: option.technical
+                  ? TechnicalText(
+                      option.text,
+                      style: theme.textTheme.titleSmall,
+                    )
+                  : Text(option.text, style: theme.textTheme.bodyMedium),
             ),
           ),
       ],
@@ -1217,12 +1205,11 @@ class _ChoiceTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     final LogicLabColors colors = LogicLabColors.of(context);
-    final Color border =
-        correct
-            ? colors.success
-            : selected
-            ? theme.colorScheme.primary
-            : theme.colorScheme.outlineVariant;
+    final Color border = correct
+        ? colors.success
+        : selected
+        ? theme.colorScheme.primary
+        : theme.colorScheme.outlineVariant;
     return Semantics(
       button: true,
       selected: selected,
@@ -1234,12 +1221,11 @@ class _ChoiceTile extends StatelessWidget {
           duration: const Duration(milliseconds: 160),
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
           decoration: BoxDecoration(
-            color:
-                correct
-                    ? colors.success.withValues(alpha: 0.08)
-                    : selected
-                    ? theme.colorScheme.primary.withValues(alpha: 0.08)
-                    : theme.colorScheme.surfaceContainerLowest,
+            color: correct
+                ? colors.success.withValues(alpha: 0.08)
+                : selected
+                ? theme.colorScheme.primary.withValues(alpha: 0.08)
+                : theme.colorScheme.surfaceContainerLowest,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
               color: border,
@@ -1283,10 +1269,9 @@ class _BuildView extends StatelessWidget {
               Row(
                 children: <Widget>[
                   IconTile(
-                    icon:
-                        passed
-                            ? Icons.verified_rounded
-                            : Icons.account_tree_outlined,
+                    icon: passed
+                        ? Icons.verified_rounded
+                        : Icons.account_tree_outlined,
                     color: passed ? LogicLabColors.of(context).success : null,
                   ),
                   const SizedBox(width: 12),
@@ -1468,10 +1453,9 @@ class _SummaryView extends StatelessWidget {
                     label: 'گام',
                   ),
                   _SummaryStat(
-                    value:
-                        earnedXp > 0
-                            ? '+${PersianFormat.digits(earnedXp)}'
-                            : '۰',
+                    value: earnedXp > 0
+                        ? '+${PersianFormat.digits(earnedXp)}'
+                        : '۰',
                     label: 'XP این جلسه',
                   ),
                   _SummaryStat(

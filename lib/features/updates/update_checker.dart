@@ -60,16 +60,15 @@ class UpdateCheckResult {
     required String downloadUrl,
     required String? updateNotes,
     required String installedVersion,
-  }) =>
-      UpdateCheckResult._internal(
-        state: UpdateCheckState.updateAvailable,
-        latestVersion: latestVersion,
-        downloadUrl: downloadUrl,
-        updateNotes: updateNotes,
-        errorMessage: null,
-        isUpToDate: false,
-        installedVersion: installedVersion,
-      );
+  }) => UpdateCheckResult._internal(
+    state: UpdateCheckState.updateAvailable,
+    latestVersion: latestVersion,
+    downloadUrl: downloadUrl,
+    updateNotes: updateNotes,
+    errorMessage: null,
+    isUpToDate: false,
+    installedVersion: installedVersion,
+  );
 
   /// Create a result indicating an error occurred.
   static UpdateCheckResult error(String message, {String? installedVersion}) =>
@@ -107,7 +106,7 @@ class GitHubUpdateChecker extends ChangeNotifier {
   final String _installedVersion;
 
   GitHubUpdateChecker({String? installedVersion})
-      : _installedVersion = installedVersion ?? AppInfo.version;
+    : _installedVersion = installedVersion ?? AppInfo.version;
 
   /// The current state of the update check.
   UpdateCheckState _state = UpdateCheckState.idle;
@@ -167,8 +166,7 @@ class GitHubUpdateChecker extends ChangeNotifier {
         downloadUrl:
             'https://github.com/ScrollBots/Logic-Lab/releases/download/v1.4.0/'
             'LogicLab-1.4.0-universal.apk',
-        updateNotes:
-            'اصلاحات UI: حذف بخش بروزرسانی از تنظیمات، دکمه برگشت، حذف گروهی مدارات، redesign\theader',
+        updateNotes: 'اصلاحات UI: حذف بخش بروزرسانی از تنظیمات، دکمه برگشت، حذف گروهی مدارات، redesign\theader',
         installedVersion: installed,
       );
     } else {
@@ -184,8 +182,9 @@ class GitHubUpdateChecker extends ChangeNotifier {
       final List<String> aParts = a.split('.');
       final List<String> bParts = b.split('.');
 
-      final int maxLength =
-          aParts.length > bParts.length ? aParts.length : bParts.length;
+      final int maxLength = aParts.length > bParts.length
+          ? aParts.length
+          : bParts.length;
 
       final List<int> aNums = _parseVersions(aParts);
       final List<int> bNums = _parseVersions(bParts);
@@ -380,7 +379,8 @@ class _UpdateCheckerWidgetState extends State<UpdateCheckerWidget>
                 'نسخه ${result.latestVersion} از فعال ${result.installedVersion}',
                 style: theme.textTheme.bodyMedium,
               ),
-              if (result.updateNotes != null && result.updateNotes!.isNotEmpty) ...[
+              if (result.updateNotes != null &&
+                  result.updateNotes!.isNotEmpty) ...[
                 const SizedBox(height: 8),
                 const Text('تغییرات:'),
                 const SizedBox(height: 4),
@@ -459,11 +459,8 @@ class _UpdateCheckerWidgetState extends State<UpdateCheckerWidget>
 Future<UpdateCheckResult> checkForUpdatesFrom({
   String? installedVersion,
 }) async {
-  final checker = GitHubUpdateChecker(
-    installedVersion: installedVersion,
-  );
+  final checker = GitHubUpdateChecker(installedVersion: installedVersion);
   await checker.checkForUpdates();
   return checker.result ??
       UpdateCheckResult.upToDate(installedVersion ?? '0.0.0');
 }
-

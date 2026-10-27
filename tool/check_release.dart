@@ -21,8 +21,9 @@ import 'package:logic_lab/features/updates/domain/app_release.dart';
 import 'package:logic_lab/features/updates/domain/semantic_version.dart';
 
 Future<void> main(List<String> arguments) async {
-  final String localVersion =
-      arguments.isNotEmpty ? arguments.first.trim() : AppInfo.version;
+  final String localVersion = arguments.isNotEmpty
+      ? arguments.first.trim()
+      : AppInfo.version;
   final SemanticVersion? current = SemanticVersion.tryParse(localVersion);
   if (current == null) {
     stderr.writeln(

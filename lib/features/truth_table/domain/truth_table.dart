@@ -210,10 +210,9 @@ class TruthTableGenerator {
       int unknown = 0;
       final Map<String, bool?> outputValues = <String, bool?>{};
       for (final TruthTableOutput output in outputs) {
-        final bool? value =
-            report.isValid
-                ? report.signalOf(output.nodeId, output.port).booleanValue
-                : null;
+        final bool? value = report.isValid
+            ? report.signalOf(output.nodeId, output.port).booleanValue
+            : null;
         outputValues[_key(output)] = value;
         if (value == null) {
           unknown++;

@@ -91,10 +91,12 @@ class _BooleanWorkspaceScreenState extends State<BooleanWorkspaceScreen> {
 
   void _insertToken(String token) {
     final TextEditingValue value = _controller.value;
-    final int start =
-        value.selection.start < 0 ? value.text.length : value.selection.start;
-    final int end =
-        value.selection.end < 0 ? value.text.length : value.selection.end;
+    final int start = value.selection.start < 0
+        ? value.text.length
+        : value.selection.start;
+    final int end = value.selection.end < 0
+        ? value.text.length
+        : value.selection.end;
     final String next = value.text.replaceRange(start, end, token);
     _controller.value = TextEditingValue(
       text: next,
@@ -117,24 +119,23 @@ class _BooleanWorkspaceScreenState extends State<BooleanWorkspaceScreen> {
       }
       final bool? created = await showDialog<bool>(
         context: context,
-        builder:
-            (BuildContext context) => AlertDialog(
-              title: const Text('ساخت مدار'),
-              content: const Text(
-                'یک مدار واقعی از این عبارت ساخته شود و در ویرایشگر باز شود؟ '
-                'مدار از دروازه‌های AND، OR، NOT و XOR و سیم‌های واقعی تشکیل می‌شود.',
-              ),
-              actions: <Widget>[
-                TextButton(
-                  onPressed: () => Navigator.pop(context, false),
-                  child: const Text('انصراف'),
-                ),
-                FilledButton(
-                  onPressed: () => Navigator.pop(context, true),
-                  child: const Text('ساخت و باز کردن'),
-                ),
-              ],
+        builder: (BuildContext context) => AlertDialog(
+          title: const Text('ساخت مدار'),
+          content: const Text(
+            'یک مدار واقعی از این عبارت ساخته شود و در ویرایشگر باز شود؟ '
+            'مدار از دروازه‌های AND، OR، NOT و XOR و سیم‌های واقعی تشکیل می‌شود.',
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('انصراف'),
             ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('ساخت و باز کردن'),
+            ),
+          ],
+        ),
       );
       if (created != true || !mounted) {
         return;
@@ -254,40 +255,38 @@ class _BooleanWorkspaceScreenState extends State<BooleanWorkspaceScreen> {
     }
     await showDialog<void>(
       context: context,
-      builder:
-          (BuildContext context) => AlertDialog(
-            icon: Icon(
-              result.equivalent
-                  ? Icons.verified_rounded
-                  : Icons.compare_arrows_rounded,
-              color:
-                  result.equivalent
-                      ? LogicLabColors.of(context).success
-                      : Theme.of(context).colorScheme.primary,
-            ),
-            title: Text(result.equivalent ? 'هم‌ارز هستند' : 'هم‌ارز نیستند'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Text(result.message),
-                for (final String mismatch in result.mismatches.take(6))
-                  Padding(
-                    padding: const EdgeInsets.only(top: 6),
-                    child: TechnicalText(
-                      mismatch,
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  ),
-              ],
-            ),
-            actions: <Widget>[
-              FilledButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('متوجه شدم'),
+      builder: (BuildContext context) => AlertDialog(
+        icon: Icon(
+          result.equivalent
+              ? Icons.verified_rounded
+              : Icons.compare_arrows_rounded,
+          color: result.equivalent
+              ? LogicLabColors.of(context).success
+              : Theme.of(context).colorScheme.primary,
+        ),
+        title: Text(result.equivalent ? 'هم‌ارز هستند' : 'هم‌ارز نیستند'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text(result.message),
+            for (final String mismatch in result.mismatches.take(6))
+              Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: TechnicalText(
+                  mismatch,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
               ),
-            ],
+          ],
+        ),
+        actions: <Widget>[
+          FilledButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('متوجه شدم'),
           ),
+        ],
+      ),
     );
   }
 
@@ -339,10 +338,9 @@ class _BooleanWorkspaceScreenState extends State<BooleanWorkspaceScreen> {
                   Expanded(
                     child: AnimatedSwitcher(
                       duration: const Duration(milliseconds: 220),
-                      child:
-                          _tab == 0
-                              ? _analysisTab(context)
-                              : _compareTab(context),
+                      child: _tab == 0
+                          ? _analysisTab(context)
+                          : _compareTab(context),
                     ),
                   ),
                 ],
@@ -473,9 +471,8 @@ class _BooleanWorkspaceScreenState extends State<BooleanWorkspaceScreen> {
             style: LogicLabTheme.technical(theme.textTheme.bodyLarge),
             decoration: InputDecoration(
               hintText: 'A & B | !C',
-              hintStyle: LogicLabTheme.technical(
-                theme.textTheme.bodyMedium,
-              ).copyWith(color: theme.colorScheme.onSurfaceVariant),
+              hintStyle: LogicLabTheme.technical(theme.textTheme.bodyMedium)
+                  .copyWith(color: theme.colorScheme.onSurfaceVariant),
               errorText: _parseError?.message,
               suffixIcon: IconButton(
                 tooltip: 'پاک کردن',
@@ -548,8 +545,8 @@ class _BooleanWorkspaceScreenState extends State<BooleanWorkspaceScreen> {
         ),
       ],
       selected: <int>{_tab},
-      onSelectionChanged:
-          (Set<int> value) => setState(() => _tab = value.first),
+      onSelectionChanged: (Set<int> value) =>
+          setState(() => _tab = value.first),
     );
   }
 
@@ -558,8 +555,7 @@ class _BooleanWorkspaceScreenState extends State<BooleanWorkspaceScreen> {
       return EmptyState(
         icon: Icons.functions_rounded,
         title: 'یک عبارت وارد کنید',
-        message:
-            'با وارد کردن یک عبارت، جدول حقیقت، نتیجه ارزیابی و شکل ساده‌شده محاسبه می‌شود.',
+        message: 'با وارد کردن یک عبارت، جدول حقیقت، نتیجه ارزیابی و شکل ساده‌شده محاسبه می‌شود.',
         action: FilledButton.icon(
           onPressed: () => _insertToken('(A & B) | !C'),
           icon: const Icon(Icons.auto_awesome_rounded),
@@ -668,14 +664,13 @@ class _BooleanWorkspaceScreenState extends State<BooleanWorkspaceScreen> {
           SectionHeader(
             title: 'ساده‌سازی',
             subtitle: result.method,
-            trailing:
-                result.exact
-                    ? Icon(
-                      Icons.verified_rounded,
-                      color: LogicLabColors.of(context).success,
-                      size: 20,
-                    )
-                    : null,
+            trailing: result.exact
+                ? Icon(
+                    Icons.verified_rounded,
+                    color: LogicLabColors.of(context).success,
+                    size: 20,
+                  )
+                : null,
           ),
           if (result.simplifiedText != null) ...<Widget>[
             Container(
@@ -714,12 +709,12 @@ class _BooleanWorkspaceScreenState extends State<BooleanWorkspaceScreen> {
             const SizedBox(height: 10),
           ],
           InfoBanner(
-            tone:
-                result.exact ? InfoBannerTone.success : InfoBannerTone.warning,
-            icon:
-                result.exact
-                    ? Icons.check_circle_outline_rounded
-                    : Icons.info_outline_rounded,
+            tone: result.exact
+                ? InfoBannerTone.success
+                : InfoBannerTone.warning,
+            icon: result.exact
+                ? Icons.check_circle_outline_rounded
+                : Icons.info_outline_rounded,
             message: result.message,
           ),
         ],
@@ -794,11 +789,11 @@ class _BooleanWorkspaceScreenState extends State<BooleanWorkspaceScreen> {
                   for (int index = 0; index < table.rows.length; index++)
                     Container(
                       decoration: BoxDecoration(
-                        color:
-                            index.isEven
-                                ? Colors.transparent
-                                : theme.colorScheme.surfaceContainerLow
-                                    .withValues(alpha: 0.5),
+                        color: index.isEven
+                            ? Colors.transparent
+                            : theme.colorScheme.surfaceContainerLow.withValues(
+                                alpha: 0.5,
+                              ),
                       ),
                       child: Row(
                         children: <Widget>[
@@ -855,8 +850,7 @@ class _BooleanWorkspaceScreenState extends State<BooleanWorkspaceScreen> {
             children: <Widget>[
               SectionHeader(
                 title: 'مقایسه دو عبارت',
-                subtitle:
-                    'دو عبارت با محاسبه جدول حقیقت روی همه ترکیب‌های متغیرهای مشترک مقایسه می‌شوند.',
+                subtitle: 'دو عبارت با محاسبه جدول حقیقت روی همه ترکیب‌های متغیرهای مشترک مقایسه می‌شوند.',
               ),
               TextField(
                 controller: _compareController,
@@ -884,14 +878,12 @@ class _BooleanWorkspaceScreenState extends State<BooleanWorkspaceScreen> {
               if (_comparison != null) ...<Widget>[
                 const SizedBox(height: 12),
                 InfoBanner(
-                  tone:
-                      _comparison!.equivalent
-                          ? InfoBannerTone.success
-                          : InfoBannerTone.warning,
-                  icon:
-                      _comparison!.equivalent
-                          ? Icons.check_circle_outline_rounded
-                          : Icons.warning_amber_rounded,
+                  tone: _comparison!.equivalent
+                      ? InfoBannerTone.success
+                      : InfoBannerTone.warning,
+                  icon: _comparison!.equivalent
+                      ? Icons.check_circle_outline_rounded
+                      : Icons.warning_amber_rounded,
                   message: _comparison!.summary,
                 ),
               ],

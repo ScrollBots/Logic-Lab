@@ -44,8 +44,10 @@ void main() {
   test('hit testing selects the nearest pin in overlapping touch targets', () {
     final CircuitNode gate = _gate(ComponentType.andGate, 8);
     final CircuitGraph graph = CircuitGraph(nodes: <CircuitNode>[gate]);
-    final CanvasPoint port =
-        CircuitGeometry.portPosition(gate, CircuitPin.input(gate.id, 3))!;
+    final CanvasPoint port = CircuitGeometry.portPosition(
+      gate,
+      CircuitPin.input(gate.id, 3),
+    )!;
     final CircuitPin? closest = CircuitGeometry.portAt(
       graph,
       port.translate(2, 1),
@@ -57,8 +59,10 @@ void main() {
       CircuitGeometry.portAt(graph, port, radius: 22, outputOnly: true),
       isNull,
     );
-    final CanvasPoint output =
-        CircuitGeometry.portPosition(gate, CircuitPin.output(gate.id, 0))!;
+    final CanvasPoint output = CircuitGeometry.portPosition(
+      gate,
+      CircuitPin.output(gate.id, 0),
+    )!;
     expect(CircuitGeometry.portAt(graph, output, inputOnly: true), isNull);
   });
 

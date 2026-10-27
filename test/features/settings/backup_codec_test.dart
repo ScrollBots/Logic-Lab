@@ -50,22 +50,21 @@ Map<String, Object?> _envelope({
 void main() {
   group('Backup decoding', () {
     test('a backup restores projects, progress and settings', () {
-      final BackupPayload payload =
-          BackupCodec.decode(
-            jsonEncode(
-              _envelope(
-                progress: <Object?>[
-                  <String, Object?>{
-                    'itemId': 'lesson-a',
-                    'completed': true,
-                    'bestScore': 90,
-                    'attempts': 3,
-                    'updatedAt': '2026-01-03T00:00:00.000Z',
-                  },
-                ],
-              ),
-            ),
-          )!;
+      final BackupPayload payload = BackupCodec.decode(
+        jsonEncode(
+          _envelope(
+            progress: <Object?>[
+              <String, Object?>{
+                'itemId': 'lesson-a',
+                'completed': true,
+                'bestScore': 90,
+                'attempts': 3,
+                'updatedAt': '2026-01-03T00:00:00.000Z',
+              },
+            ],
+          ),
+        ),
+      )!;
 
       expect(payload.projects.single.name, 'پروژه نمونه');
       expect(payload.projects.single.graph.wires.length, 1);
@@ -77,23 +76,22 @@ void main() {
     });
 
     test('wrong value types in progress do not abort the restore', () {
-      final BackupPayload payload =
-          BackupCodec.decode(
-            jsonEncode(
-              _envelope(
-                progress: <Object?>[
-                  <String, Object?>{
-                    'itemId': 'lesson-a',
-                    'completed': 'yes',
-                    'bestScore': 'high',
-                    'attempts': 2.5,
-                    'updatedAt': '2026-01-03T00:00:00.000Z',
-                  },
-                  <String, Object?>{'completed': true},
-                ],
-              ),
-            ),
-          )!;
+      final BackupPayload payload = BackupCodec.decode(
+        jsonEncode(
+          _envelope(
+            progress: <Object?>[
+              <String, Object?>{
+                'itemId': 'lesson-a',
+                'completed': 'yes',
+                'bestScore': 'high',
+                'attempts': 2.5,
+                'updatedAt': '2026-01-03T00:00:00.000Z',
+              },
+              <String, Object?>{'completed': true},
+            ],
+          ),
+        ),
+      )!;
 
       expect(payload.progress.length, 1);
       expect(payload.progress.single.completed, isFalse);
@@ -109,12 +107,9 @@ void main() {
           (circuit['nodes']! as List<Object?>).first! as Map<String, Object?>;
       node['label'] = 42;
 
-      final BackupPayload payload =
-          BackupCodec.decode(
-            jsonEncode(
-              _envelope(projects: <Object?>[broken, _project().toJson()]),
-            ),
-          )!;
+      final BackupPayload payload = BackupCodec.decode(
+        jsonEncode(_envelope(projects: <Object?>[broken, _project().toJson()])),
+      )!;
 
       expect(payload.projects.length, 1);
       expect(payload.projects.single.id, 'p1');
@@ -132,10 +127,9 @@ void main() {
         'fromPort': 0,
       });
 
-      final BackupPayload payload =
-          BackupCodec.decode(
-            jsonEncode(_envelope(projects: <Object?>[broken])),
-          )!;
+      final BackupPayload payload = BackupCodec.decode(
+        jsonEncode(_envelope(projects: <Object?>[broken])),
+      )!;
 
       expect(payload.projects, isEmpty);
     });

@@ -185,8 +185,9 @@ class LearningState {
     required DateTime now,
     int xpOverride = -1,
   }) {
-    final int gain =
-        correct ? (xpOverride >= 0 ? xpOverride : (usedHint ? 4 : 10)) : 0;
+    final int gain = correct
+        ? (xpOverride >= 0 ? xpOverride : (usedHint ? 4 : 10))
+        : 0;
     final Map<String, ConceptMastery> updatedConcepts = {...concepts};
     for (final String concept in conceptIds) {
       final ConceptMastery current =
@@ -327,16 +328,16 @@ class LearningState {
       xpToday: _readCount(raw['xpToday']),
       streakDays: _readCount(raw['streakDays']),
       bestStreak: _readCount(raw['bestStreak']),
-      lastActiveDay:
-          raw['lastActiveDay'] is String
-              ? raw['lastActiveDay']! as String
-              : null,
+      lastActiveDay: raw['lastActiveDay'] is String
+          ? raw['lastActiveDay']! as String
+          : null,
       concepts: concepts,
       completedLessons: _readStringSet(raw['completedLessons']),
       completedChallenges: _readStringSet(raw['completedChallenges']),
       stepProgress: stepProgress,
-      lastLessonId:
-          raw['lastLessonId'] is String ? raw['lastLessonId']! as String : null,
+      lastLessonId: raw['lastLessonId'] is String
+          ? raw['lastLessonId']! as String
+          : null,
       onboardingSeen: raw['onboardingSeen'] == true,
     );
   }

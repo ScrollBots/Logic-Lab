@@ -21,22 +21,21 @@ Widget _host({
       GlobalCupertinoLocalizations.delegate,
     ],
     home: Builder(
-      builder:
-          (BuildContext context) => Scaffold(
-            body: Center(
-              child: ElevatedButton(
-                onPressed: () async {
-                  final UpdateChoice? choice = await showUpdateDialog(
-                    context,
-                    release: release,
-                    currentVersion: currentVersion,
-                  );
-                  onResult(choice);
-                },
-                child: const Text('open'),
-              ),
-            ),
+      builder: (BuildContext context) => Scaffold(
+        body: Center(
+          child: ElevatedButton(
+            onPressed: () async {
+              final UpdateChoice? choice = await showUpdateDialog(
+                context,
+                release: release,
+                currentVersion: currentVersion,
+              );
+              onResult(choice);
+            },
+            child: const Text('open'),
           ),
+        ),
+      ),
     ),
   );
 }
@@ -151,10 +150,9 @@ void main() {
   testWidgets('a release without notes still renders a complete prompt', (
     WidgetTester tester,
   ) async {
-    final AppRelease release =
-        AppRelease.fromGitHubJson(
-          releasePayload(body: '', assets: <Map<String, Object?>>[]),
-        )!;
+    final AppRelease release = AppRelease.fromGitHubJson(
+      releasePayload(body: '', assets: <Map<String, Object?>>[]),
+    )!;
     await tester.pumpWidget(
       _host(release: release, onResult: (UpdateChoice? _) {}),
     );

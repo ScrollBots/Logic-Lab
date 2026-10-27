@@ -13,14 +13,13 @@ class _Built {
 
   CircuitGraph withValues(List<bool> values) {
     return graph.copyWith(
-      nodes:
-          graph.nodes.map((CircuitNode node) {
-            if (!node.type.isInput) {
-              return node;
-            }
-            final int index = inputs.indexOf(node);
-            return node.copyWith(inputValue: index >= 0 && values[index]);
-          }).toList(),
+      nodes: graph.nodes.map((CircuitNode node) {
+        if (!node.type.isInput) {
+          return node;
+        }
+        final int index = inputs.indexOf(node);
+        return node.copyWith(inputValue: index >= 0 && values[index]);
+      }).toList(),
     );
   }
 }
@@ -63,8 +62,9 @@ void main() {
           (combination >> 1) & 1 == 1,
           combination & 1 == 1,
         ];
-        final SimulationResult result =
-            CircuitSimulator(built.withValues(values)).evaluate();
+        final SimulationResult result = CircuitSimulator(
+          built.withValues(values),
+        ).evaluate();
         final List<bool> expected = ArithmeticReference.halfAdder(
           values[0],
           values[1],
@@ -88,8 +88,9 @@ void main() {
           (combination >> 1) & 1 == 1,
           combination & 1 == 1,
         ];
-        final SimulationResult result =
-            CircuitSimulator(built.withValues(values)).evaluate();
+        final SimulationResult result = CircuitSimulator(
+          built.withValues(values),
+        ).evaluate();
         final List<bool> expected = ArithmeticReference.fullAdder(
           values[0],
           values[1],
@@ -113,8 +114,9 @@ void main() {
           (combination >> 1) & 1 == 1,
           combination & 1 == 1,
         ];
-        final SimulationResult result =
-            CircuitSimulator(built.withValues(values)).evaluate();
+        final SimulationResult result = CircuitSimulator(
+          built.withValues(values),
+        ).evaluate();
         final List<bool> expected = ArithmeticReference.halfSubtractor(
           values[0],
           values[1],
@@ -138,8 +140,9 @@ void main() {
           (combination >> 1) & 1 == 1,
           combination & 1 == 1,
         ];
-        final SimulationResult result =
-            CircuitSimulator(built.withValues(values)).evaluate();
+        final SimulationResult result = CircuitSimulator(
+          built.withValues(values),
+        ).evaluate();
         final List<bool> expected = ArithmeticReference.fullSubtractor(
           values[0],
           values[1],
@@ -168,8 +171,9 @@ void main() {
             (b >> 1) & 1 == 1,
             b & 1 == 1,
           ];
-          final SimulationResult result =
-              CircuitSimulator(built.withValues(values)).evaluate();
+          final SimulationResult result = CircuitSimulator(
+            built.withValues(values),
+          ).evaluate();
           final List<bool> expected = ArithmeticReference.comparator(a, b);
           expect(
             result.signalOf(built.probes[0].id),
@@ -200,8 +204,9 @@ void main() {
           (combination >> 1) & 1 == 1,
           combination & 1 == 1,
         ];
-        final SimulationResult result =
-            CircuitSimulator(built.withValues(values)).evaluate();
+        final SimulationResult result = CircuitSimulator(
+          built.withValues(values),
+        ).evaluate();
         expect(
           result.signalOf(built.probes[0].id),
           SelectionReference.mux2(values[0], values[1], values[2])
@@ -218,8 +223,9 @@ void main() {
         final List<bool> values = <bool>[
           for (int i = 0; i < 6; i++) (combination >> (5 - i)) & 1 == 1,
         ];
-        final SimulationResult result =
-            CircuitSimulator(built.withValues(values)).evaluate();
+        final SimulationResult result = CircuitSimulator(
+          built.withValues(values),
+        ).evaluate();
         expect(
           result.signalOf(built.probes[0].id),
           SelectionReference.mux4(
@@ -244,8 +250,9 @@ void main() {
           (combination >> 1) & 1 == 1,
           combination & 1 == 1,
         ];
-        final SimulationResult result =
-            CircuitSimulator(built.withValues(values)).evaluate();
+        final SimulationResult result = CircuitSimulator(
+          built.withValues(values),
+        ).evaluate();
         final List<bool> expected = SelectionReference.demux2(
           values[0],
           values[1],
@@ -268,8 +275,9 @@ void main() {
           (combination >> 1) & 1 == 1,
           combination & 1 == 1,
         ];
-        final SimulationResult result =
-            CircuitSimulator(built.withValues(values)).evaluate();
+        final SimulationResult result = CircuitSimulator(
+          built.withValues(values),
+        ).evaluate();
         final List<bool> expected = SelectionReference.demux4(
           values[0],
           values[1],
@@ -294,8 +302,9 @@ void main() {
           (combination >> 1) & 1 == 1,
           combination & 1 == 1,
         ];
-        final SimulationResult result =
-            CircuitSimulator(built.withValues(values)).evaluate();
+        final SimulationResult result = CircuitSimulator(
+          built.withValues(values),
+        ).evaluate();
         final List<bool> expected = SelectionReference.decoder4(
           values[0],
           values[1],
@@ -318,8 +327,9 @@ void main() {
           (combination >> 1) & 1 == 1,
           combination & 1 == 1,
         ];
-        final SimulationResult result =
-            CircuitSimulator(built.withValues(values)).evaluate();
+        final SimulationResult result = CircuitSimulator(
+          built.withValues(values),
+        ).evaluate();
         final List<bool> expected = SelectionReference.decoder8(
           values[0],
           values[1],
@@ -341,8 +351,9 @@ void main() {
         final List<bool> values = <bool>[
           for (int i = 0; i < 4; i++) (combination >> i) & 1 == 1,
         ];
-        final SimulationResult result =
-            CircuitSimulator(built.withValues(values)).evaluate();
+        final SimulationResult result = CircuitSimulator(
+          built.withValues(values),
+        ).evaluate();
         final List<bool> expected = SelectionReference.encoder4(
           values[0],
           values[1],
@@ -368,8 +379,9 @@ void main() {
         final List<bool> values = <bool>[
           for (int i = 0; i < 8; i++) (combination >> i) & 1 == 1,
         ];
-        final SimulationResult result =
-            CircuitSimulator(built.withValues(values)).evaluate();
+        final SimulationResult result = CircuitSimulator(
+          built.withValues(values),
+        ).evaluate();
         final List<bool> expected = SelectionReference.encoder8(values);
         for (int i = 0; i < 3; i++) {
           expect(
@@ -387,8 +399,9 @@ void main() {
         final List<bool> values = <bool>[
           for (int i = 0; i < 8; i++) (combination >> i) & 1 == 1,
         ];
-        final SimulationResult result =
-            CircuitSimulator(built.withValues(values)).evaluate();
+        final SimulationResult result = CircuitSimulator(
+          built.withValues(values),
+        ).evaluate();
         final List<bool> expected = SelectionReference.priorityEncoder(values);
         for (int i = 0; i < 4; i++) {
           expect(

@@ -212,11 +212,10 @@ class ProjectCodec {
   }
 
   static String safeFileName(String name) {
-    final String cleaned =
-        name
-            .replaceAll(RegExp(r'[\\/:*?"<>|\r\n\t]'), '-')
-            .replaceAll(RegExp(r'\s+'), ' ')
-            .trim();
+    final String cleaned = name
+        .replaceAll(RegExp(r'[\\/:*?"<>|\r\n\t]'), '-')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
     if (cleaned.isEmpty) {
       return 'logic-lab-project';
     }
@@ -233,8 +232,9 @@ class ProjectTemplate {
   }) {
     final List<CircuitNode> nodes = <CircuitNode>[];
     final List<CircuitWire> wires = <CircuitWire>[];
-    final int count =
-        gateType == ComponentType.notGate ? 1 : inputCount.clamp(2, 4);
+    final int count = gateType == ComponentType.notGate
+        ? 1
+        : inputCount.clamp(2, 4);
     final double gateY = 220;
     for (int i = 0; i < count; i++) {
       final CircuitNode input = CircuitNode(
@@ -270,12 +270,9 @@ class ProjectTemplate {
     nodes
       ..add(gate)
       ..add(output);
-    final List<CircuitWire> finalWires =
-        wires.map((CircuitWire wire) {
-          return wire.toNodeId == '@gate'
-              ? wire.copyWith(toNodeId: gate.id)
-              : wire;
-        }).toList();
+    final List<CircuitWire> finalWires = wires.map((CircuitWire wire) {
+      return wire.toNodeId == '@gate' ? wire.copyWith(toNodeId: gate.id) : wire;
+    }).toList();
     finalWires.add(
       CircuitWire(
         id: IdGenerator.next('w'),

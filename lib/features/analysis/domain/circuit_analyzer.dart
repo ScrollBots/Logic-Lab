@@ -108,8 +108,9 @@ class CircuitAnalyzer {
         }
         final ComponentSpec spec = ComponentLibrary.specOf(source.type);
         final int sourceDepth = depth[wire.fromNodeId] ?? 0;
-        final int candidate =
-            spec.kind == ComponentKind.gate ? sourceDepth + 1 : sourceDepth;
+        final int candidate = spec.kind == ComponentKind.gate
+            ? sourceDepth + 1
+            : sourceDepth;
         if (candidate > (depth[wire.toNodeId] ?? 0)) {
           depth[wire.toNodeId] = candidate;
           changed = true;
@@ -172,10 +173,12 @@ class CircuitAnalyzer {
       for (int i = 0; i < inputs.length; i++) {
         values['$i'] = ((combination >> (inputs.length - i - 1)) & 1) == 1;
       }
-      final SimulationResult leftResult =
-          CircuitSimulator(_withInputs(left, values)).evaluate();
-      final SimulationResult rightResult =
-          CircuitSimulator(_withInputs(right, values)).evaluate();
+      final SimulationResult leftResult = CircuitSimulator(
+        _withInputs(left, values),
+      ).evaluate();
+      final SimulationResult rightResult = CircuitSimulator(
+        _withInputs(right, values),
+      ).evaluate();
       problems
         ..addAll(leftResult.errors)
         ..addAll(rightResult.errors);
@@ -229,18 +232,17 @@ class CircuitAnalyzer {
   ) {
     final List<CircuitNode> ordered = graph.inputs.toList()..sort(_compare);
     return graph.copyWith(
-      nodes:
-          graph.nodes.map((CircuitNode node) {
-            if (!node.type.isInput) {
-              return node;
-            }
-            final int index = ordered.indexWhere(
-              (CircuitNode input) => input.id == node.id,
-            );
-            return node.copyWith(
-              inputValue: index >= 0 ? (values['$index'] ?? false) : false,
-            );
-          }).toList(),
+      nodes: graph.nodes.map((CircuitNode node) {
+        if (!node.type.isInput) {
+          return node;
+        }
+        final int index = ordered.indexWhere(
+          (CircuitNode input) => input.id == node.id,
+        );
+        return node.copyWith(
+          inputValue: index >= 0 ? (values['$index'] ?? false) : false,
+        );
+      }).toList(),
     );
   }
 

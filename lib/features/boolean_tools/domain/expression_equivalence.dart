@@ -19,13 +19,12 @@ class ExpressionEquivalenceResult {
   final String message;
   final List<String> mismatches;
 
-  static const ExpressionEquivalenceResult
-  notComparable = ExpressionEquivalenceResult(
-    comparable: false,
-    equivalent: false,
-    message:
-        'تعداد یا نام ورودی‌های عبارت و مدار یکسان نیست، بنابراین هم‌ارزی قابل بررسی نیست.',
-  );
+  static const ExpressionEquivalenceResult notComparable =
+      ExpressionEquivalenceResult(
+        comparable: false,
+        equivalent: false,
+        message: 'تعداد یا نام ورودی‌های عبارت و مدار یکسان نیست، بنابراین هم‌ارزی قابل بررسی نیست.',
+      );
 }
 
 /// Compares a Boolean expression with a circuit by evaluating both over all
@@ -41,11 +40,10 @@ class ExpressionEquivalence {
   }) {
     final List<String> expressionVariables =
         expression.collectVariables().toList()..sort();
-    final List<CircuitNode> circuitInputs =
-        graph.inputs.toList()..sort(
-          (CircuitNode a, CircuitNode b) =>
-              a.position.x.compareTo(b.position.x),
-        );
+    final List<CircuitNode> circuitInputs = graph.inputs.toList()
+      ..sort(
+        (CircuitNode a, CircuitNode b) => a.position.x.compareTo(b.position.x),
+      );
 
     if (expressionVariables.length != circuitInputs.length) {
       return ExpressionEquivalenceResult.notComparable;

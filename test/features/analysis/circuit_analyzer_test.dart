@@ -56,15 +56,13 @@ CircuitGraph _andGraph({String suffix = ''}) {
 CircuitGraph _nandGraph() {
   final CircuitGraph base = _andGraph(suffix: '2');
   return base.copyWith(
-    nodes:
-        base.nodes
-            .map(
-              (CircuitNode node) =>
-                  node.id == 'g2'
-                      ? node.copyWith(type: ComponentType.nandGate)
-                      : node,
-            )
-            .toList(),
+    nodes: base.nodes
+        .map(
+          (CircuitNode node) => node.id == 'g2'
+              ? node.copyWith(type: ComponentType.nandGate)
+              : node,
+        )
+        .toList(),
   );
 }
 

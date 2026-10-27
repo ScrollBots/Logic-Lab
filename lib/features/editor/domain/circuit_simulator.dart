@@ -102,8 +102,9 @@ class CircuitSimulator {
     _states = <String, ComponentState>{};
     _nodeIndex = _buildNodeIndex(graph);
     for (final CircuitNode node in graph.nodes) {
-      final ComponentState? initial =
-          ComponentLibrary.specOf(node.type).initialState?.call();
+      final ComponentState? initial = ComponentLibrary.specOf(node.type)
+          .initialState
+          ?.call();
       if (initial != null) {
         _states[node.id] = initial;
       }
@@ -146,8 +147,9 @@ class CircuitSimulator {
       if (_states.containsKey(node.id)) {
         continue;
       }
-      final ComponentState? initial =
-          ComponentLibrary.specOf(node.type).initialState?.call();
+      final ComponentState? initial = ComponentLibrary.specOf(node.type)
+          .initialState
+          ?.call();
       if (initial != null) {
         _states[node.id] = initial;
       }
@@ -161,8 +163,9 @@ class CircuitSimulator {
   void reset() {
     _states = <String, ComponentState>{};
     for (final CircuitNode node in _graph.nodes) {
-      final ComponentState? initial =
-          ComponentLibrary.specOf(node.type).initialState?.call();
+      final ComponentState? initial = ComponentLibrary.specOf(node.type)
+          .initialState
+          ?.call();
       if (initial != null) {
         _states[node.id] = initial;
       }
@@ -389,8 +392,7 @@ class CircuitSimulator {
       addProblem(
         CircuitProblem(
           code: CircuitProblemCode.cycle,
-          message:
-              'چرخه ترکیبی در مدار شناسایی شد. سیگنال‌های این مسیر نامشخص‌اند؛ برای محاسبه نتیجه، چرخه را برطرف کنید.',
+          message: 'چرخه ترکیبی در مدار شناسایی شد. سیگنال‌های این مسیر نامشخص‌اند؛ برای محاسبه نتیجه، چرخه را برطرف کنید.',
           nodeId: cycleNodes.first,
         ),
       );
@@ -523,8 +525,7 @@ class CircuitSimulator {
             addProblem(
               CircuitProblem(
                 code: CircuitProblemCode.illegalLatchState,
-                message:
-                    'ورودی S و R هم‌زمان فعال‌اند؛ این حالت برای قفل SR غیرمجاز است.',
+                message: 'ورودی S و R هم‌زمان فعال‌اند؛ این حالت برای قفل SR غیرمجاز است.',
                 nodeId: node.id,
               ),
             );
@@ -552,8 +553,7 @@ class CircuitSimulator {
       addProblem(
         const CircuitProblem(
           code: CircuitProblemCode.unstableFeedback,
-          message:
-              'بازخورد این بخش از مدار پس از چند تکرار به مقدار پایدار نرسید؛ نتیجهٔ آن نامشخص در نظر گرفته شد.',
+          message: 'بازخورد این بخش از مدار پس از چند تکرار به مقدار پایدار نرسید؛ نتیجهٔ آن نامشخص در نظر گرفته شد.',
         ),
       );
       for (final String id in statefulIds) {

@@ -20,9 +20,8 @@ Future<UpdateChoice?> showUpdateDialog(
 }) {
   return showDialog<UpdateChoice>(
     context: context,
-    builder:
-        (BuildContext context) =>
-            UpdateDialog(release: release, currentVersion: currentVersion),
+    builder: (BuildContext context) =>
+        UpdateDialog(release: release, currentVersion: currentVersion),
   );
 }
 
@@ -150,15 +149,14 @@ class UpdateDialog extends StatelessWidget {
     }
     final List<String> lines = <String>[];
     for (final String raw in body.split('\n')) {
-      final String line =
-          raw
-              .replaceAllMapped(
-                RegExp(r'\[([^\]]+)\]\([^)]+\)'),
-                (Match match) => match.group(1) ?? '',
-              )
-              .replaceAll(RegExp(r'^[#>*\-–•\s]+'), '')
-              .replaceAll(RegExp(r'[*_`]'), '')
-              .trim();
+      final String line = raw
+          .replaceAllMapped(
+            RegExp(r'\[([^\]]+)\]\([^)]+\)'),
+            (Match match) => match.group(1) ?? '',
+          )
+          .replaceAll(RegExp(r'^[#>*\-–•\s]+'), '')
+          .replaceAll(RegExp(r'[*_`]'), '')
+          .trim();
       if (line.isEmpty) {
         continue;
       }
@@ -193,16 +191,14 @@ class _VersionTile extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
       decoration: BoxDecoration(
-        color:
-            highlight
-                ? theme.colorScheme.primary.withValues(alpha: 0.09)
-                : theme.colorScheme.surfaceContainerLow,
+        color: highlight
+            ? theme.colorScheme.primary.withValues(alpha: 0.09)
+            : theme.colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(11),
         border: Border.all(
-          color:
-              highlight
-                  ? theme.colorScheme.primary.withValues(alpha: 0.5)
-                  : theme.colorScheme.outlineVariant,
+          color: highlight
+              ? theme.colorScheme.primary.withValues(alpha: 0.5)
+              : theme.colorScheme.outlineVariant,
         ),
       ),
       child: Column(

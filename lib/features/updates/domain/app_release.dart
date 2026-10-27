@@ -127,10 +127,9 @@ class AppRelease {
     return AppRelease(
       version: version,
       tagName: raw['tag_name'] as String,
-      title:
-          raw['name'] is String && (raw['name'] as String).trim().isNotEmpty
-              ? (raw['name'] as String).trim()
-              : 'Logic Lab $version',
+      title: raw['name'] is String && (raw['name'] as String).trim().isNotEmpty
+          ? (raw['name'] as String).trim()
+          : 'Logic Lab $version',
       notes: raw['body'] is String ? raw['body'] as String : '',
       pageUri: pageUri,
       downloadUri: downloadUri,

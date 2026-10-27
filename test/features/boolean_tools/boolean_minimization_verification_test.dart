@@ -63,8 +63,9 @@ class _ReferenceMinimiser {
     for (final int minterm in onSet) {
       onMask |= 1 << minterm;
     }
-    final List<_Cube> valid =
-        all.where((_Cube cube) => cube.coverage & ~onMask == 0).toList();
+    final List<_Cube> valid = all
+        .where((_Cube cube) => cube.coverage & ~onMask == 0)
+        .toList();
 
     // A term that is covered by a term with fewer literals is never needed.
     final List<_Cube> maximal = <_Cube>[];
@@ -287,17 +288,13 @@ void main() {
                 assignment & (1 << (variables.length - i - 1)) != 0;
           }
           final CircuitGraph instance = graph.copyWith(
-            nodes:
-                graph.nodes
-                    .map(
-                      (CircuitNode node) =>
-                          node.type.isInput
-                              ? node.copyWith(
-                                inputValue: values[node.label] ?? false,
-                              )
-                              : node,
-                    )
-                    .toList(),
+            nodes: graph.nodes
+                .map(
+                  (CircuitNode node) => node.type.isInput
+                      ? node.copyWith(inputValue: values[node.label] ?? false)
+                      : node,
+                )
+                .toList(),
           );
           final SimulationResult result = CircuitSimulator(instance).evaluate();
           expect(

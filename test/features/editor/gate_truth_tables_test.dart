@@ -14,14 +14,13 @@ class _Built {
   /// Returns the same circuit with new switch positions.
   CircuitGraph withValues(List<bool> values) {
     return graph.copyWith(
-      nodes:
-          graph.nodes.map((CircuitNode node) {
-            if (!node.type.isInput) {
-              return node;
-            }
-            final int index = inputs.indexOf(node);
-            return node.copyWith(inputValue: index >= 0 && values[index]);
-          }).toList(),
+      nodes: graph.nodes.map((CircuitNode node) {
+        if (!node.type.isInput) {
+          return node;
+        }
+        final int index = inputs.indexOf(node);
+        return node.copyWith(inputValue: index >= 0 && values[index]);
+      }).toList(),
     );
   }
 }
@@ -82,8 +81,9 @@ void main() {
             for (int i = 0; i < inputCount; i++)
               (combination >> (inputCount - i - 1)) & 1 == 1,
           ];
-          final SimulationResult result =
-              CircuitSimulator(built.withValues(values)).evaluate();
+          final SimulationResult result = CircuitSimulator(
+            built.withValues(values),
+          ).evaluate();
           expect(
             result.signalOf(built.probes.first.id),
             GateReference.apply(type, values)
@@ -116,8 +116,9 @@ void main() {
             for (int i = 0; i < inputCount; i++)
               (combination >> (inputCount - i - 1)) & 1 == 1,
           ];
-          final SimulationResult result =
-              CircuitSimulator(built.withValues(values)).evaluate();
+          final SimulationResult result = CircuitSimulator(
+            built.withValues(values),
+          ).evaluate();
           expect(
             result.signalOf(built.probes.first.id),
             GateReference.apply(type, values)
@@ -137,8 +138,9 @@ void main() {
         final List<bool> values = <bool>[
           for (int i = 0; i < 4; i++) (combination >> (3 - i)) & 1 == 1,
         ];
-        final SimulationResult result =
-            CircuitSimulator(built.withValues(values)).evaluate();
+        final SimulationResult result = CircuitSimulator(
+          built.withValues(values),
+        ).evaluate();
         expect(
           result.signalOf(built.probes.first.id),
           values.every((bool bit) => bit) ? LogicSignal.high : LogicSignal.low,
@@ -153,8 +155,9 @@ void main() {
         final List<bool> values = <bool>[
           for (int i = 0; i < 3; i++) (combination >> (2 - i)) & 1 == 1,
         ];
-        final SimulationResult result =
-            CircuitSimulator(built.withValues(values)).evaluate();
+        final SimulationResult result = CircuitSimulator(
+          built.withValues(values),
+        ).evaluate();
         expect(
           result.signalOf(built.probes.first.id),
           values.where((bool bit) => bit).length.isOdd
@@ -186,23 +189,20 @@ void main() {
 
       CircuitGraph withValues(bool dataValue, bool enableValue) {
         return graph.copyWith(
-          nodes:
-              graph.nodes
-                  .map(
-                    (CircuitNode node) =>
-                        node.type.isInput
-                            ? node.copyWith(
-                              inputValue:
-                                  node.label == 'A' ? dataValue : enableValue,
-                            )
-                            : node,
-                  )
-                  .toList(),
+          nodes: graph.nodes
+              .map(
+                (CircuitNode node) => node.type.isInput
+                    ? node.copyWith(
+                        inputValue: node.label == 'A' ? dataValue : enableValue,
+                      )
+                    : node,
+              )
+              .toList(),
         );
       }
 
-      SimulationResult result =
-          CircuitSimulator(withValues(true, true)).evaluate();
+      SimulationResult result = CircuitSimulator(withValues(true, true))
+          .evaluate();
       expect(result.signalOf(probe.id), LogicSignal.high);
 
       result = CircuitSimulator(withValues(true, false)).evaluate();
@@ -232,8 +232,8 @@ void main() {
         builder.connect(low, gate, toPort: 0);
         builder.connect(gate, probe, toPort: 0);
         // The second input of the AND gate stays unconnected -> unknown.
-        final SimulationResult result =
-            CircuitSimulator(builder.build()).evaluate();
+        final SimulationResult result = CircuitSimulator(builder.build())
+            .evaluate();
         expect(result.signalOf(probe.id), LogicSignal.low);
         expect(result.hasErrors, isTrue);
       },
@@ -255,8 +255,8 @@ void main() {
         );
         builder.connect(high, gate, toPort: 0);
         builder.connect(gate, probe, toPort: 0);
-        final SimulationResult result =
-            CircuitSimulator(builder.build()).evaluate();
+        final SimulationResult result = CircuitSimulator(builder.build())
+            .evaluate();
         expect(result.signalOf(probe.id), LogicSignal.high);
       },
     );
@@ -269,8 +269,8 @@ void main() {
         label: 'Y',
       );
       builder.connect(gate, probe, toPort: 0);
-      final SimulationResult result =
-          CircuitSimulator(builder.build()).evaluate();
+      final SimulationResult result = CircuitSimulator(builder.build())
+          .evaluate();
       expect(result.signalOf(probe.id), LogicSignal.unknown);
       expect(
         result.problems.any(

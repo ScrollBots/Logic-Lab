@@ -210,17 +210,16 @@ void main() {
 
   group('Serialization', () {
     test('state survives a JSON round trip', () {
-      final LearningState state =
-          const LearningState()
-              .recordAnswer(
-                conceptIds: const <String>['and'],
-                correct: true,
-                usedHint: false,
-                now: day,
-              )
-              .completeLesson('lesson_and', 4, now: day)
-              .completeChallenge('challenge_and', now: day)
-              .markOnboardingSeen();
+      final LearningState state = const LearningState()
+          .recordAnswer(
+            conceptIds: const <String>['and'],
+            correct: true,
+            usedHint: false,
+            now: day,
+          )
+          .completeLesson('lesson_and', 4, now: day)
+          .completeChallenge('challenge_and', now: day)
+          .markOnboardingSeen();
 
       final LearningState restored = LearningState.fromJson(
         jsonDecode(jsonEncode(state.toJson())),

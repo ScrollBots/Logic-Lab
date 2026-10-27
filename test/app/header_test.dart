@@ -80,8 +80,7 @@ void main() {
     expect(
       identity.center.dx,
       closeTo(center, 12),
-      reason:
-          'the identity must be centered in the screen, not shifted by the side widgets',
+      reason: 'the identity must be centered in the screen, not shifted by the side widgets',
     );
     expect(find.text('Logic Lab'), findsOneWidget);
     expect(find.text('آزمایشگاه منطق'), findsOneWidget);

@@ -123,14 +123,14 @@ class _AppShellState extends State<AppShell>
                 index: _destination.navIndex,
                 children: <Widget>[
                   HomeScreen(
-                    onOpenProjects:
-                        () => _selectDestination(AppDestination.circuits),
-                    onOpenLearn:
-                        () => _selectDestination(AppDestination.learning),
+                    onOpenProjects: () =>
+                        _selectDestination(AppDestination.circuits),
+                    onOpenLearn: () =>
+                        _selectDestination(AppDestination.learning),
                   ),
                   ProjectsScreen(
-                    onOpenProjectsTab:
-                        () => _selectDestination(AppDestination.circuits),
+                    onOpenProjectsTab: () =>
+                        _selectDestination(AppDestination.circuits),
                   ),
                   const LabScreen(),
                   const LearnScreen(),
@@ -186,10 +186,9 @@ class _CapsuleNavigationBar extends StatelessWidget {
               border: Border.all(color: theme.colorScheme.outlineVariant),
               boxShadow: <BoxShadow>[
                 BoxShadow(
-                  color:
-                      theme.brightness == Brightness.dark
-                          ? Colors.black.withValues(alpha: 0.4)
-                          : const Color(0xFF1B2A44).withValues(alpha: 0.1),
+                  color: theme.brightness == Brightness.dark
+                      ? Colors.black.withValues(alpha: 0.4)
+                      : const Color(0xFF1B2A44).withValues(alpha: 0.1),
                   blurRadius: 22,
                   offset: const Offset(0, 8),
                 ),
@@ -315,26 +314,26 @@ class _CapsuleItem extends StatelessWidget {
               children: <Widget>[
                 AnimatedSwitcher(
                   duration: motionDuration,
-                  transitionBuilder: (
-                    Widget child,
-                    Animation<double> animation,
-                  ) {
-                    return ScaleTransition(
-                      scale: CurvedAnimation(
-                        parent: animation,
-                        curve: Curves.easeOutBack,
-                      ),
-                      child: FadeTransition(opacity: animation, child: child),
-                    );
-                  },
+                  transitionBuilder:
+                      (Widget child, Animation<double> animation) {
+                        return ScaleTransition(
+                          scale: CurvedAnimation(
+                            parent: animation,
+                            curve: Curves.easeOutBack,
+                          ),
+                          child: FadeTransition(
+                            opacity: animation,
+                            child: child,
+                          ),
+                        );
+                      },
                   child: Icon(
                     selected ? destination.activeIcon : destination.icon,
                     key: ValueKey<bool>(selected),
                     size: 20,
-                    color:
-                        selected
-                            ? activeColor
-                            : theme.colorScheme.onSurfaceVariant,
+                    color: selected
+                        ? activeColor
+                        : theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
                 const SizedBox(height: 1),
@@ -345,10 +344,9 @@ class _CapsuleItem extends StatelessWidget {
                     fontSize: compact ? 9.5 : 10.5,
                     height: 1.25,
                     fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                    color:
-                        selected
-                            ? activeColor
-                            : theme.colorScheme.onSurfaceVariant,
+                    color: selected
+                        ? activeColor
+                        : theme.colorScheme.onSurfaceVariant,
                   ),
                   child: Text(
                     destination.label,

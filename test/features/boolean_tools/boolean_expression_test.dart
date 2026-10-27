@@ -216,17 +216,13 @@ void main() {
           'C': (combination & 1) != 0,
         };
         final CircuitGraph subset = graph.copyWith(
-          nodes:
-              graph.nodes
-                  .map(
-                    (CircuitNode node) =>
-                        node.type.isInput
-                            ? node.copyWith(
-                              inputValue: values[node.label] ?? false,
-                            )
-                            : node,
-                  )
-                  .toList(),
+          nodes: graph.nodes
+              .map(
+                (CircuitNode node) => node.type.isInput
+                    ? node.copyWith(inputValue: values[node.label] ?? false)
+                    : node,
+              )
+              .toList(),
         );
         final SimulationResult subsetReport = CircuitValidator.simulate(subset);
         expect(

@@ -93,10 +93,9 @@ void main() {
 
   group('Step evaluation', () {
     test('a wrong prediction does not reveal the answer immediately', () {
-      final PredictionStep step =
-          kLessonById['lesson_signals']!.steps
-              .whereType<PredictionStep>()
-              .first;
+      final PredictionStep step = kLessonById['lesson_signals']!.steps
+          .whereType<PredictionStep>()
+          .first;
 
       final StepEvaluation wrong = step.check(false);
       expect(wrong.correct, isFalse);
@@ -108,8 +107,9 @@ void main() {
     });
 
     test('a truth table reports the mismatched rows', () {
-      final TruthTableStep step =
-          kLessonById['lesson_and']!.steps.whereType<TruthTableStep>().first;
+      final TruthTableStep step = kLessonById['lesson_and']!.steps
+          .whereType<TruthTableStep>()
+          .first;
 
       expect(step.expectedRows(), <bool?>[false, false, false, true]);
 
@@ -126,10 +126,9 @@ void main() {
     });
 
     test('a wrong gate choice hides the correct gate name', () {
-      final GateChoiceStep step =
-          kLessonById['lesson_signals']!.steps
-              .whereType<GateChoiceStep>()
-              .first;
+      final GateChoiceStep step = kLessonById['lesson_signals']!.steps
+          .whereType<GateChoiceStep>()
+          .first;
 
       final StepEvaluation wrong = step.check(ComponentType.andGate);
       expect(wrong.correct, isFalse);
@@ -140,8 +139,9 @@ void main() {
     });
 
     test('a wrong text choice hides the correct expression', () {
-      final TextChoiceStep step =
-          kLessonById['lesson_wiring']!.steps.whereType<TextChoiceStep>().first;
+      final TextChoiceStep step = kLessonById['lesson_wiring']!.steps
+          .whereType<TextChoiceStep>()
+          .first;
       final LessonOption wrongOption = step.options.firstWhere(
         (LessonOption option) => !option.correct,
       );
