@@ -76,27 +76,26 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
     final int count = _selected.length;
     final bool? confirmed = await showDialog<bool>(
       context: context,
-      builder:
-          (BuildContext context) => AlertDialog(
-            title: const Text('حذف مدارها'),
-            content: Text(
-              '$count مدار برای همیشه حذف می‌شود. اگر پشتیبان نگرفته‌اید، '
-              'امکان بازگردانی وجود ندارد.',
-            ),
-            actions: <Widget>[
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text('انصراف'),
-              ),
-              FilledButton(
-                style: FilledButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.error,
-                ),
-                onPressed: () => Navigator.pop(context, true),
-                child: const Text('حذف همه'),
-              ),
-            ],
+      builder: (BuildContext context) => AlertDialog(
+        title: const Text('حذف مدارها'),
+        content: Text(
+          '$count مدار برای همیشه حذف می‌شود. اگر پشتیبان نگرفته‌اید، '
+          'امکان بازگردانی وجود ندارد.',
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('انصراف'),
           ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('حذف همه'),
+          ),
+        ],
+      ),
     );
     if (confirmed != true || !mounted) {
       return;
@@ -118,27 +117,26 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
   Future<void> _confirmDelete(CircuitProject project) async {
     final bool? confirmed = await showDialog<bool>(
       context: context,
-      builder:
-          (BuildContext context) => AlertDialog(
-            title: const Text('حذف مدار'),
-            content: Text(
-              'مدار «${project.name}» برای همیشه حذف می‌شود. اگر پشتیبان نگرفته‌اید، '
-              'امکان بازگردانی وجود ندارد.',
-            ),
-            actions: <Widget>[
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text('انصراف'),
-              ),
-              FilledButton(
-                style: FilledButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.error,
-                ),
-                onPressed: () => Navigator.pop(context, true),
-                child: const Text('حذف کن'),
-              ),
-            ],
+      builder: (BuildContext context) => AlertDialog(
+        title: const Text('حذف مدار'),
+        content: Text(
+          'مدار «${project.name}» برای همیشه حذف می‌شود. اگر پشتیبان نگرفته‌اید، '
+          'امکان بازگردانی وجود ندارد.',
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('انصراف'),
           ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('حذف کن'),
+          ),
+        ],
+      ),
     );
     if (confirmed != true || !mounted) {
       return;
@@ -178,27 +176,26 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
     );
     final String? name = await showDialog<String>(
       context: context,
-      builder:
-          (BuildContext context) => AlertDialog(
-            title: const Text('تغییر نام مدار'),
-            content: TextField(
-              controller: controller,
-              autofocus: true,
-              maxLength: 80,
-              onSubmitted: (String value) => Navigator.pop(context, value),
-              decoration: const InputDecoration(labelText: 'نام جدید'),
-            ),
-            actions: <Widget>[
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('انصراف'),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.pop(context, controller.text),
-                child: const Text('ذخیره'),
-              ),
-            ],
+      builder: (BuildContext context) => AlertDialog(
+        title: const Text('تغییر نام مدار'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          maxLength: 80,
+          onSubmitted: (String value) => Navigator.pop(context, value),
+          decoration: const InputDecoration(labelText: 'نام جدید'),
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('انصراف'),
           ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, controller.text),
+            child: const Text('ذخیره'),
+          ),
+        ],
+      ),
     );
     controller.dispose();
     if (name == null || name.trim().isEmpty) {
@@ -796,4 +793,3 @@ class _MetaChip extends StatelessWidget {
     );
   }
 }
-
