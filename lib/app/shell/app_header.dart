@@ -16,6 +16,7 @@ class AppHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) {
         final double width = constraints.maxWidth;
@@ -26,6 +27,15 @@ class AppHeader extends StatelessWidget {
         return Container(
           key: const Key('app-header'),
           height: kAppHeaderHeight,
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surface,
+            border: Border(
+              bottom: BorderSide(
+                color: theme.colorScheme.outlineVariant,
+                width: 0.5,
+              ),
+            ),
+          ),
           padding: const EdgeInsets.fromLTRB(14, 8, 14, 8),
           child: Stack(
             children: <Widget>[
@@ -85,6 +95,7 @@ class _AppIdentity extends StatelessWidget {
         Text(
           'Logic Lab',
           textDirection: TextDirection.ltr,
+          textAlign: TextAlign.center,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: theme.textTheme.titleMedium?.copyWith(
@@ -96,6 +107,7 @@ class _AppIdentity extends StatelessWidget {
         const SizedBox(height: 2),
         Text(
           'آزمایشگاه منطق',
+          textAlign: TextAlign.center,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: theme.textTheme.bodySmall?.copyWith(
