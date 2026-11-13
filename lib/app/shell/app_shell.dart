@@ -73,6 +73,7 @@ class _AppShellState extends State<AppShell>
     final SettingsController settings = context.watch<SettingsController>();
     final bool animate = settings.animationsEnabled;
     final Duration duration = animate ? _transitionDuration : Duration.zero;
+    final double topPadding = MediaQuery.paddingOf(context).top;
 
     return Scaffold(
       body: Stack(
@@ -98,7 +99,7 @@ class _AppShellState extends State<AppShell>
           ),
           // Pages morph underneath the header.
           Positioned(
-            top: kAppHeaderHeight,
+            top: kAppHeaderHeight + topPadding,
             left: 0,
             right: 0,
             bottom: 0,

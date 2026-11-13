@@ -17,6 +17,7 @@ class AppHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
+    final double topPadding = MediaQuery.paddingOf(context).top;
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) {
         final double width = constraints.maxWidth;
@@ -26,7 +27,7 @@ class AppHeader extends StatelessWidget {
 
         return Container(
           key: const Key('app-header'),
-          height: kAppHeaderHeight,
+          height: kAppHeaderHeight + topPadding,
           decoration: BoxDecoration(
             color: theme.colorScheme.surface,
             border: Border(
@@ -36,7 +37,7 @@ class AppHeader extends StatelessWidget {
               ),
             ),
           ),
-          padding: const EdgeInsets.fromLTRB(14, 8, 14, 8),
+          padding: EdgeInsets.fromLTRB(14, 8 + topPadding, 14, 8),
           child: Stack(
             children: <Widget>[
               Align(
